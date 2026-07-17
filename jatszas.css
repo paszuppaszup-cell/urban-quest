@@ -1,0 +1,120 @@
+/* =========================================================
+   URBAN QUEST — JÁTSZÁS (önálló végigjátszó oldal) — LAP-KERET
+   A tényleges végigjátszó UI-t az admin.css .uq-play* / .uq-pl-*
+   osztályai stílusozzák; itt csak az oldal saját kerete van.
+   ========================================================= */
+
+.play-body {
+  margin: 0;
+  min-height: 100vh;
+  background: var(--bg, #0a0d0a);
+  color: var(--text, #f1f4ec);
+  font-family: 'Inter', system-ui, sans-serif;
+}
+
+.sprite { position: absolute; width: 0; height: 0; overflow: hidden; }
+
+/* ---------- felső sáv ---------- */
+.play-top {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 22px;
+  background: rgb(10 13 10 / .92);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--line, #232a1e);
+}
+
+.play-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-decoration: none;
+  color: inherit;
+  min-width: 0;
+}
+.play-brand .brand-mark {
+  width: 38px;
+  height: 38px;
+  color: var(--lime, #9ed52b);
+  flex: none;
+}
+.play-brand-text { display: flex; flex-direction: column; min-width: 0; }
+.play-brand-name {
+  font-family: var(--font-display, 'Archivo'), sans-serif;
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: .01em;
+  color: #fff;
+  line-height: 1.1;
+}
+.play-brand-name b { color: var(--lime, #9ed52b); font-weight: 900; }
+.play-brand-sub {
+  font-size: 12px;
+  color: var(--text-2, #b9c2b1);
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 52vw;
+}
+
+.play-top-right { display: flex; align-items: center; gap: 12px; flex: none; }
+.play-top-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 11px;
+  border-radius: 99px;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--lime, #9ed52b);
+  background: rgb(158 213 43 / .12);
+  border: 1px solid rgb(158 213 43 / .34);
+}
+.play-top-tag .ico { width: 13px; height: 13px; }
+.play-back { text-decoration: none; }
+
+/* ---------- játéktér ---------- */
+.play-wrap {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 22px 22px 60px;
+}
+#playRoot { min-height: 60vh; }
+
+/* a "nincs pálya" / intro szövegben lévő linkek */
+#playRoot .uq-play-intro a {
+  color: var(--lime, #9ed52b);
+  font-weight: 600;
+  text-decoration: none;
+  border-bottom: 1px solid rgb(158 213 43 / .4);
+}
+#playRoot .uq-play-intro a:hover { border-bottom-color: var(--lime, #9ed52b); }
+
+/* ---------- reszponzív ---------- */
+@media (max-width: 720px) {
+  .play-top { padding: 10px 14px; }
+  .play-top-tag { display: none; }
+  .play-brand-sub { max-width: 46vw; }
+  .play-wrap { padding: 16px 14px 48px; }
+}
+
+/* ---------- publikus küldetés-mód: „kezdd elölről" link + intro finomítás ---------- */
+.uq-play-restartlink {
+  display: block;
+  margin: 10px auto 0;
+  padding: 6px 10px;
+  color: var(--muted, #8b957f);
+  font-family: inherit;
+  font-size: 13px;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  text-decoration: underline;
+}
+.uq-play-restartlink:hover { color: var(--text, #f1f4ec); }

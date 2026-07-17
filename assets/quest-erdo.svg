@@ -1,0 +1,147 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <!-- napfényes mélység a kép közepén -->
+    <radialGradient id="forest-glow" cx="0.55" cy="0.42" r="0.55">
+      <stop offset="0"    stop-color="#e8f7c0"/>
+      <stop offset="0.18" stop-color="#b9e37c"/>
+      <stop offset="0.42" stop-color="#6ba63e"/>
+      <stop offset="0.70" stop-color="#2f5a26"/>
+      <stop offset="1"    stop-color="#132313"/>
+    </radialGradient>
+
+    <linearGradient id="forest-canopy" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0"   stop-color="#07120a"/>
+      <stop offset="0.5" stop-color="#0e2211" stop-opacity="0.85"/>
+      <stop offset="1"   stop-color="#12280f" stop-opacity="0"/>
+    </linearGradient>
+
+    <linearGradient id="forest-floor" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#1d3a1b"/>
+      <stop offset="1" stop-color="#0a170b"/>
+    </linearGradient>
+
+    <linearGradient id="forest-water" x1="0.5" y1="0" x2="0.5" y2="1">
+      <stop offset="0"    stop-color="#cfe8b0"/>
+      <stop offset="0.22" stop-color="#8aba6a"/>
+      <stop offset="0.55" stop-color="#3e6a4a"/>
+      <stop offset="1"    stop-color="#16301f"/>
+    </linearGradient>
+
+    <linearGradient id="forest-trunk" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0"   stop-color="#0a1409"/>
+      <stop offset="0.4" stop-color="#152412"/>
+      <stop offset="0.75" stop-color="#2c3f22"/>
+      <stop offset="1"   stop-color="#0c1509"/>
+    </linearGradient>
+
+    <linearGradient id="forest-beam" x1="0.1" y1="0" x2="0.9" y2="1">
+      <stop offset="0"   stop-color="#e6f7b8" stop-opacity="0.42"/>
+      <stop offset="1"   stop-color="#c2e88a" stop-opacity="0"/>
+    </linearGradient>
+
+    <radialGradient id="forest-vig" cx="0.52" cy="0.45" r="0.72">
+      <stop offset="0.45" stop-color="#000" stop-opacity="0"/>
+      <stop offset="1"    stop-color="#020703" stop-opacity="0.8"/>
+    </radialGradient>
+
+    <filter id="forest-b30" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="24"/></filter>
+    <filter id="forest-b12" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="10"/></filter>
+    <filter id="forest-b5"  x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="4"/></filter>
+    <filter id="forest-b2"  x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="1.5"/></filter>
+  </defs>
+
+  <!-- napfényes erdőmély -->
+  <rect width="800" height="500" fill="url(#forest-glow)"/>
+
+  <!-- távoli, párás fatörzsek a fényben -->
+  <g opacity="0.35" filter="url(#forest-b12)">
+    <rect x="330" y="120" width="12" height="230" fill="#2c4a22"/>
+    <rect x="386" y="140" width="9"  height="210" fill="#33532a"/>
+    <rect x="452" y="118" width="13" height="235" fill="#2a4620"/>
+    <rect x="506" y="150" width="8"  height="200" fill="#35562c"/>
+    <rect x="286" y="150" width="9"  height="200" fill="#2f4d25"/>
+  </g>
+
+  <!-- lombkorona fentről -->
+  <rect width="800" height="230" fill="url(#forest-canopy)"/>
+  <g fill="#0a1a0c" opacity="0.92" filter="url(#forest-b5)">
+    <ellipse cx="70"  cy="40"  rx="180" ry="90"/>
+    <ellipse cx="270" cy="18"  rx="160" ry="72"/>
+    <ellipse cx="470" cy="10"  rx="150" ry="62"/>
+    <ellipse cx="700" cy="34"  rx="190" ry="86"/>
+    <ellipse cx="560" cy="52"  rx="120" ry="50"/>
+    <ellipse cx="160" cy="86"  rx="110" ry="46" opacity="0.7"/>
+    <ellipse cx="640" cy="96"  rx="120" ry="44" opacity="0.65"/>
+  </g>
+
+  <!-- erdőtalaj / partok -->
+  <path d="M0 500 L0 300 Q120 292 210 330 Q300 366 350 500 Z" fill="url(#forest-floor)"/>
+  <path d="M800 500 L800 296 Q680 290 588 328 Q496 366 452 500 Z" fill="url(#forest-floor)"/>
+
+  <!-- PATAK: hátulról előre szélesedve -->
+  <path d="M392 300 L414 300 L470 420 L520 500 L286 500 L336 420 Z" fill="url(#forest-water)"/>
+  <!-- vízcsillanások -->
+  <g opacity="0.85">
+    <path d="M396 316 L410 316 L418 340 L390 340 Z" fill="#e2f4c4" opacity="0.7" filter="url(#forest-b2)"/>
+    <path d="M382 356 L424 356 L432 374 L374 374 Z" fill="#cfeaa8" opacity="0.45" filter="url(#forest-b2)"/>
+    <path d="M362 392 L444 392 L452 408 L354 408 Z" fill="#b6dc90" opacity="0.3" filter="url(#forest-b2)"/>
+    <path d="M336 436 L470 436 L478 452 L328 452 Z" fill="#9ccd7c" opacity="0.22" filter="url(#forest-b2)"/>
+    <path d="M310 476 L496 476 L502 490 L302 490 Z" fill="#8ec272" opacity="0.16" filter="url(#forest-b2)"/>
+  </g>
+
+  <!-- mohos sziklák a patakban és a partokon -->
+  <g>
+    <path d="M330 352 Q346 336 368 344 Q382 352 376 366 Q356 376 336 370 Z" fill="#2c5222"/>
+    <path d="M334 348 Q350 338 366 346" fill="none" stroke="#6fa348" stroke-width="4" opacity="0.75" filter="url(#forest-b2)"/>
+
+    <path d="M430 366 Q452 350 476 362 Q490 372 480 388 Q456 398 434 388 Z" fill="#27491e"/>
+    <path d="M436 362 Q456 352 474 364" fill="none" stroke="#659a42" stroke-width="4" opacity="0.7" filter="url(#forest-b2)"/>
+
+    <path d="M282 416 Q312 396 348 412 Q364 424 350 442 Q312 456 280 440 Z" fill="#22421c"/>
+    <path d="M290 412 Q316 398 344 412" fill="none" stroke="#5c8f3c" stroke-width="5" opacity="0.65" filter="url(#forest-b2)"/>
+
+    <path d="M462 428 Q498 408 536 428 Q552 442 534 460 Q494 474 460 456 Z" fill="#1e3b1a"/>
+    <path d="M470 424 Q500 410 530 428" fill="none" stroke="#54833a" stroke-width="5" opacity="0.6" filter="url(#forest-b2)"/>
+
+    <path d="M120 452 Q170 424 232 452 Q256 470 228 494 Q168 512 116 486 Z" fill="#1a3417"/>
+    <path d="M600 448 Q652 422 712 452 Q736 470 706 494 Q648 512 598 484 Z" fill="#183015"/>
+  </g>
+
+  <!-- KÖZELI FATÖRZSEK: keret -->
+  <path d="M0 500 L0 0 L58 0 L74 120 Q66 300 86 500 Z" fill="url(#forest-trunk)"/>
+  <path d="M108 500 L96 0 L146 0 L160 180 Q150 340 168 500 Z" fill="#0b1509" opacity="0.95"/>
+  <path d="M800 500 L800 0 L742 0 L724 140 Q736 320 714 500 Z" fill="url(#forest-trunk)"/>
+  <path d="M694 500 L706 0 L656 0 L642 160 Q654 340 634 500 Z" fill="#0b1509" opacity="0.95"/>
+  <path d="M228 500 L214 0 L246 0 L258 200 Q252 360 264 500 Z" fill="#0d1a0b" opacity="0.85"/>
+  <path d="M566 500 L578 0 L548 0 L536 210 Q544 360 532 500 Z" fill="#0d1a0b" opacity="0.85"/>
+
+  <!-- fatörzsek napsütötte pereme (jobbról jön a fény) -->
+  <path d="M74 120 Q66 300 86 500" fill="none" stroke="#7fb355" stroke-width="3" opacity="0.35" filter="url(#forest-b2)"/>
+  <path d="M642 160 Q654 340 634 500" fill="none" stroke="#8cc05e" stroke-width="3.5" opacity="0.4" filter="url(#forest-b2)"/>
+  <path d="M536 210 Q544 360 532 500" fill="none" stroke="#7cb050" stroke-width="2.6" opacity="0.3" filter="url(#forest-b2)"/>
+
+  <!-- FÉNYNYALÁBOK a lombok között (jobb felülről) -->
+  <g filter="url(#forest-b12)" opacity="0.55">
+    <path d="M700 0 L760 0 L470 500 L360 500 Z" fill="url(#forest-beam)"/>
+    <path d="M560 0 L600 0 L400 500 L330 500 Z" fill="url(#forest-beam)" opacity="0.7"/>
+    <path d="M470 0 L496 0 L336 500 L292 500 Z" fill="url(#forest-beam)" opacity="0.5"/>
+  </g>
+
+  <!-- lebegő fényporszemek -->
+  <g fill="#e8f8c4" filter="url(#forest-b2)">
+    <circle cx="352" cy="196" r="2.6" opacity="0.8"/>
+    <circle cx="424" cy="164" r="2.1" opacity="0.7"/>
+    <circle cx="486" cy="236" r="3"   opacity="0.6"/>
+    <circle cx="306" cy="268" r="2.2" opacity="0.55"/>
+    <circle cx="520" cy="150" r="2"   opacity="0.65"/>
+    <circle cx="386" cy="252" r="1.8" opacity="0.5"/>
+    <circle cx="452" cy="300" r="2.4" opacity="0.45"/>
+    <circle cx="268" cy="196" r="1.9" opacity="0.5"/>
+  </g>
+
+  <!-- párafátyol a mélyben -->
+  <ellipse cx="420" cy="300" rx="200" ry="60" fill="#bfe08c" opacity="0.16" filter="url(#forest-b30)"/>
+
+  <!-- vignetta -->
+  <rect width="800" height="500" fill="url(#forest-vig)"/>
+</svg>

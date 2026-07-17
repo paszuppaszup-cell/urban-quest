@@ -1,0 +1,424 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <linearGradient id="romance-sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#050810"/>
+      <stop offset="35%" stop-color="#0a1020"/>
+      <stop offset="70%" stop-color="#101a30"/>
+      <stop offset="100%" stop-color="#070b16"/>
+    </linearGradient>
+
+    <linearGradient id="romance-wash" x1="0.1" y1="0" x2="0.9" y2="1">
+      <stop offset="0%" stop-color="#3a0f34" stop-opacity="0.55"/>
+      <stop offset="45%" stop-color="#7a1c46" stop-opacity="0.30"/>
+      <stop offset="100%" stop-color="#1a0a24" stop-opacity="0.60"/>
+    </linearGradient>
+
+    <radialGradient id="romance-corehalo" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0%" stop-color="#ffd9a0" stop-opacity="0.95"/>
+      <stop offset="25%" stop-color="#ffb768" stop-opacity="0.60"/>
+      <stop offset="55%" stop-color="#ff8a4d" stop-opacity="0.26"/>
+      <stop offset="80%" stop-color="#c94a68" stop-opacity="0.10"/>
+      <stop offset="100%" stop-color="#0a1020" stop-opacity="0"/>
+    </radialGradient>
+
+    <radialGradient id="romance-widehalo" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0%" stop-color="#ffb06a" stop-opacity="0.42"/>
+      <stop offset="40%" stop-color="#e0725f" stop-opacity="0.20"/>
+      <stop offset="75%" stop-color="#7a2a54" stop-opacity="0.08"/>
+      <stop offset="100%" stop-color="#0a1020" stop-opacity="0"/>
+    </radialGradient>
+
+    <radialGradient id="romance-bandglow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0%" stop-color="#ffa855" stop-opacity="0.30"/>
+      <stop offset="50%" stop-color="#b5506a" stop-opacity="0.12"/>
+      <stop offset="100%" stop-color="#0a1020" stop-opacity="0"/>
+    </radialGradient>
+
+    <radialGradient id="romance-bok-gold" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0%" stop-color="#ffd79a" stop-opacity="1"/>
+      <stop offset="55%" stop-color="#ffc46b" stop-opacity="0.85"/>
+      <stop offset="82%" stop-color="#ffb14f" stop-opacity="0.45"/>
+      <stop offset="100%" stop-color="#ffc46b" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="romance-bok-amber" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0%" stop-color="#ffc28c" stop-opacity="1"/>
+      <stop offset="55%" stop-color="#ff9a4d" stop-opacity="0.8"/>
+      <stop offset="83%" stop-color="#ef7a34" stop-opacity="0.40"/>
+      <stop offset="100%" stop-color="#ff9a4d" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="romance-bok-cyan" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0%" stop-color="#c3ecf7" stop-opacity="1"/>
+      <stop offset="55%" stop-color="#6fc7e0" stop-opacity="0.8"/>
+      <stop offset="84%" stop-color="#4a9fbe" stop-opacity="0.38"/>
+      <stop offset="100%" stop-color="#6fc7e0" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="romance-bok-rose" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0%" stop-color="#ffc0d1" stop-opacity="1"/>
+      <stop offset="55%" stop-color="#ff7a9c" stop-opacity="0.8"/>
+      <stop offset="84%" stop-color="#e0587e" stop-opacity="0.38"/>
+      <stop offset="100%" stop-color="#ff7a9c" stop-opacity="0"/>
+    </radialGradient>
+
+    <linearGradient id="romance-fog" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#2a1830" stop-opacity="0"/>
+      <stop offset="60%" stop-color="#4a2338" stop-opacity="0.30"/>
+      <stop offset="100%" stop-color="#120a18" stop-opacity="0.55"/>
+    </linearGradient>
+
+    <linearGradient id="romance-skyline-far" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#3b2a44" stop-opacity="0.55"/>
+      <stop offset="100%" stop-color="#241a30" stop-opacity="0.75"/>
+    </linearGradient>
+    <linearGradient id="romance-skyline-mid" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#241830" stop-opacity="0.85"/>
+      <stop offset="100%" stop-color="#120c1c" stop-opacity="0.95"/>
+    </linearGradient>
+
+    <linearGradient id="romance-figL" x1="0" y1="0" x2="1" y2="0.4">
+      <stop offset="0%" stop-color="#03040a"/>
+      <stop offset="70%" stop-color="#080a14"/>
+      <stop offset="100%" stop-color="#140f1c"/>
+    </linearGradient>
+    <linearGradient id="romance-figR" x1="1" y1="0" x2="0" y2="0.4">
+      <stop offset="0%" stop-color="#03040a"/>
+      <stop offset="70%" stop-color="#080a14"/>
+      <stop offset="100%" stop-color="#150e1a"/>
+    </linearGradient>
+
+    <linearGradient id="romance-rimL" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#ffb264" stop-opacity="0"/>
+      <stop offset="70%" stop-color="#ffc27a" stop-opacity="0.55"/>
+      <stop offset="100%" stop-color="#fff0d0" stop-opacity="0.95"/>
+    </linearGradient>
+    <linearGradient id="romance-rimR" x1="1" y1="0" x2="0" y2="0">
+      <stop offset="0%" stop-color="#ff9a7a" stop-opacity="0"/>
+      <stop offset="70%" stop-color="#ffb478" stop-opacity="0.55"/>
+      <stop offset="100%" stop-color="#ffe6c4" stop-opacity="0.95"/>
+    </linearGradient>
+
+    <radialGradient id="romance-vignette" cx="0.5" cy="0.52" r="0.72">
+      <stop offset="0%" stop-color="#000000" stop-opacity="0"/>
+      <stop offset="55%" stop-color="#000000" stop-opacity="0.05"/>
+      <stop offset="80%" stop-color="#04060e" stop-opacity="0.42"/>
+      <stop offset="100%" stop-color="#02030a" stop-opacity="0.85"/>
+    </radialGradient>
+
+    <linearGradient id="romance-bottom" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#04060e" stop-opacity="0"/>
+      <stop offset="100%" stop-color="#02030a" stop-opacity="0.9"/>
+    </linearGradient>
+
+    <filter id="romance-blurXS" x="-60%" y="-60%" width="220%" height="220%">
+      <feGaussianBlur stdDeviation="1.1"/>
+    </filter>
+    <filter id="romance-blurS" x="-60%" y="-60%" width="220%" height="220%">
+      <feGaussianBlur stdDeviation="2.6"/>
+    </filter>
+    <filter id="romance-blurM" x="-60%" y="-60%" width="220%" height="220%">
+      <feGaussianBlur stdDeviation="5"/>
+    </filter>
+    <filter id="romance-blurL" x="-60%" y="-60%" width="220%" height="220%">
+      <feGaussianBlur stdDeviation="9"/>
+    </filter>
+    <filter id="romance-blurXL" x="-60%" y="-60%" width="220%" height="220%">
+      <feGaussianBlur stdDeviation="18"/>
+    </filter>
+    <filter id="romance-blurSky" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="6"/>
+    </filter>
+    <filter id="romance-softrim" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="1.6"/>
+    </filter>
+
+    <filter id="romance-grain" x="0%" y="0%" width="100%" height="100%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="3" seed="7" result="romance-noise"/>
+      <feColorMatrix type="saturate" values="0" in="romance-noise" result="romance-noiseg"/>
+      <feColorMatrix in="romance-noiseg" type="matrix"
+        values="0 0 0 0 0.5  0 0 0 0 0.5  0 0 0 0 0.5  0.9 0 0 0 0"/>
+    </filter>
+  </defs>
+
+  <!-- BASE SKY -->
+  <rect x="0" y="0" width="800" height="500" fill="url(#romance-sky)"/>
+
+  <!-- deep glow band where the city sits -->
+  <ellipse cx="400" cy="250" rx="470" ry="150" fill="url(#romance-bandglow)"/>
+
+  <!-- LAYER 1: far skyline, heavily hazed -->
+  <g filter="url(#romance-blurSky)" opacity="0.5">
+    <path fill="url(#romance-skyline-far)" d="M0 300 L0 236 L26 236 L26 210 L52 210 L52 246 L84 246 L84 196 L104 196 L104 168 L120 168 L120 196 L146 196 L146 240 L176 240 L176 218 L206 218 L206 252 L236 252 L236 204 L254 204 L254 176 L272 176 L272 232 L306 232 L306 250 L340 250 L340 214 L366 214 L366 244 L400 244 L400 200 L420 200 L420 178 L438 178 L438 236 L470 236 L470 254 L500 254 L500 222 L530 222 L530 246 L560 246 L560 190 L580 190 L580 166 L598 166 L598 228 L630 228 L630 250 L662 250 L662 212 L692 212 L692 244 L724 244 L724 200 L748 200 L748 240 L776 240 L776 222 L800 222 L800 300 Z"/>
+  </g>
+
+  <!-- soft fog between far and mid -->
+  <rect x="0" y="180" width="800" height="160" fill="url(#romance-fog)" opacity="0.5"/>
+
+  <!-- LAYER 2: mid skyline silhouette (still soft) -->
+  <g filter="url(#romance-blurM)" opacity="0.85">
+    <path fill="url(#romance-skyline-mid)" d="M0 330 L0 268 L34 268 L34 248 L64 248 L64 282 L96 282 L96 236 L118 236 L118 214 L136 214 L136 262 L170 262 L170 288 L204 288 L204 254 L238 254 L238 276 L268 276 L268 240 L292 240 L292 266 L326 266 L326 290 L360 290 L360 258 L392 258 L392 232 L414 232 L414 262 L446 262 L446 288 L480 288 L480 250 L512 250 L512 274 L544 274 L544 242 L572 242 L572 218 L590 218 L590 268 L624 268 L624 290 L658 290 L658 256 L690 256 L690 280 L722 280 L722 246 L752 246 L752 272 L782 272 L782 258 L800 258 L800 330 Z"/>
+    <!-- a couple of tall towers for interest -->
+    <rect x="112" y="196" width="10" height="120" fill="#1c1428" opacity="0.9"/>
+    <rect x="578" y="200" width="9" height="116" fill="#1c1428" opacity="0.9"/>
+  </g>
+
+  <!-- BOKEH BAND: large soft dim circles (far) -->
+  <g filter="url(#romance-blurXL)" opacity="0.55">
+    <circle cx="92" cy="252" r="34" fill="url(#romance-bok-gold)" opacity="0.34"/>
+    <circle cx="188" cy="286" r="42" fill="url(#romance-bok-amber)" opacity="0.28"/>
+    <circle cx="308" cy="238" r="38" fill="url(#romance-bok-gold)" opacity="0.30"/>
+    <circle cx="470" cy="230" r="44" fill="url(#romance-bok-amber)" opacity="0.26"/>
+    <circle cx="612" cy="276" r="40" fill="url(#romance-bok-gold)" opacity="0.32"/>
+    <circle cx="720" cy="240" r="36" fill="url(#romance-bok-rose)" opacity="0.24"/>
+    <circle cx="392" cy="300" r="46" fill="url(#romance-bok-amber)" opacity="0.22"/>
+    <circle cx="30" cy="300" r="38" fill="url(#romance-bok-cyan)" opacity="0.18"/>
+    <circle cx="778" cy="300" r="38" fill="url(#romance-bok-cyan)" opacity="0.16"/>
+  </g>
+
+  <!-- BOKEH BAND: medium circles -->
+  <g filter="url(#romance-blurL)" opacity="0.8">
+    <circle cx="58" cy="224" r="21" fill="url(#romance-bok-gold)" opacity="0.55"/>
+    <circle cx="126" cy="268" r="24" fill="url(#romance-bok-amber)" opacity="0.48"/>
+    <circle cx="164" cy="212" r="18" fill="url(#romance-bok-gold)" opacity="0.60"/>
+    <circle cx="228" cy="248" r="26" fill="url(#romance-bok-gold)" opacity="0.42"/>
+    <circle cx="268" cy="298" r="20" fill="url(#romance-bok-rose)" opacity="0.45"/>
+    <circle cx="344" cy="266" r="23" fill="url(#romance-bok-amber)" opacity="0.40"/>
+    <circle cx="424" cy="252" r="19" fill="url(#romance-bok-gold)" opacity="0.52"/>
+    <circle cx="514" cy="284" r="25" fill="url(#romance-bok-amber)" opacity="0.44"/>
+    <circle cx="552" cy="226" r="18" fill="url(#romance-bok-cyan)" opacity="0.42"/>
+    <circle cx="596" cy="256" r="22" fill="url(#romance-bok-gold)" opacity="0.50"/>
+    <circle cx="660" cy="216" r="20" fill="url(#romance-bok-rose)" opacity="0.40"/>
+    <circle cx="690" cy="292" r="24" fill="url(#romance-bok-amber)" opacity="0.42"/>
+    <circle cx="756" cy="256" r="19" fill="url(#romance-bok-gold)" opacity="0.50"/>
+    <circle cx="18" cy="268" r="20" fill="url(#romance-bok-amber)" opacity="0.40"/>
+    <circle cx="474" cy="308" r="21" fill="url(#romance-bok-gold)" opacity="0.36"/>
+    <circle cx="736" cy="196" r="17" fill="url(#romance-bok-gold)" opacity="0.38"/>
+    <circle cx="80" cy="196" r="16" fill="url(#romance-bok-cyan)" opacity="0.34"/>
+  </g>
+
+  <!-- BOKEH BAND: small brighter points -->
+  <g filter="url(#romance-blurS)" opacity="0.95">
+    <circle cx="42" cy="248" r="7" fill="url(#romance-bok-gold)" opacity="0.9"/>
+    <circle cx="72" cy="278" r="5" fill="url(#romance-bok-amber)" opacity="0.85"/>
+    <circle cx="104" cy="230" r="8" fill="url(#romance-bok-gold)" opacity="0.8"/>
+    <circle cx="140" cy="298" r="6" fill="url(#romance-bok-gold)" opacity="0.75"/>
+    <circle cx="150" cy="244" r="4.5" fill="url(#romance-bok-rose)" opacity="0.9"/>
+    <circle cx="196" cy="222" r="7" fill="url(#romance-bok-gold)" opacity="0.85"/>
+    <circle cx="212" cy="304" r="5" fill="url(#romance-bok-amber)" opacity="0.7"/>
+    <circle cx="252" cy="264" r="8" fill="url(#romance-bok-gold)" opacity="0.8"/>
+    <circle cx="288" cy="226" r="5" fill="url(#romance-bok-cyan)" opacity="0.8"/>
+    <circle cx="300" cy="292" r="6.5" fill="url(#romance-bok-amber)" opacity="0.7"/>
+    <circle cx="330" cy="240" r="4.5" fill="url(#romance-bok-gold)" opacity="0.9"/>
+    <circle cx="366" cy="288" r="7" fill="url(#romance-bok-gold)" opacity="0.65"/>
+    <circle cx="404" cy="234" r="5.5" fill="url(#romance-bok-amber)" opacity="0.8"/>
+    <circle cx="444" cy="276" r="6" fill="url(#romance-bok-gold)" opacity="0.7"/>
+    <circle cx="488" cy="242" r="4.5" fill="url(#romance-bok-rose)" opacity="0.85"/>
+    <circle cx="530" cy="256" r="7.5" fill="url(#romance-bok-gold)" opacity="0.8"/>
+    <circle cx="566" cy="296" r="5" fill="url(#romance-bok-amber)" opacity="0.7"/>
+    <circle cx="580" cy="238" r="6" fill="url(#romance-bok-gold)" opacity="0.85"/>
+    <circle cx="626" cy="228" r="4.5" fill="url(#romance-bok-cyan)" opacity="0.8"/>
+    <circle cx="640" cy="278" r="7" fill="url(#romance-bok-gold)" opacity="0.75"/>
+    <circle cx="674" cy="248" r="5.5" fill="url(#romance-bok-amber)" opacity="0.85"/>
+    <circle cx="710" cy="266" r="6.5" fill="url(#romance-bok-gold)" opacity="0.8"/>
+    <circle cx="744" cy="228" r="5" fill="url(#romance-bok-rose)" opacity="0.75"/>
+    <circle cx="770" cy="278" r="7" fill="url(#romance-bok-gold)" opacity="0.7"/>
+    <circle cx="24" cy="216" r="5" fill="url(#romance-bok-gold)" opacity="0.7"/>
+    <circle cx="784" cy="234" r="5.5" fill="url(#romance-bok-amber)" opacity="0.7"/>
+    <circle cx="118" cy="192" r="4" fill="url(#romance-bok-gold)" opacity="0.6"/>
+    <circle cx="352" cy="200" r="4" fill="url(#romance-bok-amber)" opacity="0.5"/>
+    <circle cx="462" cy="196" r="4.5" fill="url(#romance-bok-gold)" opacity="0.5"/>
+    <circle cx="606" cy="192" r="4" fill="url(#romance-bok-rose)" opacity="0.45"/>
+    <circle cx="240" cy="196" r="4" fill="url(#romance-bok-cyan)" opacity="0.45"/>
+  </g>
+
+  <!-- tiny sharp sparkles -->
+  <g filter="url(#romance-blurXS)" opacity="0.9">
+    <circle cx="62" cy="262" r="2.2" fill="#ffe6b8"/>
+    <circle cx="132" cy="252" r="2" fill="#ffd79a"/>
+    <circle cx="180" cy="272" r="2.4" fill="#ffd79a"/>
+    <circle cx="232" cy="230" r="1.8" fill="#ffc0d1"/>
+    <circle cx="278" cy="252" r="2.2" fill="#ffe6b8"/>
+    <circle cx="322" cy="298" r="2" fill="#ffd79a"/>
+    <circle cx="380" cy="252" r="1.8" fill="#ffe6b8"/>
+    <circle cx="430" cy="296" r="2.2" fill="#ffd79a"/>
+    <circle cx="496" cy="266" r="2" fill="#ffe6b8"/>
+    <circle cx="548" cy="272" r="2.3" fill="#ffd79a"/>
+    <circle cx="600" cy="300" r="2" fill="#ffc0d1"/>
+    <circle cx="656" cy="262" r="2.2" fill="#ffe6b8"/>
+    <circle cx="702" cy="228" r="1.9" fill="#c3ecf7"/>
+    <circle cx="758" cy="296" r="2.2" fill="#ffd79a"/>
+    <circle cx="90" cy="300" r="2" fill="#ffd79a"/>
+    <circle cx="418" cy="216" r="1.6" fill="#ffe6b8"/>
+    <circle cx="512" cy="212" r="1.6" fill="#ffd79a"/>
+  </g>
+
+  <!-- haze rect over the city band (pushes it back) -->
+  <rect x="0" y="170" width="800" height="200" fill="#2a1230" opacity="0.16"/>
+
+  <!-- LAYER 3: near-black defocused foreground buildings at the edges -->
+  <g filter="url(#romance-blurL)" opacity="0.92">
+    <path fill="#05060e" d="M0 500 L0 268 L58 268 L58 240 L96 240 L96 500 Z"/>
+    <path fill="#05060e" d="M800 500 L800 256 L742 256 L742 228 L700 228 L700 500 Z"/>
+  </g>
+  <g filter="url(#romance-blurXL)" opacity="0.7">
+    <path fill="#04050c" d="M0 500 L0 330 L44 330 L44 500 Z"/>
+    <path fill="#04050c" d="M800 500 L800 320 L756 320 L756 500 Z"/>
+  </g>
+
+  <!-- WARM HALO behind and between the two heads -->
+  <g>
+    <ellipse cx="400" cy="300" rx="300" ry="180" fill="url(#romance-widehalo)"/>
+    <ellipse cx="400" cy="292" rx="150" ry="118" fill="url(#romance-corehalo)" opacity="0.85"/>
+    <ellipse cx="400" cy="286" rx="62" ry="72" fill="url(#romance-corehalo)" opacity="0.75" filter="url(#romance-blurL)"/>
+    <ellipse cx="400" cy="300" rx="26" ry="46" fill="#ffe0b0" opacity="0.30" filter="url(#romance-blurL)"/>
+  </g>
+
+  <!-- ============ SUBJECT: COUPLE SILHOUETTE ============ -->
+
+  <!-- soft dark bloom under the couple, grounding them -->
+  <ellipse cx="400" cy="470" rx="330" ry="110" fill="#03040a" opacity="0.75" filter="url(#romance-blurXL)"/>
+
+  <!-- LEFT FIGURE (slightly taller, short hair, facing right) -->
+  <g>
+    <!-- rim light glow behind left head edge -->
+    <path filter="url(#romance-blurM)" opacity="0.5" fill="#ffb264"
+      d="M298 246 C300 208 328 184 360 186 C388 188 404 210 404 240 C404 262 396 276 388 288 L378 300 L300 300 Z"/>
+
+    <path fill="url(#romance-figL)" d="
+      M262 500
+      L262 430
+      C262 396 280 372 310 358
+      C324 351 336 346 344 340
+      C350 336 353 330 353 322
+      L353 306
+      C338 296 328 278 325 256
+      C318 254 314 246 315 238
+      C316 231 320 228 325 229
+      C324 208 330 190 346 178
+      C362 166 386 165 402 176
+      C414 184 421 197 423 213
+      C424 224 423 236 420 246
+      C418 253 415 258 412 262
+      C410 266 409 271 410 276
+      L414 288
+      C416 293 414 297 409 298
+      L400 300
+      C398 308 396 314 393 320
+      C389 328 383 333 375 336
+      C374 344 376 350 382 355
+      C392 363 404 370 414 378
+      C430 391 438 409 438 432
+      L438 500
+      Z"/>
+
+    <!-- rim light on the face profile (right-facing edge) -->
+    <g filter="url(#romance-softrim)" opacity="0.9">
+      <path fill="none" stroke="url(#romance-rimL)" stroke-width="3.2" stroke-linecap="round" d="
+        M340 176
+        C368 166 400 178 412 204
+        C420 221 421 240 415 258
+        C412 267 409 272 410 278
+        L414 289
+        C416 294 413 297 409 298
+        L400 300
+        C398 309 395 316 391 322
+        C386 330 380 334 374 336"/>
+      <path fill="none" stroke="url(#romance-rimL)" stroke-width="2.2" stroke-linecap="round" opacity="0.8" d="
+        M377 340
+        C376 350 382 357 392 363
+        C406 372 420 382 428 396"/>
+    </g>
+    <!-- shoulder rim -->
+    <path filter="url(#romance-softrim)" opacity="0.55" fill="none" stroke="#ffb872" stroke-width="2.4" stroke-linecap="round"
+      d="M430 402 C436 414 438 424 438 438 L438 470"/>
+  </g>
+
+  <!-- RIGHT FIGURE (longer hair, facing left) -->
+  <g>
+    <!-- rim glow behind right head edge -->
+    <path filter="url(#romance-blurM)" opacity="0.5" fill="#ff9a6a"
+      d="M420 254 C420 216 444 190 476 190 C508 190 528 214 528 250 C528 272 522 288 514 300 L430 300 Z"/>
+
+    <path fill="url(#romance-figR)" d="
+      M540 500
+      L540 436
+      C540 404 528 380 508 366
+      C508 356 508 348 509 340
+      C512 328 518 316 522 302
+      C528 282 530 262 528 244
+      C526 216 512 196 490 190
+      C470 185 450 191 438 206
+      C428 218 424 234 425 250
+      C426 262 429 272 433 280
+      C434 284 434 288 432 291
+      L428 298
+      C426 302 428 306 432 306
+      L440 306
+      C441 314 444 320 448 326
+      C453 333 459 337 465 340
+      L465 352
+      C465 360 461 366 452 371
+      C436 380 424 388 414 400
+      C402 414 396 432 396 452
+      L396 500
+      Z"/>
+
+    <!-- long hair mass falling behind -->
+    <path fill="#05060e" opacity="0.98" d="
+      M528 236
+      C536 246 542 262 544 282
+      C547 310 546 338 540 364
+      C536 382 532 398 530 414
+      C548 408 562 396 570 382
+      C574 400 570 420 558 436
+      C548 450 534 458 518 462
+      C508 464 500 462 498 456
+      C494 442 500 420 506 396
+      C514 364 518 330 516 300
+      C514 276 512 256 512 240
+      Z"/>
+    <!-- hair strand highlight -->
+    <path filter="url(#romance-softrim)" opacity="0.35" fill="none" stroke="#c96f70" stroke-width="2.4" stroke-linecap="round"
+      d="M534 258 C544 292 546 336 536 380 C531 402 525 424 522 444"/>
+
+    <!-- rim light on the right face profile (left-facing edge) -->
+    <g filter="url(#romance-softrim)" opacity="0.9">
+      <path fill="none" stroke="url(#romance-rimR)" stroke-width="3.2" stroke-linecap="round" d="
+        M498 192
+        C470 184 442 198 432 224
+        C426 240 425 258 431 276
+        C434 284 435 288 433 292
+        L428 299
+        C426 303 428 306 432 306
+        L440 306
+        C441 315 444 321 448 327
+        C452 333 458 337 464 340"/>
+      <path fill="none" stroke="url(#romance-rimR)" stroke-width="2.2" stroke-linecap="round" opacity="0.75" d="
+        M465 346
+        C464 358 456 366 444 373
+        C428 382 415 392 406 404"/>
+    </g>
+    <!-- shoulder rim -->
+    <path filter="url(#romance-softrim)" opacity="0.5" fill="none" stroke="#ff9d68" stroke-width="2.4" stroke-linecap="round"
+      d="M402 412 C398 424 396 436 396 448 L396 476"/>
+  </g>
+
+  <!-- warm light leaking through the gap between faces -->
+  <g filter="url(#romance-blurM)" opacity="0.55">
+    <ellipse cx="418" cy="268" rx="7" ry="30" fill="#ffd9a0"/>
+    <ellipse cx="419" cy="238" rx="9" ry="16" fill="#ffc07a" opacity="0.7"/>
+  </g>
+
+  <!-- FOREGROUND: near-black bottom mass -->
+  <rect x="0" y="400" width="800" height="100" fill="url(#romance-bottom)"/>
+
+  <!-- deep magenta/rose wash across the whole frame -->
+  <rect x="0" y="0" width="800" height="500" fill="url(#romance-wash)" opacity="0.45"/>
+
+  <!-- top darkening for cinematic weight -->
+  <rect x="0" y="0" width="800" height="150" fill="#04060e" opacity="0.35"/>
+
+  <!-- vignette -->
+  <rect x="0" y="0" width="800" height="500" fill="url(#romance-vignette)"/>
+
+  <!-- film grain -->
+  <rect x="0" y="0" width="800" height="500" filter="url(#romance-grain)" opacity="0.11" style="mix-blend-mode:overlay"/>
+</svg>

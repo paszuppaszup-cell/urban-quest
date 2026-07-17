@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<title>Mobil előnézet – Urban Quest</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600..900&family=Inter:wght@400..700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0a0d0a; --panel:#12160f; --panel-2:#0f130d; --line:#232a1e; --line-soft:#1b2117;
+    --text:#f1f4ec; --text-2:#b9c2b1; --muted:#8b957f; --lime:#9ed52b; --lime-2:#b3e156;
+    --f-disp:'Archivo','Arial Narrow',system-ui,sans-serif; --f-body:'Inter',system-ui,sans-serif;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:var(--f-body);display:flex;flex-direction:column;overflow:hidden}
+  ::selection{background:var(--lime);color:#0a0d0a}
+  :focus-visible{outline:2px solid var(--lime);outline-offset:2px}
+  button{font-family:inherit}
+
+  /* ---------- felső vezérlősáv ---------- */
+  .bar{flex:none;display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:11px 18px;border-bottom:1px solid var(--line);background:var(--panel-2);z-index:10}
+  .brand{display:flex;align-items:center;gap:11px;flex:none}
+  .brand svg{width:34px;height:34px;color:var(--lime)}
+  .brand b{font-family:var(--f-disp);font-weight:800;font-size:15px;letter-spacing:.01em}
+  .brand span{display:block;font-size:10px;color:var(--muted);letter-spacing:.12em;text-transform:uppercase;margin-top:1px}
+  .bar-sp{flex:1}
+
+  .group{display:flex;align-items:center;gap:8px}
+  .lbl{font-size:10.5px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--muted)}
+
+  .seg{display:inline-flex;gap:3px;padding:3px;border:1px solid var(--line);border-radius:10px;background:rgb(255 255 255 / .03)}
+  .seg button{border:0;background:none;color:var(--muted);font-size:12.5px;font-weight:600;padding:6px 14px;border-radius:7px;cursor:pointer;transition:.14s}
+  .seg button:hover{color:var(--text-2)}
+  .seg button.on{background:var(--lime);color:#0a0d0a}
+
+  .sel{position:relative;display:inline-flex;align-items:center}
+  .sel select{appearance:none;cursor:pointer;height:36px;padding:0 34px 0 13px;border-radius:9px;border:1px solid var(--line);background:var(--panel);color:var(--text);font-family:var(--f-body);font-size:12.5px;font-weight:600;max-width:230px;text-overflow:ellipsis}
+  .sel select:disabled{opacity:.4;cursor:not-allowed}
+  .sel svg{position:absolute;right:11px;width:13px;height:13px;color:var(--muted);pointer-events:none;stroke:currentColor;fill:none;stroke-width:2}
+
+  .iconbtn{width:36px;height:36px;flex:none;display:grid;place-items:center;border:1px solid var(--line);border-radius:9px;background:rgb(255 255 255 / .03);color:var(--text-2);cursor:pointer;transition:.14s}
+  .iconbtn:hover{color:#fff;border-color:rgb(158 213 43 / .4);background:rgb(158 213 43 / .07)}
+  .iconbtn svg{width:17px;height:17px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+  .iconbtn.on{color:var(--lime);border-color:rgb(158 213 43 / .5);background:rgb(158 213 43 / .1)}
+
+  .readout{font-size:11.5px;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
+  .readout b{color:var(--text)}
+
+  /* ---------- színpad + telefon ---------- */
+  .stage{flex:1;position:relative;display:grid;place-items:center;overflow:hidden;
+    background:radial-gradient(120% 100% at 50% 0%,rgb(158 213 43 / .05),transparent 55%),#080a08}
+  .urlbar{position:absolute;top:14px;left:50%;transform:translateX(-50%);display:inline-flex;align-items:center;gap:8px;
+    max-width:min(560px,86vw);padding:7px 14px;border:1px solid var(--line);border-radius:99px;background:rgb(10 13 10 / .7);
+    backdrop-filter:blur(6px);font-size:11.5px;color:var(--text-2);z-index:5}
+  .urlbar svg{width:13px;height:13px;color:var(--lime);flex:none;stroke:currentColor;fill:none;stroke-width:2}
+  .urlbar span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+  .scale{transition:transform .18s ease}
+  .phone{position:relative;background:linear-gradient(160deg,#181c15,#0b0d0a);border-radius:52px;padding:15px;
+    border:1px solid #2c3227;box-shadow:0 2px 0 rgba(255,255,255,.04) inset,0 40px 90px rgba(0,0,0,.6),0 0 0 2px #000}
+  .screen{position:relative;border-radius:38px;overflow:hidden;background:#000;
+    width:var(--w,390px);height:var(--h,844px);box-shadow:0 0 0 3px #060706 inset}
+  .screen iframe{width:100%;height:100%;border:0;display:block;background:var(--bg)}
+
+  .island{position:absolute;top:11px;left:50%;transform:translateX(-50%);width:104px;height:29px;background:#000;
+    border-radius:99px;z-index:3;pointer-events:none;box-shadow:0 0 0 1px rgb(255 255 255 / .04)}
+  .island::after{content:"";position:absolute;right:16px;top:50%;transform:translateY(-50%);width:7px;height:7px;border-radius:50%;
+    background:#10140d;box-shadow:0 0 0 1px rgb(255 255 255 / .06)}
+  .homebar{position:absolute;bottom:8px;left:50%;transform:translateX(-50%);width:36%;height:5px;border-radius:99px;
+    background:rgb(255 255 255 / .5);z-index:3;pointer-events:none}
+  .phone.landscape .island,.phone.landscape .homebar{display:none}
+
+  .stage-hint{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);font-size:11px;color:var(--muted);z-index:4}
+
+  @media (max-width:720px){
+    .bar{gap:9px;padding:9px 12px}
+    .brand span{display:none}
+    .readout{display:none}
+  }
+</style>
+</head>
+<body>
+
+<div class="bar">
+  <a class="brand" href="iranyitopult.html" title="Vissza az adminba">
+    <svg viewBox="0 0 64 64" aria-hidden="true">
+      <circle cx="32" cy="32" r="29.5" fill="none" stroke="currentColor" stroke-width="2.4"/>
+      <circle cx="32" cy="32" r="24.5" fill="none" stroke="currentColor" stroke-width="1" opacity=".55"/>
+      <path d="M32 7 36 28 57 32 36 36 32 57 28 36 7 32 28 28z" fill="currentColor"/>
+      <circle cx="32" cy="32" r="3.2" fill="#0a0d0a"/>
+    </svg>
+    <span class="brand-txt"><b>Mobil előnézet</b><span>Urban Quest</span></span>
+  </a>
+
+  <div class="bar-sp"></div>
+
+  <div class="group">
+    <span class="lbl">Oldal</span>
+    <div class="seg" id="pageSeg">
+      <button type="button" data-page="home" class="on">Főoldal</button>
+      <button type="button" data-page="detail">Részletoldal</button>
+    </div>
+  </div>
+
+  <div class="group" id="gameGroup">
+    <span class="lbl">Játék</span>
+    <div class="sel">
+      <select id="gameSel" disabled aria-label="Játék kiválasztása"></select>
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+    </div>
+  </div>
+
+  <div class="group">
+    <span class="lbl">Eszköz</span>
+    <div class="sel">
+      <select id="deviceSel" aria-label="Eszköz kiválasztása"></select>
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+    </div>
+  </div>
+
+  <div class="group">
+    <button class="iconbtn" id="rotateBtn" type="button" title="Forgatás (álló/fekvő)" aria-label="Forgatás">
+      <svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/><path d="M3 21v-5h5"/></svg>
+    </button>
+    <button class="iconbtn" id="reloadBtn" type="button" title="Újratöltés" aria-label="Újratöltés">
+      <svg viewBox="0 0 24 24"><path d="M20 12a8 8 0 1 1-2.3-5.6"/><path d="M20 4v4h-4"/></svg>
+    </button>
+    <button class="iconbtn" id="openBtn" type="button" title="Megnyitás új lapon" aria-label="Megnyitás új lapon">
+      <svg viewBox="0 0 24 24"><path d="M14 4h6v6"/><path d="M20 4 10 14"/><path d="M20 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h5"/></svg>
+    </button>
+  </div>
+
+  <span class="readout" id="readout">—</span>
+</div>
+
+<div class="stage" id="stage">
+  <div class="urlbar"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="11" width="16" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg><span id="urlText">index.html</span></div>
+  <div class="scale" id="scale">
+    <div class="phone" id="phone">
+      <div class="screen" id="screen">
+        <iframe id="frame" title="Előnézet" src="index.html"></iframe>
+      </div>
+      <div class="island"></div>
+      <div class="homebar"></div>
+    </div>
+  </div>
+  <div class="stage-hint">Élő előnézet a valódi oldalról · a méret/forgatás azonnal frissül</div>
+</div>
+
+<script src="data.js?v=6"></script>
+<script>
+(function(){
+  'use strict';
+  var DEVICES = [
+    { key:'se',    name:'iPhone SE',        w:375, h:667 },
+    { key:'i14',   name:'iPhone 14',        w:390, h:844 },
+    { key:'max',   name:'iPhone 15 Pro Max',w:430, h:932 },
+    { key:'pixel', name:'Pixel 7',          w:412, h:915 }
+  ];
+  var state = { page:'home', game:null, device:'i14', landscape:false };
+
+  var frame   = document.getElementById('frame');
+  var screen  = document.getElementById('screen');
+  var phone   = document.getElementById('phone');
+  var scaleEl = document.getElementById('scale');
+  var stage   = document.getElementById('stage');
+  var readout = document.getElementById('readout');
+  var urlText = document.getElementById('urlText');
+  var gameSel = document.getElementById('gameSel');
+  var deviceSel = document.getElementById('deviceSel');
+  var pageSeg = document.getElementById('pageSeg');
+
+  /* --- eszköz-lista feltöltése --- */
+  DEVICES.forEach(function(d){
+    var o = document.createElement('option'); o.value = d.key; o.textContent = d.name + ' · ' + d.w + '×' + d.h;
+    deviceSel.appendChild(o);
+  });
+  deviceSel.value = state.device;
+
+  /* --- játék-lista a data.js-ből (statikus + közzétett admin játékok) --- */
+  function fillGames(){
+    var order = (window.QUEST_ORDER || []).slice();
+    var quests = window.QUESTS || {};
+    gameSel.innerHTML = '';
+    order.forEach(function(id){
+      var q = quests[id]; if(!q) return;
+      var o = document.createElement('option'); o.value = id;
+      o.textContent = (q.isAdmin ? '★ ' : '') + (q.title || id);
+      gameSel.appendChild(o);
+    });
+    if(order.length){ state.game = order[0]; gameSel.value = order[0]; }
+  }
+  fillGames();
+
+  function device(){ return DEVICES.filter(function(d){return d.key===state.device;})[0] || DEVICES[1]; }
+  function currentSrc(){
+    if(state.page === 'home' || !state.game) return 'index.html';
+    return 'kuldetes.html?id=' + encodeURIComponent(state.game);
+  }
+
+  var lastSrc = '';
+  function applyPage(){
+    var src = currentSrc();
+    gameSel.disabled = (state.page !== 'detail');
+    urlText.textContent = src;
+    if(src !== lastSrc){ lastSrc = src; frame.src = src; }
+  }
+
+  function applyDevice(){
+    var d = device();
+    var w = state.landscape ? d.h : d.w;
+    var h = state.landscape ? d.w : d.h;
+    screen.style.setProperty('--w', w + 'px');
+    screen.style.setProperty('--h', h + 'px');
+    phone.classList.toggle('landscape', state.landscape);
+    readout.innerHTML = '<b>' + d.name + '</b> · ' + w + ' × ' + h + (state.landscape ? ' · fekvő' : ' · álló');
+    fit();
+  }
+
+  function fit(){
+    // nullázás, hogy a keret valódi (nem skálázott) méretét mérjük
+    scaleEl.style.transform = 'none';
+    scaleEl.style.width = '';
+    scaleEl.style.height = '';
+    var w = phone.offsetWidth, h = phone.offsetHeight;
+    if(!w || !h) return;
+    var availH = stage.clientHeight - 84;   // hely az url-sávnak és a láblécnek
+    var availW = stage.clientWidth - 32;
+    var s = Math.min(1, availH / h, availW / w);
+    if(!isFinite(s) || s <= 0) s = 1;
+    // a skálázott doboz LAYOUT mérete is akkora legyen, hogy a rács jól középre tegye
+    scaleEl.style.transformOrigin = 'top left';
+    scaleEl.style.transform = 'scale(' + s.toFixed(4) + ')';
+    scaleEl.style.width = Math.round(w * s) + 'px';
+    scaleEl.style.height = Math.round(h * s) + 'px';
+  }
+
+  /* --- események --- */
+  pageSeg.addEventListener('click', function(e){
+    var b = e.target.closest('button[data-page]'); if(!b) return;
+    state.page = b.dataset.page;
+    Array.prototype.forEach.call(pageSeg.querySelectorAll('button'), function(x){ x.classList.toggle('on', x===b); });
+    applyPage();
+  });
+  gameSel.addEventListener('change', function(){ state.game = gameSel.value; if(state.page==='detail'){ lastSrc=''; applyPage(); } });
+  deviceSel.addEventListener('change', function(){ state.device = deviceSel.value; applyDevice(); });
+  document.getElementById('rotateBtn').addEventListener('click', function(){ state.landscape = !state.landscape; this.classList.toggle('on', state.landscape); applyDevice(); });
+  document.getElementById('reloadBtn').addEventListener('click', function(){ try{ frame.contentWindow.location.reload(); }catch(e){ frame.src = frame.src; } });
+  document.getElementById('openBtn').addEventListener('click', function(){ window.open(currentSrc(), '_blank'); });
+
+  window.addEventListener('resize', fit);
+
+  /* --- indítás --- */
+  applyPage();
+  applyDevice();
+  window.setTimeout(fit, 60);
+})();
+</script>
+</body>
+</html>

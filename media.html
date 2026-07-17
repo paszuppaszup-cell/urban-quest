@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta name="description" content="Urban Quest admin – médiatár kezelése: képek, videók és hangfájlok.">
+<title>Admin – Média | Urban Quest</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&family=Inter:wght@400..700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css?v=5">
+<link rel="stylesheet" href="admin.css?v=7">
+<link rel="stylesheet" href="media.css?v=3">
+</head>
+<body class="admin-body">
+
+<svg class="sprite" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <g id="a-search"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.5 15.5 4 4"/></g>
+    <g id="a-eye"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3.2"/></g>
+    <g id="a-save"><path d="M5 3h11l3 3v15H5z"/><path d="M8 3v5h7V3M8 21v-6h8v6"/></g>
+    <g id="a-folder"><path d="M3 6.5h6l2 2.5h10V19H3z"/></g>
+    <g id="a-send"><path d="M21.5 3 11 13.5M21.5 3 15 21l-3.8-7.2L4 10z"/></g>
+    <g id="a-check-c"><circle cx="12" cy="12" r="9"/><path d="m8.3 12.2 2.4 2.4 5-5.2"/></g>
+    <g id="a-check"><path d="m5 12.5 4.5 4.5L19 7"/></g>
+    <g id="a-down"><path d="m6 9 6 6 6-6"/></g>
+    <g id="a-collapse"><path d="m15 6-6 6 6 6"/><path d="M9 6 3 12l6 6" opacity=".5"/></g>
+    <g id="a-menu"><path d="M4 7h16M4 12h16M4 17h16"/></g>
+    <g id="a-logout"><path d="M14 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8"/><path d="M18 15l3-3-3-3M21 12H9"/></g>
+    <g id="a-home"><path d="M4 11 12 4l8 7"/><path d="M6 10v10h5v-6h2v6h5V10"/></g>
+    <g id="a-route"><circle cx="6" cy="18" r="2.5"/><circle cx="18" cy="6" r="2.5"/><path d="M8.5 18H14a3.5 3.5 0 0 0 0-7H9a3.5 3.5 0 0 1 0-7h6.5"/></g>
+    <g id="a-game"><rect x="2.5" y="7" width="19" height="10" rx="4"/><path d="M7 11v3M5.5 12.5h3"/><circle cx="16" cy="11.5" r="1"/><circle cx="18" cy="13.5" r="1"/></g>
+    <g id="a-pin"><path d="M12 21s6.5-5.6 6.5-10.3A6.5 6.5 0 0 0 5.5 10.7C5.5 15.4 12 21 12 21z"/><circle cx="12" cy="10.5" r="2.4"/></g>
+    <g id="a-task"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 3.5h6v3H9zM8.5 11l1.5 1.5 3-3M8.5 16l1.5 1.5 3-3"/></g>
+    <g id="a-image"><rect x="3.5" y="5" width="17" height="14" rx="2"/><circle cx="8.5" cy="10" r="1.6"/><path d="m5 17 4.5-4 3 2.5L16 11l3.5 4"/></g>
+    <g id="a-clock"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 1.8"/></g>
+    <g id="a-users"><circle cx="9" cy="8" r="3"/><path d="M3 20v-1a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v1"/><path d="M16.5 5.4a3 3 0 0 1 0 5.2M17.5 15.2A4 4 0 0 1 21 19v1"/></g>
+    <g id="a-gear"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 12a7.4 7.4 0 0 0-.1-1.2l2-1.6-2-3.4-2.4 1a7.3 7.3 0 0 0-2-1.2l-.4-2.6H9.5l-.4 2.6a7.3 7.3 0 0 0-2 1.2l-2.4-1-2 3.4 2 1.6a7.4 7.4 0 0 0 0 2.4l-2 1.6 2 3.4 2.4-1a7.3 7.3 0 0 0 2 1.2l.4 2.6h4.9l.4-2.6a7.3 7.3 0 0 0 2-1.2l2.4 1 2-3.4-2-1.6c.06-.4.1-.8.1-1.2z"/></g>
+    <g id="a-plus"><path d="M12 5v14M5 12h14"/></g>
+    <g id="a-edit"><path d="M4 20.5h4L19 9.5a2 2 0 0 0-2.8-2.8L5.2 17.5z"/><path d="m14.5 8 2.5 2.5"/></g>
+    <g id="a-copy"><rect x="8.5" y="8.5" width="11" height="11" rx="2.2"/><path d="M4.5 15.5V6a1.5 1.5 0 0 1 1.5-1.5h9.5"/></g>
+    <g id="a-target"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="1"/></g>
+    <g id="a-close"><path d="M6 6l12 12M18 6 6 18"/></g>
+    <g id="a-upload"><path d="M12 16V4M7 9l5-5 5 5"/><path d="M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3"/></g>
+    <g id="a-download"><path d="M12 4v12M7 11l5 5 5-5"/><path d="M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3"/></g>
+    <g id="a-filter"><path d="M3 5h18l-7 8v6l-4 2v-8z"/></g>
+    <g id="a-video"><rect x="3" y="6" width="12" height="12" rx="2.4"/><path d="m15 10 5.5-3v10L15 14z"/></g>
+    <g id="a-audio"><path d="M4 9v6h4l5 4V5L8 9z"/><path d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8 8 0 0 1 0 12"/></g>
+    <g id="a-trash"><path d="M4 7h16M9 7V4.5h6V7M6 7l1 13h10l1-13"/><path d="M10 11v6M14 11v6"/></g>
+    <g id="a-swap"><path d="M4 8h13l-3-3M20 16H7l3 3"/></g>
+  </defs>
+  <symbol id="f-hu" viewBox="0 0 18 12"><rect width="18" height="4" fill="#cd2a3e"/><rect y="4" width="18" height="4" fill="#fff"/><rect y="8" width="18" height="4" fill="#436f4d"/></symbol>
+  <symbol id="a-logo" viewBox="0 0 64 64">
+    <circle cx="32" cy="32" r="29.5" fill="none" stroke="currentColor" stroke-width="2.4"/>
+    <circle cx="32" cy="32" r="24.5" fill="none" stroke="currentColor" stroke-width="1" opacity=".55"/>
+    <g stroke="currentColor" stroke-width="1.6" opacity=".75"><path d="M32 2.5v5M32 56.5v5M2.5 32h5M56.5 32h5"/></g>
+    <path d="M32 7 36 28 57 32 36 36 32 57 28 36 7 32 28 28z" fill="currentColor"/>
+    <path d="M32 32 44.5 19.5 38.5 38.5 19.5 44.5z" fill="currentColor" opacity=".38"/>
+    <circle cx="32" cy="32" r="3.4" fill="#0a0d0a"/><circle cx="32" cy="32" r="1.7" fill="currentColor"/>
+  </symbol>
+  <symbol id="ava" viewBox="0 0 64 64">
+    <rect width="64" height="64" fill="#2f4a24"/>
+    <circle cx="32" cy="26" r="12" fill="#c9d3bd"/>
+    <path d="M11 60c1-13 10-20 21-20s20 7 21 20z" fill="#c9d3bd"/>
+  </symbol>
+</svg>
+
+<!-- ===================== FELSŐ SÁV ===================== -->
+<header class="adm-top">
+  <a class="adm-brand" href="index.html">
+    <svg class="brand-mark" viewBox="0 0 64 64" aria-hidden="true"><use href="#a-logo"/></svg>
+    <span class="adm-brand-text"><span class="adm-brand-name">URBAN <b>QUEST</b></span><span class="adm-brand-sub">KALANDOK. KÜLDETÉSEK. ÉLMÉNYEK.</span></span>
+  </a>
+
+  <div class="adm-search">
+    <svg class="ico ico-sm" aria-hidden="true"><use href="#a-search"/></svg>
+    <input type="text" id="topSearch" placeholder="Keresés a médiatárban…">
+    <kbd>⌘ K</kbd>
+  </div>
+
+  <div class="adm-top-right">
+    <button class="adm-btn" type="button" id="btnSave"><svg class="ico ico-sm" aria-hidden="true"><use href="#a-folder"/></svg>Mentés</button>
+
+    <div class="uq-dd adm-split" data-dd>
+      <button class="adm-btn adm-btn-lime" type="button" id="btnPublish"><svg class="ico ico-sm" aria-hidden="true"><use href="#a-send"/></svg>Közzététel</button>
+      <button class="adm-btn adm-btn-lime adm-split-caret" type="button" data-dd-toggle aria-label="Közzétételi lehetőségek"><svg class="ico ico-xs" aria-hidden="true"><use href="#a-down"/></svg></button>
+      <div class="uq-dd-menu">
+        <div class="uq-dd-label">Közzététel</div>
+        <button class="uq-dd-item" type="button" data-pub="now"><svg class="ico" aria-hidden="true"><use href="#a-send"/></svg>Közzététel most</button>
+        <button class="uq-dd-item" type="button" data-pub="schedule"><svg class="ico" aria-hidden="true"><use href="#a-clock"/></svg>Ütemezés</button>
+        <div class="uq-dd-sep"></div>
+        <button class="uq-dd-item" type="button" data-pub="draft"><svg class="ico" aria-hidden="true"><use href="#a-folder"/></svg>Piszkozatként mentés</button>
+      </div>
+    </div>
+
+    <div class="uq-dd" data-dd>
+      <button class="adm-user" type="button" data-dd-toggle>
+        <span class="adm-avatar adm-avatar-photo"><svg viewBox="0 0 64 64" aria-hidden="true"><use href="#ava"/></svg></span>
+        <span class="adm-user-text"><b>Szabó Tamás</b><span>Adminisztrátor</span></span>
+        <svg class="ico ico-xs" aria-hidden="true"><use href="#a-down"/></svg>
+      </button>
+      <div class="uq-dd-menu">
+        <div class="uq-dd-label">Fiók</div>
+        <button class="uq-dd-item" type="button" data-user="profile"><svg class="ico" aria-hidden="true"><use href="#a-users"/></svg>Profil</button>
+        <button class="uq-dd-item" type="button" data-user="settings"><svg class="ico" aria-hidden="true"><use href="#a-gear"/></svg>Beállítások</button>
+        <div class="uq-dd-sep"></div>
+        <button class="uq-dd-item is-danger" type="button" data-user="logout"><svg class="ico" aria-hidden="true"><use href="#a-logout"/></svg>Kijelentkezés</button>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="adm-shell">
+  <!-- ===================== OLDALSÁV ===================== -->
+  <aside class="adm-side" id="admSide">
+    <button class="adm-collapse" type="button" data-side-toggle aria-label="Oldalsáv összecsukása"><svg class="ico ico-sm" aria-hidden="true"><use href="#a-menu"/></svg></button>
+    <nav class="adm-nav">
+      <a class="adm-nav-item" href="iranyitopult.html" data-label="Irányítópult"><svg class="ico" aria-hidden="true"><use href="#a-home"/></svg><span class="adm-nav-txt">Irányítópult</span></a>
+      <a class="adm-nav-item" href="admin.html" data-label="Pályák"><svg class="ico" aria-hidden="true"><use href="#a-route"/></svg><span class="adm-nav-txt">Pályák</span></a>
+      <a class="adm-nav-item" href="jatekok.html" data-label="Játékok"><svg class="ico" aria-hidden="true"><use href="#a-game"/></svg><span class="adm-nav-txt">Játékok</span></a>
+      <a class="adm-nav-item" href="allomasok.html" data-label="Állomások"><svg class="ico" aria-hidden="true"><use href="#a-pin"/></svg><span class="adm-nav-txt">Állomások</span></a>
+      <a class="adm-nav-item" href="feladatok.html" data-label="Feladatok"><svg class="ico" aria-hidden="true"><use href="#a-task"/></svg><span class="adm-nav-txt">Feladatok</span></a>
+      <a class="adm-nav-item is-active" href="media.html" data-label="Média"><svg class="ico" aria-hidden="true"><use href="#a-image"/></svg><span class="adm-nav-txt">Média</span></a>
+      <a class="adm-nav-item" href="idozitesek.html" data-label="Időzítések"><svg class="ico" aria-hidden="true"><use href="#a-clock"/></svg><span class="adm-nav-txt">Időzítések</span></a>
+      <a class="adm-nav-item" href="csapatok.html" data-label="Csapatok"><svg class="ico" aria-hidden="true"><use href="#a-users"/></svg><span class="adm-nav-txt">Csapatok</span></a>
+      <a class="adm-nav-item" href="beallitasok.html" data-label="Beállítások"><svg class="ico" aria-hidden="true"><use href="#a-gear"/></svg><span class="adm-nav-txt">Beállítások</span></a>
+    </nav>
+    <div class="adm-side-foot">
+      <div class="adm-sysstat"><span class="adm-sysstat-label">Rendszer állapota</span><span class="adm-sysstat-ok"><span class="dot"></span><span>Minden rendben</span></span></div>
+      <div class="adm-ver">Verzió 2.4.1<br>© 2024 Urban Quest</div>
+    </div>
+  </aside>
+
+  <!-- ===================== FŐ TERÜLET ===================== -->
+  <main class="adm-main">
+    <!-- statisztika kártyák -->
+    <div class="adm-stats">
+      <div class="adm-stat"><span class="adm-stat-ic"><svg class="ico" aria-hidden="true"><use href="#a-image"/></svg></span><div><span class="adm-stat-label">Összes fájl</span><b id="statFiles">248</b><span class="adm-stat-delta up">+18 ezen a héten</span></div></div>
+      <div class="adm-stat"><span class="adm-stat-ic"><svg class="ico" aria-hidden="true"><use href="#a-video"/></svg></span><div><span class="adm-stat-label">Videók</span><b id="statVideo">32</b><span class="adm-stat-delta">1.8 GB tárhely</span></div></div>
+      <div class="adm-stat"><span class="adm-stat-ic"><svg class="ico" aria-hidden="true"><use href="#a-audio"/></svg></span><div><span class="adm-stat-label">Hangfájlok</span><b id="statAudio">46</b><span class="adm-stat-delta">Narrációk és effektek</span></div></div>
+      <div class="adm-stat"><span class="adm-stat-ic"><svg class="ico" aria-hidden="true"><use href="#a-folder"/></svg></span><div><span class="adm-stat-label">Felhasznált tárhely</span><b id="statSize">4.2 GB</b><span class="adm-stat-delta up">42% az 10 GB-ból</span></div></div>
+    </div>
+
+    <!-- médiatár fejléc -->
+    <div class="jtk-head">
+      <h1>Médiatár</h1>
+      <div class="jtk-head-actions">
+        <div class="med-tabs" id="medTabs" role="tablist">
+          <button class="med-tab is-on" type="button" data-type="all" role="tab" aria-selected="true">Összes <span class="med-tab-n" id="cAll">0</span></button>
+          <button class="med-tab" type="button" data-type="image" role="tab" aria-selected="false">Képek <span class="med-tab-n" id="cImage">0</span></button>
+          <button class="med-tab" type="button" data-type="video" role="tab" aria-selected="false">Videók <span class="med-tab-n" id="cVideo">0</span></button>
+          <button class="med-tab" type="button" data-type="audio" role="tab" aria-selected="false">Hang <span class="med-tab-n" id="cAudio">0</span></button>
+        </div>
+        <button class="adm-btn adm-btn-lime" type="button" id="btnUpload"><svg class="ico ico-sm" aria-hidden="true"><use href="#a-upload"/></svg>Feltöltés</button>
+      </div>
+    </div>
+
+    <!-- rejtett fájlválasztó (valós feltöltés) -->
+    <input type="file" id="mediaFileInput" accept="image/*,video/*,audio/*" multiple hidden>
+
+    <!-- feltöltés dropzone -->
+    <button class="med-dropzone" type="button" id="medDropzone">
+      <span class="med-dropzone-ic"><svg class="ico" aria-hidden="true"><use href="#a-upload"/></svg></span>
+      <span class="med-dropzone-txt"><b>Fájl feltöltése</b><small>Húzd ide a fájlokat vagy <span class="med-dropzone-link">tallózz</span> a gépeden</small></span>
+      <span class="med-dropzone-hint">JPG, PNG, MP3 — max. 50 MB · videófájl max. 5 MB</span>
+    </button>
+
+    <!-- videó-link beillesztése (YouTube / Vimeo / .mp4 URL) -->
+    <div class="med-linkadd">
+      <span class="med-linkadd-ic"><svg class="ico" aria-hidden="true"><use href="#a-video"/></svg></span>
+      <input type="url" id="medVideoUrl" class="med-linkadd-input" placeholder="Videó-link beillesztése — YouTube, Vimeo vagy .mp4 URL…" spellcheck="false" autocomplete="off">
+      <button class="adm-btn adm-btn-lime med-linkadd-btn" type="button" id="btnAddVideoUrl"><svg class="ico ico-sm" aria-hidden="true"><use href="#a-plus"/></svg>Hozzáadás</button>
+    </div>
+
+    <!-- tömeges műveleti sáv -->
+    <div class="jtk-bulk is-hidden" id="bulkBar">
+      <span class="jtk-bulk-count"><b id="bulkCount">0</b> kijelölve</span>
+      <div class="jtk-bulk-actions">
+        <button class="jtk-bulk-btn is-danger" type="button" id="bulkDelete"><svg class="ico" aria-hidden="true"><use href="#a-trash"/></svg>Törlés</button>
+        <button class="jtk-bulk-x" type="button" id="bulkClear">Mégse</button>
+      </div>
+    </div>
+
+    <!-- média rács -->
+    <div class="med-grid" id="medGrid"><!-- JS tölti fel --></div>
+    <div class="jtk-empty" id="medEmpty" hidden>Nincs a szűrésnek megfelelő médiafájl.</div>
+  </main>
+</div>
+
+<!-- ===================== ELŐNÉZET MODAL ===================== -->
+<div class="uq-modal" id="medModal" role="dialog" aria-modal="true" aria-labelledby="mmTitle">
+  <div class="uq-modal-backdrop" data-modal-close></div>
+  <div class="uq-modal-panel med-modal-panel" tabindex="-1">
+    <div class="uq-modal-head">
+      <div class="med-title-wrap"><input id="mmTitle" class="med-title-input" type="text" value="Médiafájl" aria-label="Fájlnév átnevezése" spellcheck="false"><span class="uq-modal-sub" id="mmSub">Előnézet</span></div>
+      <button class="uq-modal-x" type="button" data-modal-close aria-label="Bezárás"><svg class="ico ico-sm" aria-hidden="true"><use href="#a-close"/></svg></button>
+    </div>
+    <div class="uq-modal-body">
+      <div class="med-preview" id="mmPreview">
+        <span class="med-preview-badge" id="mmPreviewBadge"></span>
+        <span class="med-preview-ic" id="mmPreviewIc"><svg class="ico" aria-hidden="true"><use href="#a-image"/></svg></span>
+      </div>
+      <div class="med-meta" id="mmMeta"><!-- JS tölti fel --></div>
+    </div>
+    <div class="uq-modal-foot">
+      <button class="adm-btn" type="button" id="mmDownload"><svg class="ico ico-sm" aria-hidden="true"><use href="#a-download"/></svg>Letöltés</button>
+      <button class="adm-btn" type="button" id="mmReplace"><svg class="ico ico-sm" aria-hidden="true"><use href="#a-swap"/></svg>Csere</button>
+      <button class="adm-btn med-btn-danger" type="button" id="mmDelete"><svg class="ico ico-sm" aria-hidden="true"><use href="#a-trash"/></svg>Törlés</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== TOAST KONTÉNER ===================== -->
+<div class="uq-toast-wrap" id="uqToasts"></div>
+
+<script src="media.js?v=3"></script>
+</body>
+</html>

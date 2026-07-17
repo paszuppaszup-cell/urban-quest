@@ -1,0 +1,590 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <linearGradient id="castle-sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#0d1b31"/>
+      <stop offset="0.16" stop-color="#152645"/>
+      <stop offset="0.36" stop-color="#1b3350"/>
+      <stop offset="0.55" stop-color="#28587a"/>
+      <stop offset="0.72" stop-color="#3f7f9c"/>
+      <stop offset="0.86" stop-color="#79aebf"/>
+      <stop offset="0.95" stop-color="#9fc7cf"/>
+      <stop offset="1" stop-color="#c2cfc4"/>
+    </linearGradient>
+
+    <radialGradient id="castle-horizonglow" cx="0.5" cy="1" r="0.72">
+      <stop offset="0" stop-color="#e2b07a" stop-opacity="0.95"/>
+      <stop offset="0.26" stop-color="#d9a273" stop-opacity="0.55"/>
+      <stop offset="0.58" stop-color="#9fc7cf" stop-opacity="0.18"/>
+      <stop offset="1" stop-color="#3f7f9c" stop-opacity="0"/>
+    </radialGradient>
+
+    <radialGradient id="castle-bloom" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#ffd79a" stop-opacity="0.55"/>
+      <stop offset="0.45" stop-color="#e8a95e" stop-opacity="0.24"/>
+      <stop offset="1" stop-color="#e8a95e" stop-opacity="0"/>
+    </radialGradient>
+
+    <radialGradient id="castle-bloom2" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#ffe2b4" stop-opacity="0.7"/>
+      <stop offset="0.5" stop-color="#f0b56b" stop-opacity="0.25"/>
+      <stop offset="1" stop-color="#f0b56b" stop-opacity="0"/>
+    </radialGradient>
+
+    <!-- tight halo that sits directly behind the dome so it separates from the sky -->
+    <radialGradient id="castle-domebloom" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#ffe9c4" stop-opacity="0.62"/>
+      <stop offset="0.35" stop-color="#f3c078" stop-opacity="0.3"/>
+      <stop offset="0.7" stop-color="#d89a5c" stop-opacity="0.1"/>
+      <stop offset="1" stop-color="#d89a5c" stop-opacity="0"/>
+    </radialGradient>
+
+    <linearGradient id="castle-far" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#527f95" stop-opacity="0.7"/>
+      <stop offset="1" stop-color="#3a637a" stop-opacity="0.9"/>
+    </linearGradient>
+
+    <linearGradient id="castle-mid" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#2e5069" stop-opacity="0.95"/>
+      <stop offset="1" stop-color="#21405a" stop-opacity="1"/>
+    </linearGradient>
+
+    <linearGradient id="castle-stone" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#efd39a"/>
+      <stop offset="0.3" stop-color="#e8c98a"/>
+      <stop offset="0.6" stop-color="#d8a55e"/>
+      <stop offset="0.85" stop-color="#a9743e"/>
+      <stop offset="1" stop-color="#6b4a2e"/>
+    </linearGradient>
+
+    <linearGradient id="castle-stone-dark" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#c9995c"/>
+      <stop offset="0.45" stop-color="#95693c"/>
+      <stop offset="1" stop-color="#4a3524"/>
+    </linearGradient>
+
+    <linearGradient id="castle-stone-far" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#a98254"/>
+      <stop offset="1" stop-color="#5a4531"/>
+    </linearGradient>
+
+    <linearGradient id="castle-dome" x1="0.18" y1="0" x2="0.88" y2="1">
+      <stop offset="0" stop-color="#f7e6bb"/>
+      <stop offset="0.24" stop-color="#eed295"/>
+      <stop offset="0.52" stop-color="#d8a55e"/>
+      <stop offset="0.78" stop-color="#a9743e"/>
+      <stop offset="1" stop-color="#5f4227"/>
+    </linearGradient>
+
+    <linearGradient id="castle-arch" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#fff2d4"/>
+      <stop offset="0.45" stop-color="#ffdca0"/>
+      <stop offset="1" stop-color="#e09b52" stop-opacity="0.7"/>
+    </linearGradient>
+
+    <linearGradient id="castle-bridge" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#2b4155"/>
+      <stop offset="0.5" stop-color="#1b2e3f"/>
+      <stop offset="1" stop-color="#0d1b27"/>
+    </linearGradient>
+
+    <linearGradient id="castle-quay" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#6d5236"/>
+      <stop offset="0.22" stop-color="#3f3126"/>
+      <stop offset="1" stop-color="#11202a"/>
+    </linearGradient>
+
+    <linearGradient id="castle-haze" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#9fc7cf" stop-opacity="0"/>
+      <stop offset="0.45" stop-color="#a9c6cb" stop-opacity="0.16"/>
+      <stop offset="0.85" stop-color="#dcb98d" stop-opacity="0.26"/>
+      <stop offset="1" stop-color="#e2b07a" stop-opacity="0.3"/>
+    </linearGradient>
+
+    <linearGradient id="castle-haze2" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#8fb6c4" stop-opacity="0.36"/>
+      <stop offset="1" stop-color="#8fb6c4" stop-opacity="0"/>
+    </linearGradient>
+
+    <linearGradient id="castle-water" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#2f6b7e"/>
+      <stop offset="0.1" stop-color="#1a4557"/>
+      <stop offset="0.36" stop-color="#12303f"/>
+      <stop offset="0.75" stop-color="#0d2530"/>
+      <stop offset="1" stop-color="#071820"/>
+    </linearGradient>
+
+    <linearGradient id="castle-refl-warm" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffd79a" stop-opacity="0.85"/>
+      <stop offset="0.22" stop-color="#e8a95e" stop-opacity="0.42"/>
+      <stop offset="0.6" stop-color="#c07f42" stop-opacity="0.16"/>
+      <stop offset="1" stop-color="#c07f42" stop-opacity="0"/>
+    </linearGradient>
+
+    <linearGradient id="castle-refl-cyan" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#a9dbe6" stop-opacity="0.4"/>
+      <stop offset="0.35" stop-color="#5fa9bd" stop-opacity="0.18"/>
+      <stop offset="1" stop-color="#5fa9bd" stop-opacity="0"/>
+    </linearGradient>
+
+    <linearGradient id="castle-fg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#050f16" stop-opacity="0"/>
+      <stop offset="0.55" stop-color="#050f16" stop-opacity="0.45"/>
+      <stop offset="1" stop-color="#03090d" stop-opacity="0.95"/>
+    </linearGradient>
+
+    <radialGradient id="castle-vignette" cx="0.5" cy="0.46" r="0.78">
+      <stop offset="0" stop-color="#000000" stop-opacity="0"/>
+      <stop offset="0.58" stop-color="#000000" stop-opacity="0.06"/>
+      <stop offset="0.84" stop-color="#000814" stop-opacity="0.36"/>
+      <stop offset="1" stop-color="#00050c" stop-opacity="0.66"/>
+    </radialGradient>
+
+    <filter id="castle-blur-soft" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="7"/>
+    </filter>
+    <filter id="castle-blur-big" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="16"/>
+    </filter>
+    <filter id="castle-blur-tiny" x="-25%" y="-25%" width="150%" height="150%">
+      <feGaussianBlur stdDeviation="1.2"/>
+    </filter>
+    <filter id="castle-blur-refl" x="-20%" y="-10%" width="140%" height="130%">
+      <feGaussianBlur stdDeviation="1.6 3.6"/>
+    </filter>
+    <filter id="castle-blur-haze" x="-20%" y="-60%" width="140%" height="240%">
+      <feGaussianBlur stdDeviation="9"/>
+    </filter>
+
+    <filter id="castle-grain" x="0%" y="0%" width="100%" height="100%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="3" seed="7" result="castle-noise"/>
+      <feColorMatrix type="matrix" in="castle-noise"
+        values="0 0 0 0 0.5  0 0 0 0 0.5  0 0 0 0 0.5  0 0 0 0.42 0"/>
+    </filter>
+
+    <filter id="castle-cloudgrain" x="-10%" y="-10%" width="120%" height="120%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.012 0.03" numOctaves="4" seed="19" result="castle-cn"/>
+      <feColorMatrix type="matrix" in="castle-cn"
+        values="0 0 0 0 0.62  0 0 0 0 0.72  0 0 0 0 0.78  0 0 0 0.5 0"/>
+      <feGaussianBlur stdDeviation="3"/>
+    </filter>
+  </defs>
+
+  <!-- ================= SKY ================= -->
+  <rect x="0" y="0" width="800" height="352" fill="url(#castle-sky)"/>
+
+  <!-- faint stars in the deep blue band (kept out of the corners) -->
+  <g fill="#dfeaf2">
+    <circle cx="88" cy="58" r="0.9" opacity="0.5"/>
+    <circle cx="147" cy="33" r="0.7" opacity="0.34"/>
+    <circle cx="212" cy="86" r="0.8" opacity="0.44"/>
+    <circle cx="268" cy="45" r="0.6" opacity="0.3"/>
+    <circle cx="331" cy="70" r="0.8" opacity="0.4"/>
+    <circle cx="392" cy="29" r="0.6" opacity="0.28"/>
+    <circle cx="452" cy="64" r="0.9" opacity="0.42"/>
+    <circle cx="512" cy="38" r="0.7" opacity="0.3"/>
+    <circle cx="566" cy="93" r="0.7" opacity="0.34"/>
+    <circle cx="626" cy="50" r="0.9" opacity="0.44"/>
+    <circle cx="688" cy="76" r="0.7" opacity="0.3"/>
+    <circle cx="717" cy="37" r="0.6" opacity="0.24"/>
+    <circle cx="170" cy="112" r="0.6" opacity="0.2"/>
+    <circle cx="486" cy="106" r="0.6" opacity="0.2"/>
+  </g>
+
+  <!-- high thin cloud banding -->
+  <g opacity="0.28" filter="url(#castle-blur-soft)">
+    <ellipse cx="180" cy="74" rx="230" ry="15" fill="#2c4a6e"/>
+    <ellipse cx="600" cy="54" rx="260" ry="12" fill="#28466a"/>
+    <ellipse cx="430" cy="122" rx="300" ry="14" fill="#2f5c80"/>
+    <ellipse cx="120" cy="170" rx="220" ry="11" fill="#3a6c8d"/>
+    <ellipse cx="690" cy="152" rx="200" ry="10" fill="#38688a"/>
+    <ellipse cx="380" cy="207" rx="330" ry="12" fill="#4b83a0"/>
+    <ellipse cx="650" cy="234" rx="240" ry="9" fill="#6fa2b6"/>
+    <ellipse cx="150" cy="250" rx="230" ry="8" fill="#7cadbe"/>
+  </g>
+  <rect x="0" y="0" width="800" height="352" filter="url(#castle-cloudgrain)" opacity="0.1" style="mix-blend-mode:screen"/>
+
+  <!-- last warm glow low on the horizon -->
+  <rect x="-100" y="118" width="1000" height="234" fill="url(#castle-horizonglow)"/>
+  <ellipse cx="400" cy="350" rx="340" ry="72" fill="url(#castle-bloom)" filter="url(#castle-blur-big)"/>
+
+  <!-- ========= LAYER 1 : farthest hills (hazy, low contrast) ========= -->
+  <g opacity="0.5">
+    <path d="M -20 352 L -20 314 C 40 302 90 308 140 298 C 190 288 235 294 285 286 C 340 277 380 286 430 280 C 490 273 530 284 585 278 C 640 272 690 286 740 292 C 770 296 800 302 820 308 L 820 352 Z"
+          fill="url(#castle-far)" filter="url(#castle-blur-tiny)"/>
+  </g>
+  <rect x="0" y="266" width="800" height="86" fill="url(#castle-haze2)" opacity="0.75"/>
+
+  <!-- ========= LAYER 2 : distant city roofline ========= -->
+  <g opacity="0.68">
+    <path d="M -20 352 L -20 324 L 30 324 L 30 314 L 62 314 L 62 322 L 96 322 L 96 308 L 104 308 L 104 320 L 150 320 L 150 312 L 176 312 L 176 322 L 226 322 L 226 302 L 232 302 L 232 318 L 268 318 L 268 310 L 300 310 L 300 320 L 344 320 L 344 306 L 350 306 L 350 318 L 400 318 L 400 308 L 440 308 L 440 316 L 486 316 L 486 304 L 492 304 L 492 318 L 540 318 L 540 310 L 578 310 L 578 320 L 620 320 L 620 302 L 626 302 L 626 316 L 664 316 L 664 308 L 700 308 L 700 318 L 742 318 L 742 310 L 780 310 L 780 320 L 820 320 L 820 352 Z"
+          fill="url(#castle-mid)" filter="url(#castle-blur-tiny)"/>
+    <rect x="118" y="290" width="4" height="34" fill="#2a4a63"/>
+    <rect x="700" y="292" width="4" height="30" fill="#2a4a63"/>
+    <rect x="556" y="294" width="3" height="26" fill="#2a4a63"/>
+  </g>
+  <!-- haze wash sinking the distant roofline back -->
+  <rect x="0" y="284" width="800" height="68" fill="url(#castle-haze)" opacity="0.9"/>
+
+  <!-- ========= GLOW BLOOM behind the lit far bank ========= -->
+  <ellipse cx="400" cy="308" rx="260" ry="82" fill="url(#castle-bloom2)" filter="url(#castle-blur-big)"/>
+  <ellipse cx="400" cy="250" rx="118" ry="96" fill="url(#castle-domebloom)" filter="url(#castle-blur-big)"/>
+  <ellipse cx="656" cy="280" rx="52" ry="62" fill="url(#castle-bloom)" filter="url(#castle-blur-soft)" opacity="0.75"/>
+  <ellipse cx="120" cy="308" rx="130" ry="44" fill="url(#castle-bloom)" filter="url(#castle-blur-big)" opacity="0.5"/>
+
+  <!-- ========= LAYER 3 : CHAIN BRIDGE (left) =========
+       towers at x=48 and x=200, deck y=328, catenary sags to y=300 -->
+  <g>
+    <!-- main cables -->
+    <path d="M -20 322 Q 12 292 48 250" fill="none" stroke="#16283a" stroke-width="2.4"/>
+    <path d="M 48 250 Q 124 350 200 250" fill="none" stroke="#16283a" stroke-width="2.6"/>
+    <path d="M 200 250 Q 248 296 300 328" fill="none" stroke="#16283a" stroke-width="2.4"/>
+    <!-- secondary cable, slightly lower, for weight -->
+    <path d="M 48 256 Q 124 352 200 256" fill="none" stroke="#1d3244" stroke-width="1.2" opacity="0.65"/>
+    <path d="M -20 328 Q 12 298 48 256" fill="none" stroke="#1d3244" stroke-width="1.1" opacity="0.6"/>
+
+    <!-- hangers, y computed on the catenary -->
+    <g stroke="#1a2c3d" stroke-width="1" opacity="0.85">
+      <path d="M 0 303 L 0 328"/><path d="M 16 287 L 16 328"/><path d="M 32 270 L 32 328"/>
+      <path d="M 64 269 L 64 328"/><path d="M 80 283 L 80 328"/><path d="M 96 293 L 96 328"/>
+      <path d="M 112 299 L 112 328"/><path d="M 128 300 L 128 328"/><path d="M 144 297 L 144 328"/>
+      <path d="M 160 289 L 160 328"/><path d="M 176 277 L 176 328"/><path d="M 192 260 L 192 328"/>
+      <path d="M 220 268 L 220 328"/><path d="M 244 287 L 244 328"/>
+      <path d="M 268 304 L 268 328"/><path d="M 288 317 L 288 328"/>
+    </g>
+
+    <!-- deck -->
+    <rect x="-20" y="328" width="325" height="6" fill="#132435"/>
+    <rect x="-20" y="327" width="325" height="1.6" fill="#6a8c9c" opacity="0.45"/>
+    <!-- deck lamp line -->
+    <g fill="#ffdca0">
+      <circle cx="18" cy="324" r="1.4"/><circle cx="58" cy="324" r="1.4"/>
+      <circle cx="100" cy="324" r="1.4"/><circle cx="140" cy="324" r="1.4"/>
+      <circle cx="180" cy="324" r="1.4"/><circle cx="228" cy="324" r="1.4"/>
+      <circle cx="266" cy="324" r="1.4"/>
+    </g>
+    <g fill="#ffd394" opacity="0.3" filter="url(#castle-blur-tiny)">
+      <circle cx="18" cy="324" r="4"/><circle cx="58" cy="324" r="4"/>
+      <circle cx="100" cy="324" r="4"/><circle cx="140" cy="324" r="4"/>
+      <circle cx="180" cy="324" r="4"/><circle cx="228" cy="324" r="4"/>
+      <circle cx="266" cy="324" r="4"/>
+    </g>
+
+    <!-- tower A -->
+    <path d="M 34 352 L 34 258 L 38 250 L 58 250 L 62 258 L 62 352 Z" fill="url(#castle-bridge)"/>
+    <rect x="32" y="274" width="32" height="5" fill="#22384c"/>
+    <path d="M 41 352 L 41 302 Q 48 289 55 302 L 55 352 Z" fill="#09161f"/>
+    <rect x="44" y="242" width="8" height="9" fill="#1c2f40"/>
+    <path d="M 62 352 L 62 258 L 58 250" fill="none" stroke="#c99a63" stroke-width="1" opacity="0.5"/>
+    <!-- tower B -->
+    <path d="M 186 352 L 186 258 L 190 250 L 210 250 L 214 258 L 214 352 Z" fill="url(#castle-bridge)"/>
+    <rect x="184" y="274" width="32" height="5" fill="#22384c"/>
+    <path d="M 193 352 L 193 302 Q 200 289 207 302 L 207 352 Z" fill="#09161f"/>
+    <rect x="196" y="242" width="8" height="9" fill="#1c2f40"/>
+    <path d="M 214 352 L 214 258 L 210 250" fill="none" stroke="#c99a63" stroke-width="1" opacity="0.55"/>
+  </g>
+
+  <!-- ========= LAYER 4 : THE LIT PALACE (subject, centred on x=400) ========= -->
+  <g>
+    <!-- outer low ranges (furthest / dimmest) -->
+    <rect x="206" y="320" width="44" height="25" fill="url(#castle-stone-far)"/>
+    <rect x="550" y="320" width="44" height="25" fill="url(#castle-stone-far)"/>
+    <path d="M 204 320 L 216 306 L 228 320 Z" fill="url(#castle-stone-far)"/>
+    <path d="M 572 320 L 584 306 L 596 320 Z" fill="url(#castle-stone-far)"/>
+    <rect x="202" y="318" width="52" height="3" fill="#e0c090" opacity="0.5"/>
+    <rect x="546" y="318" width="52" height="3" fill="#e0c090" opacity="0.5"/>
+
+    <!-- inner wings -->
+    <rect x="250" y="310" width="66" height="35" fill="url(#castle-stone-dark)"/>
+    <rect x="484" y="310" width="66" height="35" fill="url(#castle-stone-dark)"/>
+    <rect x="246" y="307" width="74" height="4" fill="#f0d5a0" opacity="0.8"/>
+    <rect x="480" y="307" width="74" height="4" fill="#f0d5a0" opacity="0.8"/>
+    <!-- wing cupolas -->
+    <path d="M 270 307 L 270 298 C 270 288 276 282 283 282 C 290 282 296 288 296 298 L 296 307 Z" fill="url(#castle-dome)"/>
+    <rect x="282" y="272" width="2" height="11" fill="#e8c98a"/>
+    <path d="M 504 307 L 504 298 C 504 288 510 282 517 282 C 524 282 530 288 530 298 L 530 307 Z" fill="url(#castle-dome)"/>
+    <rect x="516" y="272" width="2" height="11" fill="#e8c98a"/>
+
+    <!-- main block -->
+    <rect x="316" y="298" width="168" height="47" fill="url(#castle-stone)"/>
+    <rect x="312" y="294" width="176" height="5" fill="#f2dcac" opacity="0.9"/>
+
+    <!-- side turrets flanking the main block -->
+    <rect x="318" y="288" width="11" height="57" fill="url(#castle-stone-dark)"/>
+    <path d="M 316 288 L 323.5 268 L 331 288 Z" fill="#cd9c5d"/>
+    <rect x="471" y="288" width="11" height="57" fill="url(#castle-stone-dark)"/>
+    <path d="M 469 288 L 476.5 268 L 484 288 Z" fill="#cd9c5d"/>
+
+    <!-- central projecting pavilion (brightest plane) -->
+    <rect x="354" y="294" width="92" height="51" fill="url(#castle-stone)"/>
+    <rect x="350" y="290" width="100" height="5" fill="#f7e6bb" opacity="0.95"/>
+
+    <!-- pavilion arcade : 7 tall warm arches = the focal glow -->
+    <g fill="url(#castle-arch)">
+      <path d="M 360 338 L 360 318 C 360 312 368 312 368 318 L 368 338 Z"/>
+      <path d="M 372 338 L 372 318 C 372 312 380 312 380 318 L 380 338 Z"/>
+      <path d="M 384 338 L 384 318 C 384 312 392 312 392 318 L 392 338 Z"/>
+      <path d="M 396 338 L 396 316 C 396 310 404 310 404 316 L 404 338 Z"/>
+      <path d="M 408 338 L 408 318 C 408 312 416 312 416 318 L 416 338 Z"/>
+      <path d="M 420 338 L 420 318 C 420 312 428 312 428 318 L 428 338 Z"/>
+      <path d="M 432 338 L 432 318 C 432 312 440 312 440 318 L 440 338 Z"/>
+    </g>
+    <!-- pilasters between the arches -->
+    <g fill="#8a5f33" opacity="0.5">
+      <rect x="355" y="296" width="3" height="49"/><rect x="443" y="296" width="3" height="49"/>
+      <rect x="369" y="296" width="2" height="20"/><rect x="381" y="296" width="2" height="20"/>
+      <rect x="393" y="296" width="2" height="20"/><rect x="405" y="296" width="2" height="20"/>
+      <rect x="417" y="296" width="2" height="20"/><rect x="429" y="296" width="2" height="20"/>
+    </g>
+    <!-- upper pavilion window row -->
+    <g fill="#ffdca0">
+      <rect x="362" y="300" width="2.5" height="6"/><rect x="374" y="300" width="2.5" height="6"/>
+      <rect x="386" y="300" width="2.5" height="6"/><rect x="399" y="300" width="2.5" height="6"/>
+      <rect x="411" y="300" width="2.5" height="6"/><rect x="423" y="300" width="2.5" height="6"/>
+      <rect x="435" y="300" width="2.5" height="6"/>
+    </g>
+
+    <!-- DRUM -->
+    <rect x="360" y="258" width="80" height="34" fill="url(#castle-stone)"/>
+    <rect x="356" y="288" width="88" height="5" fill="#f2dcac" opacity="0.9"/>
+    <!-- drum colonnade -->
+    <g fill="#7a542f" opacity="0.72">
+      <rect x="363" y="259" width="3" height="30"/><rect x="373" y="259" width="3" height="30"/>
+      <rect x="383" y="259" width="3" height="30"/><rect x="393" y="259" width="3" height="30"/>
+      <rect x="405" y="259" width="3" height="30"/><rect x="415" y="259" width="3" height="30"/>
+      <rect x="425" y="259" width="3" height="30"/><rect x="435" y="259" width="3" height="30"/>
+    </g>
+    <g fill="#ffdca0">
+      <rect x="368" y="266" width="2.5" height="8"/><rect x="388" y="266" width="2.5" height="8"/>
+      <rect x="410" y="266" width="2.5" height="8"/><rect x="430" y="266" width="2.5" height="8"/>
+    </g>
+    <!-- dome base cornice (wider than the drum) -->
+    <rect x="352" y="252" width="96" height="7" fill="#f7e6bb" opacity="0.92"/>
+
+    <!-- THE DOME -->
+    <path d="M 356 253 C 356 226 358 208 376 198 C 384 193 392 191 400 191 C 408 191 416 193 424 198 C 442 208 444 226 444 253 Z"
+          fill="url(#castle-dome)"/>
+    <!-- lit shoulder -->
+    <path d="M 356 253 C 356 226 358 208 376 198 C 384 193 392 191 400 191 C 389 200 382 220 380 253 Z"
+          fill="#f9ecc9" opacity="0.34"/>
+    <!-- ribs -->
+    <g fill="none" stroke="#8a5f33" stroke-width="0.9" opacity="0.42">
+      <path d="M 400 192 C 396 214 394 232 393 253"/>
+      <path d="M 400 192 C 406 214 409 232 410 253"/>
+      <path d="M 383 196 C 375 216 371 234 370 253"/>
+      <path d="M 417 196 C 425 216 429 234 430 253"/>
+      <path d="M 366 206 C 360 224 358 238 358 253"/>
+      <path d="M 434 206 C 440 224 442 238 442 253"/>
+    </g>
+    <!-- rim light on the dome edge -->
+    <path d="M 444 253 C 444 226 442 208 424 198" fill="none" stroke="#ffe6b8" stroke-width="1" opacity="0.5"/>
+
+    <!-- LANTERN -->
+    <rect x="390" y="172" width="20" height="22" fill="url(#castle-dome)"/>
+    <g fill="#7a542f" opacity="0.6">
+      <rect x="391" y="173" width="2" height="20"/><rect x="399" y="173" width="2" height="20"/>
+      <rect x="407" y="173" width="2" height="20"/>
+    </g>
+    <rect x="394" y="177" width="2.5" height="10" fill="#ffdca0"/>
+    <rect x="403.5" y="177" width="2.5" height="10" fill="#ffdca0"/>
+    <rect x="386" y="168" width="28" height="5" fill="#f7e6bb" opacity="0.95"/>
+    <path d="M 387 169 C 388 154 393 147 400 147 C 407 147 412 154 413 169 Z" fill="url(#castle-dome)"/>
+    <rect x="399" y="137" width="2.2" height="11" fill="#e8c98a"/>
+    <circle cx="400" cy="135" r="2.8" fill="#ffdca0"/>
+    <circle cx="400" cy="135" r="9" fill="#ffdca0" opacity="0.28" filter="url(#castle-blur-tiny)"/>
+
+    <!-- ===== WINDOW LIGHTS ===== -->
+    <g fill="#ffdca0">
+      <!-- main block, left of the pavilion -->
+      <rect x="334" y="306" width="2" height="5"/><rect x="341" y="306" width="2" height="5"/>
+      <rect x="348" y="306" width="2" height="5"/>
+      <rect x="334" y="320" width="2" height="5"/><rect x="346" y="320" width="2" height="5"/>
+      <rect x="337" y="332" width="2" height="5"/><rect x="349" y="332" width="2" height="5"/>
+      <!-- main block, right of the pavilion -->
+      <rect x="452" y="306" width="2" height="5"/><rect x="459" y="306" width="2" height="5"/>
+      <rect x="466" y="306" width="2" height="5"/>
+      <rect x="452" y="320" width="2" height="5"/><rect x="464" y="320" width="2" height="5"/>
+      <rect x="455" y="332" width="2" height="5"/><rect x="467" y="332" width="2" height="5"/>
+
+      <!-- inner wings -->
+      <rect x="256" y="318" width="2" height="4"/><rect x="266" y="318" width="2" height="4"/>
+      <rect x="276" y="318" width="2" height="4"/><rect x="290" y="318" width="2" height="4"/>
+      <rect x="300" y="318" width="2" height="4"/><rect x="310" y="318" width="2" height="4"/>
+      <rect x="258" y="330" width="2" height="5"/><rect x="272" y="330" width="2" height="5"/>
+      <rect x="288" y="330" width="2" height="5"/><rect x="306" y="330" width="2" height="5"/>
+      <rect x="490" y="318" width="2" height="4"/><rect x="500" y="318" width="2" height="4"/>
+      <rect x="510" y="318" width="2" height="4"/><rect x="524" y="318" width="2" height="4"/>
+      <rect x="534" y="318" width="2" height="4"/><rect x="544" y="318" width="2" height="4"/>
+      <rect x="492" y="330" width="2" height="5"/><rect x="508" y="330" width="2" height="5"/>
+      <rect x="524" y="330" width="2" height="5"/><rect x="542" y="330" width="2" height="5"/>
+
+      <!-- outer low ranges (dimmer) -->
+      <g opacity="0.8">
+        <rect x="212" y="328" width="2" height="4"/><rect x="224" y="328" width="2" height="4"/>
+        <rect x="236" y="328" width="2" height="4"/>
+        <rect x="558" y="328" width="2" height="4"/><rect x="570" y="328" width="2" height="4"/>
+        <rect x="582" y="328" width="2" height="4"/>
+      </g>
+    </g>
+  </g>
+
+  <!-- ========= CHURCH / SPIRE (right) ========= -->
+  <g>
+    <rect x="618" y="314" width="72" height="31" fill="url(#castle-stone-dark)"/>
+    <rect x="614" y="310" width="80" height="4" fill="#e0c390" opacity="0.75"/>
+    <rect x="640" y="252" width="32" height="62" fill="url(#castle-stone)"/>
+    <rect x="636" y="248" width="40" height="5" fill="#f0d5a0" opacity="0.9"/>
+    <!-- steep gothic spire -->
+    <path d="M 637 248 L 656 176 L 675 248 Z" fill="url(#castle-dome)"/>
+    <path d="M 637 248 L 656 176 L 656 248 Z" fill="#f7e6bb" opacity="0.22"/>
+    <!-- corner pinnacles -->
+    <path d="M 632 248 L 636 224 L 640 248 Z" fill="#c79658"/>
+    <path d="M 672 248 L 676 224 L 680 248 Z" fill="#c79658"/>
+    <!-- cross finial -->
+    <rect x="655.9" y="158" width="2.2" height="19" fill="#e8c98a"/>
+    <rect x="650" y="164" width="14" height="2" fill="#e8c98a"/>
+    <circle cx="657" cy="160" r="5" fill="#ffdca0" opacity="0.3" filter="url(#castle-blur-tiny)"/>
+    <!-- small side tower -->
+    <rect x="698" y="316" width="18" height="29" fill="url(#castle-stone-far)"/>
+    <path d="M 696 316 L 707 294 L 718 316 Z" fill="#a97c48"/>
+    <g fill="#ffdca0">
+      <rect x="646" y="264" width="2" height="7"/><rect x="664" y="264" width="2" height="7"/>
+      <rect x="646" y="284" width="2" height="7"/><rect x="664" y="284" width="2" height="7"/>
+      <rect x="624" y="322" width="2" height="4"/><rect x="636" y="322" width="2" height="4"/>
+      <rect x="650" y="322" width="2" height="4"/><rect x="664" y="322" width="2" height="4"/>
+      <rect x="678" y="322" width="2" height="4"/>
+      <rect x="628" y="334" width="2" height="5"/><rect x="656" y="334" width="2" height="5"/>
+      <rect x="680" y="334" width="2" height="5"/>
+      <rect x="702" y="326" width="2" height="4" opacity="0.8"/><rect x="710" y="326" width="2" height="4" opacity="0.8"/>
+    </g>
+  </g>
+
+  <!-- right-edge distant block, pushed back with haze -->
+  <g opacity="0.5">
+    <rect x="730" y="320" width="38" height="25" fill="#3d5f74"/>
+    <rect x="772" y="312" width="34" height="33" fill="#375a70"/>
+    <g fill="#ffdca0" opacity="0.65">
+      <rect x="736" y="328" width="2" height="3"/><rect x="748" y="328" width="2" height="3"/>
+      <rect x="758" y="336" width="2" height="3"/><rect x="778" y="322" width="2" height="3"/>
+      <rect x="792" y="330" width="2" height="3"/>
+    </g>
+  </g>
+
+  <!-- ========= QUAY / EMBANKMENT (buildings now stand on something) ========= -->
+  <rect x="-20" y="337" width="840" height="15" fill="url(#castle-quay)"/>
+  <rect x="-20" y="337" width="840" height="1.6" fill="#e3c08a" opacity="0.5"/>
+  <!-- quay lamp line -->
+  <g fill="#ffdca0">
+    <circle cx="40" cy="341" r="1"/><circle cx="92" cy="341" r="1"/><circle cx="144" cy="341" r="1"/>
+    <circle cx="196" cy="341" r="1"/><circle cx="248" cy="341" r="1"/><circle cx="300" cy="341" r="1"/>
+    <circle cx="352" cy="341" r="1"/><circle cx="404" cy="341" r="1"/><circle cx="456" cy="341" r="1"/>
+    <circle cx="508" cy="341" r="1"/><circle cx="560" cy="341" r="1"/><circle cx="612" cy="341" r="1"/>
+    <circle cx="664" cy="341" r="1"/><circle cx="716" cy="341" r="1"/><circle cx="768" cy="341" r="1"/>
+  </g>
+  <g fill="#ffc98a" opacity="0.3" filter="url(#castle-blur-tiny)">
+    <circle cx="40" cy="341" r="3.5"/><circle cx="92" cy="341" r="3.5"/><circle cx="144" cy="341" r="3.5"/>
+    <circle cx="196" cy="341" r="3.5"/><circle cx="248" cy="341" r="3.5"/><circle cx="300" cy="341" r="3.5"/>
+    <circle cx="352" cy="341" r="3.5"/><circle cx="404" cy="341" r="3.5"/><circle cx="456" cy="341" r="3.5"/>
+    <circle cx="508" cy="341" r="3.5"/><circle cx="560" cy="341" r="3.5"/><circle cx="612" cy="341" r="3.5"/>
+    <circle cx="664" cy="341" r="3.5"/><circle cx="716" cy="341" r="3.5"/><circle cx="768" cy="341" r="3.5"/>
+  </g>
+  <!-- moored barges along the quay, for scale -->
+  <g fill="#0a1a24" opacity="0.9">
+    <path d="M 132 346 L 176 346 L 172 351 L 136 351 Z"/>
+    <path d="M 470 347 L 504 347 L 501 351 L 473 351 Z"/>
+    <path d="M 684 346 L 722 346 L 718 351 L 688 351 Z"/>
+  </g>
+
+  <!-- ========= HAZE over the far bank ========= -->
+  <rect x="0" y="302" width="800" height="50" fill="url(#castle-haze)" opacity="0.55" filter="url(#castle-blur-haze)"/>
+  <ellipse cx="400" cy="346" rx="400" ry="20" fill="#e2b07a" opacity="0.14" filter="url(#castle-blur-soft)"/>
+  <ellipse cx="120" cy="342" rx="180" ry="15" fill="#9fc7cf" opacity="0.12" filter="url(#castle-blur-soft)"/>
+
+  <!-- ================= WATER ================= -->
+  <rect x="0" y="350" width="800" height="150" fill="url(#castle-water)"/>
+  <rect x="0" y="350" width="800" height="14" fill="#6fa3b2" opacity="0.16" filter="url(#castle-blur-tiny)"/>
+
+  <!-- broad reflection column directly under the dome : anchors the eye to centre -->
+  <path d="M 352 350 C 344 386 362 416 350 452 C 344 476 358 490 352 500 L 448 500 C 442 490 456 476 450 452 C 438 416 456 386 448 350 Z"
+        fill="url(#castle-refl-warm)" opacity="0.5" filter="url(#castle-blur-soft)"/>
+
+  <!-- warm reflection streaks -->
+  <g filter="url(#castle-blur-refl)" fill="url(#castle-refl-warm)">
+    <path d="M 386 350 C 381 376 392 402 383 428 C 378 456 391 480 385 500 L 415 500 C 421 480 408 456 413 428 C 422 402 411 376 414 350 Z"/>
+    <path d="M 363 350 C 359 374 368 400 360 426 C 356 454 366 478 361 500 L 373 500 C 378 478 368 454 372 426 C 380 400 371 374 375 350 Z" opacity="0.82"/>
+    <path d="M 427 350 C 423 374 432 400 424 426 C 420 454 430 478 425 500 L 437 500 C 442 478 432 454 436 426 C 444 400 435 374 439 350 Z" opacity="0.82"/>
+    <path d="M 330 350 C 326 376 336 398 328 426 C 324 452 334 476 329 500 L 343 500 C 348 476 338 452 342 426 C 350 398 340 376 344 350 Z" opacity="0.6"/>
+    <path d="M 458 350 C 454 376 464 398 456 426 C 452 452 462 476 457 500 L 471 500 C 476 476 466 452 470 426 C 478 398 468 376 472 350 Z" opacity="0.6"/>
+    <path d="M 296 350 C 292 372 300 398 293 424 C 289 450 298 474 294 500 L 302 500 C 306 474 297 450 301 424 C 308 398 300 372 304 350 Z" opacity="0.46"/>
+    <path d="M 496 350 C 492 372 500 398 493 424 C 489 450 498 474 494 500 L 502 500 C 506 474 497 450 501 424 C 508 398 500 372 504 350 Z" opacity="0.46"/>
+    <path d="M 258 350 C 255 370 262 394 256 420 C 252 446 260 470 256 500 L 263 500 C 267 470 259 446 263 420 C 269 394 262 370 265 350 Z" opacity="0.36"/>
+    <path d="M 534 350 C 531 370 538 394 532 420 C 528 446 536 470 532 500 L 539 500 C 543 470 535 446 539 420 C 545 394 538 370 541 350 Z" opacity="0.36"/>
+    <!-- church spire reflection -->
+    <path d="M 650 350 C 646 374 655 398 647 424 C 643 450 652 476 647 500 L 665 500 C 670 476 660 450 664 424 C 672 398 662 374 666 350 Z" opacity="0.5"/>
+    <!-- bridge lamp reflections -->
+    <path d="M 44 350 C 41 368 48 392 42 418 C 38 444 45 470 42 500 L 52 500 C 55 470 48 444 52 418 C 58 392 51 368 54 350 Z" opacity="0.3"/>
+    <path d="M 138 350 C 135 368 142 392 136 418 C 132 444 139 470 136 500 L 146 500 C 149 470 142 444 146 418 C 152 392 145 368 148 350 Z" opacity="0.28"/>
+    <path d="M 196 350 C 193 368 200 392 194 418 C 190 444 197 470 194 500 L 204 500 C 207 470 200 444 204 418 C 210 392 203 368 206 350 Z" opacity="0.3"/>
+    <path d="M 592 350 C 589 370 596 394 590 420 C 586 446 593 470 590 500 L 596 500 C 599 470 592 446 596 420 C 602 394 595 370 598 350 Z" opacity="0.28"/>
+    <path d="M 706 350 C 703 368 710 392 704 418 C 700 444 707 470 704 500 L 710 500 C 713 470 706 444 710 418 C 716 392 709 368 712 350 Z" opacity="0.22"/>
+  </g>
+
+  <!-- cool reflection streaks -->
+  <g filter="url(#castle-blur-refl)" fill="url(#castle-refl-cyan)">
+    <path d="M 24 350 C 20 374 30 398 22 426 C 18 452 28 478 22 500 L 40 500 C 46 478 36 452 40 426 C 48 398 38 374 42 350 Z"/>
+    <path d="M 748 350 C 744 374 754 398 746 426 C 742 452 752 478 746 500 L 764 500 C 770 478 760 452 764 426 C 772 398 762 374 766 350 Z"/>
+    <path d="M 100 350 C 97 370 104 394 98 420 C 94 446 101 472 98 500 L 108 500 C 111 472 104 446 108 420 C 114 394 107 370 110 350 Z" opacity="0.55"/>
+    <path d="M 618 350 C 615 370 622 394 616 420 C 612 446 619 472 616 500 L 626 500 C 629 472 622 446 626 420 C 632 394 625 370 628 350 Z" opacity="0.45"/>
+  </g>
+
+  <!-- wavy ripple lines breaking the reflections -->
+  <g fill="none" stroke="#08202b" stroke-linecap="round">
+    <path d="M -10 355 Q 90 353 190 355 T 390 355 T 590 355 T 810 355" stroke-width="1" opacity="0.28"/>
+    <path d="M -10 361 Q 100 358 210 361 T 430 361 T 650 361 T 810 361" stroke-width="1.1" opacity="0.3"/>
+    <path d="M -10 369 Q 80 366 170 369 T 350 369 T 530 369 T 810 369" stroke-width="1.2" opacity="0.3"/>
+    <path d="M -10 379 Q 110 375 230 379 T 470 379 T 710 379 T 810 379" stroke-width="1.4" opacity="0.32"/>
+    <path d="M -10 391 Q 95 386 200 391 T 410 391 T 620 391 T 810 391" stroke-width="1.6" opacity="0.34"/>
+    <path d="M -10 405 Q 120 399 250 405 T 510 405 T 770 405 T 810 405" stroke-width="1.8" opacity="0.36"/>
+    <path d="M -10 421 Q 100 414 210 421 T 430 421 T 650 421 T 810 421" stroke-width="2.1" opacity="0.38"/>
+    <path d="M -10 439 Q 130 431 270 439 T 550 439 T 810 439" stroke-width="2.4" opacity="0.4"/>
+    <path d="M -10 459 Q 110 450 230 459 T 470 459 T 710 459 T 810 459" stroke-width="2.8" opacity="0.42"/>
+    <path d="M -10 481 Q 140 471 290 481 T 590 481 T 810 481" stroke-width="3.4" opacity="0.44"/>
+  </g>
+
+  <!-- bright ripple flecks -->
+  <g filter="url(#castle-blur-tiny)">
+    <rect x="362" y="367" width="28" height="1.4" fill="#ffe0aa" opacity="0.45"/>
+    <rect x="406" y="381" width="34" height="1.6" fill="#ffd79a" opacity="0.34"/>
+    <rect x="340" y="397" width="30" height="1.6" fill="#e8b075" opacity="0.26"/>
+    <rect x="420" y="417" width="42" height="1.8" fill="#e8b075" opacity="0.22"/>
+    <rect x="356" y="445" width="52" height="2" fill="#d69f66" opacity="0.16"/>
+    <rect x="640" y="373" width="22" height="1.4" fill="#ffd79a" opacity="0.3"/>
+    <rect x="654" y="403" width="28" height="1.6" fill="#e8b075" opacity="0.2"/>
+    <rect x="44" y="375" width="22" height="1.4" fill="#cfe9f0" opacity="0.22"/>
+    <rect x="180" y="393" width="26" height="1.4" fill="#cfe9f0" opacity="0.18"/>
+    <rect x="732" y="387" width="34" height="1.6" fill="#a9dbe6" opacity="0.18"/>
+    <rect x="240" y="425" width="36" height="1.8" fill="#8fc3d2" opacity="0.12"/>
+    <rect x="520" y="437" width="40" height="1.8" fill="#8fc3d2" opacity="0.12"/>
+  </g>
+
+  <!-- water haze right at the far bank -->
+  <ellipse cx="400" cy="352" rx="420" ry="9" fill="#dcb98d" opacity="0.16" filter="url(#castle-blur-soft)"/>
+
+  <!-- ========= FOREGROUND : near-black bank ========= -->
+  <rect x="0" y="428" width="800" height="72" fill="url(#castle-fg)"/>
+  <path d="M -20 500 L -20 486 C 60 480 130 484 210 480 C 300 476 380 484 470 480 C 560 476 650 484 740 479 C 770 478 800 480 820 482 L 820 500 Z"
+        fill="#03090d" opacity="0.9" filter="url(#castle-blur-tiny)"/>
+
+  <!-- small drifting boat, off-centre, kept dark and quiet -->
+  <g opacity="0.8">
+    <path d="M 566 424 L 622 424 L 617 431 L 571 431 Z" fill="#061520"/>
+    <rect x="583" y="417" width="22" height="7" fill="#061520"/>
+    <rect x="592" y="410" width="2.5" height="8" fill="#061520"/>
+    <rect x="588" y="419" width="2" height="2" fill="#ffdca0" opacity="0.9"/>
+    <rect x="598" y="419" width="2" height="2" fill="#ffdca0" opacity="0.9"/>
+    <rect x="584" y="432" width="38" height="9" fill="#ffdca0" opacity="0.1" filter="url(#castle-blur-tiny)"/>
+  </g>
+
+  <!-- ========= GRAIN + VIGNETTE ========= -->
+  <rect x="0" y="0" width="800" height="500" filter="url(#castle-grain)" opacity="0.075" style="mix-blend-mode:overlay"/>
+  <rect x="0" y="0" width="800" height="500" fill="url(#castle-vignette)"/>
+</svg>

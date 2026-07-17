@@ -1,0 +1,143 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 340" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <linearGradient id="hm-sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0"    stop-color="#231d33"/>
+      <stop offset="0.18" stop-color="#3b2b47"/>
+      <stop offset="0.36" stop-color="#6b3d4f"/>
+      <stop offset="0.50" stop-color="#a4523f"/>
+      <stop offset="0.62" stop-color="#cf6a2c"/>
+      <stop offset="0.72" stop-color="#ee8f34"/>
+      <stop offset="0.82" stop-color="#ffb85c"/>
+      <stop offset="0.92" stop-color="#ffd48c"/>
+      <stop offset="1"    stop-color="#ffe6b4"/>
+    </linearGradient>
+
+    <radialGradient id="hm-sunglow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0"    stop-color="#fff6dc" stop-opacity="0.98"/>
+      <stop offset="0.16" stop-color="#ffe6a8" stop-opacity="0.88"/>
+      <stop offset="0.36" stop-color="#ffbe62" stop-opacity="0.60"/>
+      <stop offset="0.62" stop-color="#f08a35" stop-opacity="0.28"/>
+      <stop offset="1"    stop-color="#e0702a" stop-opacity="0"/>
+    </radialGradient>
+
+    <linearGradient id="hm-haze" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0"   stop-color="#ffd9a0" stop-opacity="0"/>
+      <stop offset="0.6" stop-color="#ffcf8e" stop-opacity="0.30"/>
+      <stop offset="1"   stop-color="#ffc06e" stop-opacity="0.44"/>
+    </linearGradient>
+
+    <linearGradient id="hm-r4" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#9aa4b8"/>
+      <stop offset="1" stop-color="#7c88a0"/>
+    </linearGradient>
+    <linearGradient id="hm-r3" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#68718c"/>
+      <stop offset="1" stop-color="#4c5470"/>
+    </linearGradient>
+    <linearGradient id="hm-r2" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#3a4257"/>
+      <stop offset="1" stop-color="#252b3a"/>
+    </linearGradient>
+    <linearGradient id="hm-r1" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#1b2029"/>
+      <stop offset="1" stop-color="#10141b"/>
+    </linearGradient>
+    <linearGradient id="hm-fg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#0c0f13"/>
+      <stop offset="1" stop-color="#05070a"/>
+    </linearGradient>
+
+    <linearGradient id="hm-vig" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0"    stop-color="#05070a" stop-opacity="0.55"/>
+      <stop offset="0.35" stop-color="#05070a" stop-opacity="0"/>
+      <stop offset="0.78" stop-color="#05070a" stop-opacity="0"/>
+      <stop offset="1"    stop-color="#05070a" stop-opacity="0.5"/>
+    </linearGradient>
+
+    <filter id="hm-blur-lg" x="-25%" y="-60%" width="150%" height="220%">
+      <feGaussianBlur stdDeviation="9"/>
+    </filter>
+    <filter id="hm-blur-md" x="-25%" y="-60%" width="150%" height="220%">
+      <feGaussianBlur stdDeviation="4"/>
+    </filter>
+    <filter id="hm-blur-sm" x="-30%" y="-80%" width="160%" height="260%">
+      <feGaussianBlur stdDeviation="1.6"/>
+    </filter>
+  </defs>
+
+  <!-- ÉG -->
+  <rect width="1600" height="230" fill="url(#hm-sky)"/>
+
+  <!-- napkorong + izzás -->
+  <ellipse cx="830" cy="206" rx="340" ry="152" fill="url(#hm-sunglow)"/>
+  <circle cx="830" cy="203" r="26" fill="#fff8e2" filter="url(#hm-blur-md)"/>
+  <circle cx="830" cy="203" r="13" fill="#fffdf4" filter="url(#hm-blur-sm)"/>
+
+  <!-- felhősávok, alulról megvilágítva -->
+  <g filter="url(#hm-blur-lg)" opacity="0.75">
+    <ellipse cx="430"  cy="96"  rx="290" ry="9"  fill="#c2718a" opacity="0.50"/>
+    <ellipse cx="1080" cy="78"  rx="330" ry="8"  fill="#a75f7d" opacity="0.45"/>
+    <ellipse cx="760"  cy="132" rx="420" ry="10" fill="#e08a5c" opacity="0.55"/>
+    <ellipse cx="1280" cy="150" rx="300" ry="9"  fill="#f0a05e" opacity="0.60"/>
+    <ellipse cx="300"  cy="160" rx="280" ry="8"  fill="#f2a464" opacity="0.55"/>
+    <ellipse cx="880"  cy="176" rx="520" ry="8"  fill="#ffc98a" opacity="0.50"/>
+  </g>
+
+  <!-- párás fénysáv a horizont fölött -->
+  <rect x="0" y="150" width="1600" height="80" fill="url(#hm-haze)"/>
+
+  <!-- sötét alapréteg a horizont alatt (nehogy rés maradjon a gerincek között) -->
+  <rect x="0" y="226" width="1600" height="114" fill="#0f131a"/>
+
+  <!-- 4. (legtávolabbi) gerinc -->
+  <path d="M0 232 L0 210 L70 196 L140 205 L215 182 L268 199 L352 172 L410 191 L470 186 L556 197 L640 179 L712 196 L806 187 L880 201 L946 175 L1020 195 L1096 186 L1150 199 L1232 178 L1308 197 L1372 189 L1450 200 L1520 185 L1600 199 L1600 232 Z"
+        fill="url(#hm-r4)" opacity="0.55" filter="url(#hm-blur-md)"/>
+  <rect x="0" y="170" width="1600" height="62" fill="#ffcf90" opacity="0.16" filter="url(#hm-blur-lg)"/>
+
+  <!-- 3. gerinc -->
+  <path d="M0 244 L0 218 L96 201 L168 215 L246 193 L322 213 L404 205 L468 219 L558 199 L636 217 L700 209 L788 221 L872 200 L948 216 L1032 206 L1112 220 L1196 202 L1268 218 L1354 207 L1436 219 L1520 205 L1600 217 L1600 244 Z"
+        fill="url(#hm-r3)" opacity="0.85" filter="url(#hm-blur-sm)"/>
+  <rect x="0" y="196" width="1600" height="50" fill="#f7b276" opacity="0.13" filter="url(#hm-blur-lg)"/>
+
+  <!-- 2. gerinc -->
+  <path d="M0 258 L0 236 L104 219 L186 235 L262 214 L338 231 L426 222 L512 236 L604 216 L688 234 L768 226 L858 238 L940 218 L1024 235 L1108 227 L1190 239 L1276 217 L1358 234 L1444 224 L1528 237 L1600 228 L1600 258 Z"
+        fill="url(#hm-r2)"/>
+  <path d="M262 214 L338 231 L426 222 L512 236 L604 216 L688 234 L768 226 L858 238 L940 218"
+        fill="none" stroke="#ffb877" stroke-width="1.2" opacity="0.5" filter="url(#hm-blur-sm)"/>
+  <rect x="0" y="214" width="1600" height="44" fill="#e79a63" opacity="0.10" filter="url(#hm-blur-lg)"/>
+
+  <!-- 1. gerinc -->
+  <path d="M0 284 L0 256 L112 240 L204 257 L296 234 L392 254 L486 244 L578 258 L668 238 L764 256 L852 246 L946 259 L1040 240 L1136 257 L1228 247 L1320 260 L1414 241 L1502 256 L1600 248 L1600 284 Z"
+        fill="url(#hm-r1)"/>
+
+  <!-- ELŐTÉR: sziklapad -->
+  <path d="M0 340 L0 306 L70 296 L160 302 L250 290 L340 300 L430 292 L520 302 L610 296 L700 306 L800 298 L900 308 L960 292 L1010 280 L1080 272 L1170 268 L1260 274 L1340 284 L1430 292 L1520 288 L1600 296 L1600 340 Z"
+        fill="url(#hm-fg)"/>
+  <path d="M960 292 L1010 280 L1080 272 L1170 268 L1260 274 L1340 284"
+        fill="none" stroke="#c98a52" stroke-width="1.1" opacity="0.45" filter="url(#hm-blur-sm)"/>
+
+  <!-- TÚRÁZÓ (hátulnézet, hátizsákkal) -->
+  <g fill="#04060a" transform="translate(90,0)">
+    <path d="M1132 218 L1141 218 L1143 268 L1134 269 Z"/>
+    <path d="M1148 218 L1157 218 L1159 269 L1150 268 Z"/>
+    <path d="M1130 265 L1145 265 L1146 271 L1128 271 Z"/>
+    <path d="M1148 265 L1163 265 L1164 271 L1147 271 Z"/>
+    <path d="M1128 160 L1166 160 L1163 222 L1131 222 Z"/>
+    <path d="M1126 158 Q1123 152 1130 150 L1163 150 Q1171 152 1168 158 L1170 196 Q1170 206 1160 207 L1134 207 Q1124 206 1124 196 Z"/>
+    <path d="M1129 149 Q1128 142 1136 141 L1158 141 Q1166 142 1165 149 Z"/>
+    <path d="M1121 164 Q1117 166 1118 174 L1120 192 Q1121 198 1126 197 L1126 164 Z"/>
+    <path d="M1173 164 Q1177 166 1176 174 L1174 192 Q1173 198 1168 197 L1168 164 Z"/>
+    <path d="M1120 162 L1126 162 L1124 210 L1117 209 Z"/>
+    <path d="M1168 162 L1174 162 L1177 209 L1170 210 Z"/>
+    <path d="M1131 156 Q1147 146 1163 156 L1163 162 L1131 162 Z"/>
+    <path d="M1141 138 L1153 138 L1153 152 L1141 152 Z"/>
+    <ellipse cx="1147" cy="130" rx="10.5" ry="12"/>
+  </g>
+
+  <!-- meleg peremfény a túrázón (a nap felőli oldal) -->
+  <path d="M1226 119 Q1218 126 1219 140 M1214 152 L1210 200"
+        fill="none" stroke="#ffb066" stroke-width="1.2" opacity="0.5" filter="url(#hm-blur-sm)"/>
+
+  <!-- vignetta -->
+  <rect width="1600" height="340" fill="url(#hm-vig)"/>
+</svg>

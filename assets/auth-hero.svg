@@ -1,0 +1,298 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 1400" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <!-- ============ SKY ============ -->
+    <linearGradient id="ah-sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0"    stop-color="#232833"/>
+      <stop offset="0.14" stop-color="#2c3142"/>
+      <stop offset="0.26" stop-color="#33384a"/>
+      <stop offset="0.40" stop-color="#524457"/>
+      <stop offset="0.52" stop-color="#6b5560"/>
+      <stop offset="0.66" stop-color="#9c6448"/>
+      <stop offset="0.78" stop-color="#c07a3c"/>
+      <stop offset="0.88" stop-color="#e8a84c"/>
+      <stop offset="0.95" stop-color="#f4c877"/>
+      <stop offset="1"    stop-color="#ffe9b8"/>
+    </linearGradient>
+
+    <!-- warm horizon wash to blend sky into valley -->
+    <linearGradient id="ah-horizonwash" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0"   stop-color="#f4c877" stop-opacity="0"/>
+      <stop offset="0.5" stop-color="#f0c070" stop-opacity="0.35"/>
+      <stop offset="1"   stop-color="#e8a84c" stop-opacity="0.6"/>
+    </linearGradient>
+
+    <!-- sun bloom -->
+    <radialGradient id="ah-sunbloom" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0"    stop-color="#fff6dd" stop-opacity="1"/>
+      <stop offset="0.14" stop-color="#fff2cc" stop-opacity="0.95"/>
+      <stop offset="0.34" stop-color="#f9d488" stop-opacity="0.7"/>
+      <stop offset="0.6"  stop-color="#eaa64f" stop-opacity="0.32"/>
+      <stop offset="1"    stop-color="#e8a84c" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="ah-suncore" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0"   stop-color="#fffaf0" stop-opacity="1"/>
+      <stop offset="0.5" stop-color="#fff2cc" stop-opacity="0.9"/>
+      <stop offset="1"   stop-color="#ffe9b0" stop-opacity="0"/>
+    </radialGradient>
+
+    <!-- cloud gradients -->
+    <linearGradient id="ah-cloudA" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0"   stop-color="#3a3542" stop-opacity="0.9"/>
+      <stop offset="0.6" stop-color="#7a5b4a" stop-opacity="0.8"/>
+      <stop offset="1"   stop-color="#e0a860" stop-opacity="0.85"/>
+    </linearGradient>
+    <linearGradient id="ah-cloudB" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0"   stop-color="#4a4048" stop-opacity="0.7"/>
+      <stop offset="1"   stop-color="#d99a55" stop-opacity="0.8"/>
+    </linearGradient>
+    <linearGradient id="ah-cloudLit" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0"   stop-color="#c98a4e" stop-opacity="0.55"/>
+      <stop offset="1"   stop-color="#ffd488" stop-opacity="0.75"/>
+    </linearGradient>
+
+    <!-- ============ VALLEY / RIDGES ============ -->
+    <linearGradient id="ah-ridge5" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#c3b399"/>
+      <stop offset="1" stop-color="#b9a891"/>
+    </linearGradient>
+    <linearGradient id="ah-ridge4" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#a8926f"/>
+      <stop offset="1" stop-color="#8f7a5c"/>
+    </linearGradient>
+    <linearGradient id="ah-ridge3" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#7c6349"/>
+      <stop offset="1" stop-color="#5f4c39"/>
+    </linearGradient>
+    <linearGradient id="ah-ridge2" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#4a3a2c"/>
+      <stop offset="1" stop-color="#33281f"/>
+    </linearGradient>
+
+    <!-- fog bands -->
+    <linearGradient id="ah-fog" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0"    stop-color="#f0d9a8" stop-opacity="0"/>
+      <stop offset="0.45" stop-color="#f0d9a8" stop-opacity="0.85"/>
+      <stop offset="1"    stop-color="#e8cf9c" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="ah-fog2" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0"   stop-color="#f5e2b8" stop-opacity="0"/>
+      <stop offset="0.5" stop-color="#f3ddaa" stop-opacity="0.7"/>
+      <stop offset="1"   stop-color="#e6d09a" stop-opacity="0"/>
+    </linearGradient>
+
+    <!-- ============ FOREGROUND ROCK ============ -->
+    <linearGradient id="ah-rock" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0"   stop-color="#0e1116"/>
+      <stop offset="0.5" stop-color="#0a0d11"/>
+      <stop offset="1"   stop-color="#07090c"/>
+    </linearGradient>
+    <linearGradient id="ah-rockrim" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0"   stop-color="#f6c470" stop-opacity="0.85"/>
+      <stop offset="0.5" stop-color="#e8a24c" stop-opacity="0.5"/>
+      <stop offset="1"   stop-color="#c07a3c" stop-opacity="0.1"/>
+    </linearGradient>
+
+    <!-- figure rim light -->
+    <linearGradient id="ah-rim" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0"    stop-color="#ffdf9a" stop-opacity="0.95"/>
+      <stop offset="0.35" stop-color="#f5b45e" stop-opacity="0.35"/>
+      <stop offset="1"    stop-color="#000000" stop-opacity="0"/>
+    </linearGradient>
+
+    <!-- ============ OVERLAYS ============ -->
+    <radialGradient id="ah-vignette" cx="0.5" cy="0.46" r="0.75">
+      <stop offset="0"    stop-color="#000000" stop-opacity="0"/>
+      <stop offset="0.6"  stop-color="#000000" stop-opacity="0"/>
+      <stop offset="0.82" stop-color="#050608" stop-opacity="0.35"/>
+      <stop offset="1"    stop-color="#020304" stop-opacity="0.85"/>
+    </radialGradient>
+    <linearGradient id="ah-bottomdark" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0"    stop-color="#000000" stop-opacity="0"/>
+      <stop offset="0.72" stop-color="#000000" stop-opacity="0"/>
+      <stop offset="1"    stop-color="#020304" stop-opacity="0.8"/>
+    </linearGradient>
+    <linearGradient id="ah-leftdark" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0"   stop-color="#000000" stop-opacity="0.34"/>
+      <stop offset="0.4" stop-color="#000000" stop-opacity="0.1"/>
+      <stop offset="1"   stop-color="#000000" stop-opacity="0"/>
+    </linearGradient>
+
+    <!-- filters -->
+    <filter id="ah-blurS" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="6"/>
+    </filter>
+    <filter id="ah-blurM" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="16"/>
+    </filter>
+    <filter id="ah-blurL" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="30"/>
+    </filter>
+    <filter id="ah-fogblur" x="-40%" y="-60%" width="180%" height="220%">
+      <feGaussianBlur stdDeviation="22"/>
+    </filter>
+
+    <!-- grain -->
+    <filter id="ah-grain" x="0" y="0" width="100%" height="100%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" stitchTiles="stitch" result="n"/>
+      <feColorMatrix in="n" type="matrix"
+        values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.7 0"/>
+    </filter>
+    <!-- soft cloud noise for atmosphere -->
+    <filter id="ah-haze" x="-20%" y="-20%" width="140%" height="140%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.008 0.02" numOctaves="3" seed="7" result="n"/>
+      <feColorMatrix in="n" type="matrix"
+        values="0 0 0 0 0.95  0 0 0 0 0.82  0 0 0 0 0.6  0 0 0 0.5 0"/>
+      <feGaussianBlur stdDeviation="6"/>
+    </filter>
+  </defs>
+
+  <!-- ================= SKY ================= -->
+  <rect x="0" y="0" width="1200" height="700" fill="url(#ah-sky)"/>
+
+  <!-- sun glow bloom low near horizon, centered x=560 y=560 -->
+  <ellipse cx="560" cy="575" rx="620" ry="360" fill="url(#ah-sunbloom)" filter="url(#ah-blurL)"/>
+  <ellipse cx="560" cy="562" rx="150" ry="120" fill="url(#ah-suncore)" filter="url(#ah-blurM)"/>
+
+  <!-- ===== dramatic cloud bands (blurred), lit warmly from below ===== -->
+  <g filter="url(#ah-blurM)">
+    <path d="M-60 150 C 200 118, 420 150, 640 132 C 860 116, 1060 150, 1260 128 L1260 205 C 1040 232, 820 200, 600 220 C 400 236, 180 208, -60 232 Z"
+          fill="url(#ah-cloudA)" opacity="0.8"/>
+    <path d="M-60 250 C 260 220, 520 262, 780 240 C 980 224, 1120 258, 1260 240 L1260 312 C 1060 332, 840 300, 620 320 C 420 336, 160 306, -60 328 Z"
+          fill="url(#ah-cloudB)" opacity="0.7"/>
+    <path d="M-60 372 C 240 350, 460 392, 700 372 C 920 354, 1080 392, 1260 372 L1260 432 C 1040 452, 800 424, 560 442 C 360 456, 140 430, -60 450 Z"
+          fill="url(#ah-cloudA)" opacity="0.62"/>
+  </g>
+  <g filter="url(#ah-blurS)">
+    <path d="M-60 452 C 220 436, 440 470, 700 452 C 920 438, 1100 468, 1260 452 L1260 500 C 1060 514, 820 492, 580 506 C 380 516, 160 496, -60 512 Z"
+          fill="url(#ah-cloudLit)" opacity="0.7"/>
+    <path d="M-60 300 C 180 286, 360 312, 540 300 C 700 290, 820 310, 980 300 L980 330 C 820 342, 660 322, 500 332 C 340 340, 120 326, -60 336 Z"
+          fill="url(#ah-cloudLit)" opacity="0.45"/>
+    <!-- thin hot streaks near the sun -->
+    <path d="M120 560 C 320 548, 520 552, 760 546 C 900 542, 1020 548, 1160 542 L1160 560 C 1000 566, 820 560, 620 566 C 420 570, 260 566, 120 574 Z"
+          fill="#ffdf9a" opacity="0.5"/>
+    <path d="M200 605 C 400 596, 640 600, 900 592 L900 606 C 660 614, 420 610, 200 618 Z"
+          fill="#ffe6ad" opacity="0.4"/>
+  </g>
+
+  <!-- ================= VALLEY ================= -->
+  <!-- warm wash blending horizon into ridges -->
+  <rect x="0" y="470" width="1200" height="360" fill="url(#ah-horizonwash)"/>
+
+  <!-- farthest ridge (very hazy, pale) -->
+  <g opacity="0.5">
+    <path d="M0 650 C 150 610, 300 632, 470 600 C 640 568, 780 612, 940 588 C 1080 566, 1140 604, 1200 592 L1200 720 L0 720 Z"
+          fill="url(#ah-ridge5)"/>
+  </g>
+  <!-- fog band 1 -->
+  <rect x="-40" y="600" width="1280" height="150" fill="url(#ah-fog)" filter="url(#ah-fogblur)"/>
+
+  <!-- ridge 4 -->
+  <g opacity="0.82">
+    <path d="M0 700 C 180 664, 340 692, 520 660 C 690 630, 820 684, 1000 656 C 1110 638, 1160 676, 1200 664 L1200 780 L0 780 Z"
+          fill="url(#ah-ridge4)"/>
+  </g>
+  <!-- fog band 2 -->
+  <rect x="-40" y="672" width="1280" height="150" fill="url(#ah-fog2)" filter="url(#ah-fogblur)"/>
+
+  <!-- ridge 3 -->
+  <g opacity="0.92">
+    <path d="M0 762 C 160 726, 360 762, 540 730 C 720 698, 860 748, 1040 724 C 1130 712, 1170 742, 1200 734 L1200 850 L0 850 Z"
+          fill="url(#ah-ridge3)"/>
+  </g>
+  <!-- fog band 3 -->
+  <rect x="-40" y="740" width="1280" height="140" fill="url(#ah-fog)" filter="url(#ah-fogblur)" opacity="0.8"/>
+
+  <!-- ridge 2 (nearer, darker) -->
+  <path d="M0 838 C 200 800, 380 838, 560 812 C 760 784, 900 828, 1080 806 C 1150 798, 1180 820, 1200 814 L1200 940 L0 940 Z"
+        fill="url(#ah-ridge2)"/>
+  <!-- low fog wisp -->
+  <rect x="-40" y="820" width="1280" height="110" fill="url(#ah-fog2)" filter="url(#ah-fogblur)" opacity="0.6"/>
+
+  <!-- faint distant structures on valley floor (tiny, very faint) -->
+  <g opacity="0.16" fill="#3a2c20">
+    <rect x="512" y="700" width="4" height="14"/>
+    <rect x="520" y="704" width="3" height="10"/>
+    <rect x="527" y="698" width="4" height="16"/>
+    <rect x="534" y="705" width="3" height="9"/>
+    <rect x="618" y="716" width="3" height="11"/>
+    <rect x="624" y="712" width="4" height="15"/>
+    <rect x="631" y="718" width="3" height="9"/>
+  </g>
+
+  <!-- atmospheric haze texture over valley -->
+  <rect x="0" y="560" width="1200" height="340" fill="url(#ah-haze)" opacity="0.35"/>
+
+  <!-- ================= FOREGROUND ROCK ================= -->
+  <!-- main ledge the hikers stand on -->
+  <path d="M0 1030 C 120 1010, 240 1002, 360 1000 C 520 998, 700 1004, 860 1002 C 980 1000, 1100 1010, 1200 1024 L1200 1400 L0 1400 Z"
+        fill="url(#ah-rock)"/>
+  <!-- rock rising on the sides -->
+  <path d="M0 1400 L0 900 C 60 940, 110 1000, 150 1060 C 180 1105, 200 1160, 210 1400 Z"
+        fill="url(#ah-rock)"/>
+  <path d="M1200 1400 L1200 940 C 1140 975, 1090 1030, 1055 1085 C 1025 1130, 1010 1180, 1005 1400 Z"
+        fill="url(#ah-rock)"/>
+  <!-- a higher rock on the left for the tall figure's foot -->
+  <path d="M250 1075 C 300 1030, 360 1010, 420 1012 C 470 1014, 500 1040, 505 1080 C 460 1068, 400 1064, 340 1074 C 305 1080, 275 1080, 250 1075 Z"
+        fill="url(#ah-rock)"/>
+
+  <!-- warm rim light on top edges of rock facing sun -->
+  <g opacity="0.9">
+    <path d="M360 1000 C 520 998, 700 1004, 860 1002 C 900 1001, 940 1003, 980 1006"
+          fill="none" stroke="url(#ah-rockrim)" stroke-width="3.5" stroke-linecap="round"/>
+    <path d="M255 1074 C 320 1020, 400 1008, 470 1018"
+          fill="none" stroke="url(#ah-rockrim)" stroke-width="3" stroke-linecap="round" opacity="0.8"/>
+    <path d="M60 940 C 110 995, 150 1050, 175 1110"
+          fill="none" stroke="url(#ah-rockrim)" stroke-width="2.5" stroke-linecap="round" opacity="0.5"/>
+  </g>
+
+  <!-- ================= THREE HIKERS (from behind) ================= -->
+  <!-- Group sits ~ y=690-1030, centered horizontally. Near-black silhouettes. -->
+
+  <!-- === LEFT: tall figure, big backpack, one leg up on higher rock === -->
+  <g>
+    <path d="M452 690 C 438 760, 436 850, 448 1010 L470 1010 C 458 850, 460 760, 474 690 Z"
+          fill="url(#ah-rim)" opacity="0.55" filter="url(#ah-blurS)"/>
+    <path fill="#04060a" d="M498 690 C 486 682, 476 686, 472 700 C 468 712, 470 726, 476 736 C 466 740, 458 750, 456 766 C 448 762, 438 764, 432 772 C 420 786, 416 812, 418 846 C 419 872, 424 898, 430 918 C 436 916, 444 916, 452 918 C 458 940, 462 968, 462 1006 L 486 1006 C 486 968, 484 940, 488 918 C 500 916, 512 914, 520 906 C 528 894, 530 860, 528 828 C 526 800, 520 778, 510 764 C 512 750, 510 738, 502 732 C 510 722, 514 708, 508 698 C 505 693, 502 690, 498 690 Z"/>
+    <path fill="#04060a" d="M462 940 C 448 958, 432 986, 424 1030 C 432 1034, 444 1036, 454 1034 C 460 998, 468 970, 476 950 Z"/>
+    <path fill="#04060a" d="M480 946 C 482 978, 484 1002, 488 1030 L 508 1030 C 506 1000, 502 972, 496 948 Z"/>
+    <path fill="#04060a" d="M470 748 C 466 780, 466 820, 470 860 L 478 860 C 476 820, 476 782, 480 750 Z"/>
+    <path d="M472 700 C 462 716, 456 748, 452 782 C 448 820, 448 866, 452 906 C 445 930, 442 960, 442 1004"
+          fill="none" stroke="#ffcf82" stroke-width="2.4" stroke-linecap="round" opacity="0.85"/>
+  </g>
+
+  <!-- === CENTER: medium figure, backpack, looking out === -->
+  <g>
+    <path d="M566 720 C 556 790, 556 880, 566 985 L586 985 C 576 880, 576 790, 586 720 Z"
+          fill="url(#ah-rim)" opacity="0.5" filter="url(#ah-blurS)"/>
+    <path fill="#04060a" d="M612 726 C 602 720, 592 724, 588 736 C 585 746, 587 758, 593 766 C 584 770, 577 780, 575 794 C 566 792, 558 796, 553 806 C 545 820, 544 852, 547 884 C 549 906, 554 924, 560 936 C 566 934, 574 934, 580 936 C 584 958, 586 980, 586 1000 L 610 1000 C 610 980, 608 958, 612 936 C 622 934, 632 930, 638 920 C 646 906, 646 874, 643 846 C 640 820, 634 802, 625 792 C 628 780, 626 770, 619 764 C 626 756, 628 744, 622 734 C 619 729, 616 726, 612 726 Z"/>
+    <path fill="#04060a" d="M572 950 C 570 972, 570 992, 572 1012 L 588 1012 C 588 992, 586 972, 584 952 Z"/>
+    <path fill="#04060a" d="M596 952 C 596 974, 598 994, 602 1014 L 618 1014 C 616 992, 612 972, 608 950 Z"/>
+    <path fill="#04060a" d="M572 800 C 568 830, 568 862, 572 892 L 580 892 C 578 862, 578 832, 582 802 Z"/>
+    <path d="M588 734 C 580 748, 575 776, 572 806 C 568 842, 568 884, 572 918 C 566 940, 564 968, 564 998"
+          fill="none" stroke="#ffcf82" stroke-width="2.2" stroke-linecap="round" opacity="0.8"/>
+  </g>
+
+  <!-- === RIGHT: shorter figure, backpack === -->
+  <g>
+    <path d="M700 764 C 692 820, 692 892, 700 972 L718 972 C 710 892, 710 820, 718 764 Z"
+          fill="url(#ah-rim)" opacity="0.45" filter="url(#ah-blurS)"/>
+    <path fill="#04060a" d="M742 770 C 733 765, 724 769, 721 780 C 718 789, 720 800, 726 807 C 718 811, 712 820, 710 832 C 702 830, 695 834, 691 843 C 684 855, 683 882, 686 908 C 688 926, 692 941, 698 951 C 704 949, 711 949, 716 951 C 719 969, 721 984, 721 1000 L 743 1000 C 743 984, 741 969, 745 951 C 754 949, 762 945, 767 936 C 774 923, 774 896, 771 872 C 768 850, 763 835, 755 826 C 758 816, 756 807, 750 802 C 756 795, 758 785, 752 776 C 749 772, 746 770, 742 770 Z"/>
+    <path fill="#04060a" d="M706 962 C 704 980, 704 996, 706 1012 L 720 1012 C 720 996, 718 980, 716 964 Z"/>
+    <path fill="#04060a" d="M728 964 C 728 982, 730 998, 733 1014 L 747 1014 C 745 996, 742 980, 738 962 Z"/>
+    <path fill="#04060a" d="M706 838 C 703 864, 703 892, 706 918 L 713 918 C 711 892, 711 866, 715 840 Z"/>
+    <path d="M721 778 C 714 790, 710 814, 707 840 C 704 872, 704 908, 707 938 C 702 957, 700 980, 700 1000"
+          fill="none" stroke="#ffcf82" stroke-width="2" stroke-linecap="round" opacity="0.75"/>
+  </g>
+
+  <!-- contact shadows softening figures onto the ledge -->
+  <ellipse cx="470" cy="1024" rx="70" ry="12" fill="#000" opacity="0.55" filter="url(#ah-blurS)"/>
+  <ellipse cx="595" cy="1016" rx="60" ry="11" fill="#000" opacity="0.5" filter="url(#ah-blurS)"/>
+  <ellipse cx="725" cy="1016" rx="54" ry="10" fill="#000" opacity="0.5" filter="url(#ah-blurS)"/>
+
+  <!-- ================= OVERLAYS ================= -->
+  <rect x="0" y="0" width="1200" height="1400" fill="url(#ah-leftdark)"/>
+  <rect x="0" y="0" width="1200" height="1400" fill="url(#ah-bottomdark)"/>
+  <rect x="0" y="0" width="1200" height="1400" fill="url(#ah-vignette)"/>
+  <!-- photographic grain -->
+  <rect x="0" y="0" width="1200" height="1400" fill="#808080" filter="url(#ah-grain)" opacity="0.06" style="mix-blend-mode:overlay"/>
+</svg>

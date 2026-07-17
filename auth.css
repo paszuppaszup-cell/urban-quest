@@ -1,0 +1,372 @@
+/* =========================================================
+   URBAN QUEST — bejelentkezés / regisztráció
+   (asztalon egy képernyőre fér, görgetés nélkül)
+   ========================================================= */
+.auth-page {
+  height: 100vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+}
+
+/* ---------- fejléc ---------- */
+.auth-header {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 13px clamp(18px, 3.5vw, 52px);
+  position: relative;
+  z-index: 5;
+}
+.auth-header .brand-mark { width: 44px; height: 44px; }
+.auth-header .brand-tagline { display: block; }
+.auth-header-right { display: flex; align-items: center; gap: 16px; }
+.auth-have {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: .09em;
+  text-transform: uppercase;
+  color: var(--text-2);
+}
+
+/* ---------- fő rács ---------- */
+.auth-main {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
+  gap: clamp(20px, 3vw, 44px);
+  padding: 0 clamp(18px, 3.5vw, 52px) clamp(14px, 2.4vh, 32px);
+}
+
+/* ---------- bal: űrlap kártya ---------- */
+.auth-form-panel {
+  display: flex;
+  align-items: center;
+  min-height: 0;
+}
+.auth-card {
+  width: 100%;
+  max-width: 468px;
+  margin: 0 auto;
+  padding: clamp(20px, 3vh, 34px) clamp(22px, 2vw, 36px);
+  background:
+    linear-gradient(180deg, rgb(255 255 255 / .02), rgb(255 255 255 / 0)),
+    var(--bg-elev);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  max-height: 100%;
+  overflow-y: auto;
+  scrollbar-width: none;
+}
+.auth-card::-webkit-scrollbar { display: none; }
+
+.auth-title {
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-stretch: 70%;
+  font-size: clamp(28px, 3.4vw, 44px);
+  line-height: 1;
+  letter-spacing: .01em;
+  text-transform: uppercase;
+  color: #fff;
+  margin-bottom: 10px;
+}
+.auth-title.with-bar { border-left: 4px solid var(--lime); padding-left: 14px; }
+
+.auth-sub {
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: var(--text-2);
+  margin-bottom: 18px;
+  max-width: 400px;
+}
+
+.auth-form { display: flex; flex-direction: column; gap: 11px; }
+
+.field-group { display: flex; flex-direction: column; gap: 6px; }
+.field-label { font-size: 12px; font-weight: 600; color: var(--text-2); }
+
+.field {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  height: 48px;
+  padding: 0 15px;
+  background: rgb(255 255 255 / .025);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  transition: border-color .18s, background-color .18s;
+}
+.field:focus-within {
+  border-color: var(--lime);
+  background: rgb(158 213 43 / .04);
+}
+.field.is-error { border-color: var(--extrem); background: rgb(224 58 47 / .05); }
+.field > .ico { color: var(--muted); flex: none; }
+.field:focus-within > .ico { color: var(--lime); }
+.field input {
+  flex: 1;
+  min-width: 0;
+  background: none;
+  border: 0;
+  outline: none;
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: 14px;
+}
+.field input::placeholder { color: var(--muted); }
+.field .eye {
+  display: grid;
+  place-items: center;
+  color: var(--muted);
+  padding: 4px;
+  cursor: pointer;
+  transition: color .18s;
+}
+.field .eye:hover { color: var(--text); }
+
+.field-hint {
+  font-size: 10.5px;
+  line-height: 1.45;
+  color: var(--dim);
+  margin-top: -2px;
+}
+
+/* remember / forgot */
+.auth-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.remember {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  cursor: pointer;
+  font-size: 12.5px;
+  color: var(--text-2);
+  user-select: none;
+}
+.remember input { position: absolute; opacity: 0; width: 0; height: 0; }
+.remember .box {
+  width: 18px; height: 18px;
+  border-radius: 5px;
+  border: 1px solid var(--line);
+  display: grid;
+  place-items: center;
+  color: #0a0d0a;
+  transition: background-color .15s, border-color .15s;
+}
+.remember .box .ico { width: 13px; height: 13px; opacity: 0; }
+.remember input:checked + .box { background: var(--lime); border-color: var(--lime); }
+.remember input:checked + .box .ico { opacity: 1; }
+.remember input:focus-visible + .box { outline: 2px solid var(--lime); outline-offset: 2px; }
+.link-accent { font-size: 12.5px; font-weight: 600; color: var(--lime); }
+.link-accent:hover { text-decoration: underline; }
+
+/* gombok */
+.btn-block { width: 100%; height: 46px; font-size: 12.5px; }
+.btn-lime.btn-block .ico { color: #0a0d0a; }
+.btn-google {
+  background: rgb(255 255 255 / .04);
+  border: 1px solid var(--line);
+  color: var(--text);
+  text-transform: none;
+  letter-spacing: .01em;
+  font-size: 13.5px;
+  font-weight: 600;
+}
+.btn-google:hover { background: rgb(255 255 255 / .08); border-color: var(--muted); }
+.gg { width: 18px; height: 18px; flex: none; }
+
+/* vagy elválasztó */
+.auth-or {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin: 1px 0;
+  color: var(--muted);
+  font-size: 12px;
+}
+.auth-or::before, .auth-or::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--line);
+}
+
+.auth-switch { text-align: center; font-size: 13px; color: var(--text-2); }
+.auth-switch a { color: var(--lime); font-weight: 600; margin-left: 4px; }
+.auth-switch a:hover { text-decoration: underline; }
+
+.auth-legal {
+  font-size: 11px;
+  line-height: 1.55;
+  color: var(--muted);
+  text-align: center;
+  margin-top: 1px;
+}
+.auth-legal a { color: var(--lime); }
+.auth-legal a:hover { text-decoration: underline; }
+
+/* ---------- jobb: vizuál + jellemzők ---------- */
+.auth-visual {
+  position: relative;
+  border-radius: 16px;
+  overflow: hidden;
+  min-height: 0;
+  isolation: isolate;
+}
+.auth-visual img {
+  position: absolute;
+  inset: 0;
+  width: 100%; height: 100%;
+  object-fit: cover;
+  z-index: -2;
+}
+.auth-visual-scrim {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background:
+    linear-gradient(90deg, rgb(8 10 8 / .55) 0%, rgb(8 10 8 / .08) 30%, rgb(8 10 8 / .30) 78%, rgb(8 10 8 / .55) 100%),
+    linear-gradient(0deg, rgb(6 8 6 / .55) 0%, rgb(6 8 6 / 0) 30%);
+}
+.auth-visual.glow::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: radial-gradient(60% 55% at 78% 42%, rgb(158 213 43 / .22) 0%, rgb(158 213 43 / 0) 60%);
+  pointer-events: none;
+}
+
+.auth-features {
+  position: absolute;
+  top: 50%;
+  right: clamp(18px, 2.6vw, 52px);
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: clamp(14px, 2.4vh, 24px);
+  width: min(318px, 45%);
+}
+.auth-feature { display: flex; gap: 14px; align-items: flex-start; }
+.feat-ico {
+  width: 54px; height: 54px;
+  flex: none;
+  border-radius: 50%;
+  border: 1px solid rgb(158 213 43 / .55);
+  background: rgb(10 13 10 / .4);
+  backdrop-filter: blur(3px);
+  display: grid;
+  place-items: center;
+  color: var(--lime);
+}
+.feat-ico .ico { width: 24px; height: 24px; }
+.auth-feature .feat-text strong {
+  display: block;
+  font-size: 12.5px;
+  font-weight: 700;
+  letter-spacing: .11em;
+  text-transform: uppercase;
+  color: #fff;
+  margin-bottom: 4px;
+}
+.auth-feature .feat-text p {
+  font-size: 12px;
+  line-height: 1.45;
+  color: #d3dbcd;
+}
+.auth-feature + .auth-feature {
+  border-top: 1px solid rgb(255 255 255 / .1);
+  padding-top: clamp(14px, 2.4vh, 24px);
+}
+
+/* mini jellemzők (login, form alatt) — egy tömör sor */
+.auth-mini-features {
+  display: flex;
+  gap: 10px;
+  margin-top: 16px;
+  flex-wrap: nowrap;
+}
+.mini-feature {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+.mini-feature > div { min-width: 0; }
+.mini-feature .feat-ico { width: 36px; height: 36px; border-color: rgb(158 213 43 / .45); }
+.mini-feature .feat-ico .ico { width: 16px; height: 16px; }
+.mini-feature strong {
+  display: block;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: #fff;
+  line-height: 1.2;
+}
+.mini-feature span { font-size: 10px; line-height: 1.25; color: var(--muted); }
+
+@media (max-width: 560px) {
+  .auth-mini-features { flex-wrap: wrap; }
+  .mini-feature { flex: 1 1 45%; }
+}
+
+/* ---------- reszponzív ---------- */
+@media (max-width: 940px) {
+  .auth-page { height: auto; min-height: 100vh; overflow: visible; }
+
+  /* fejléc a kép fölé úszik */
+  .auth-header {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    z-index: 6;
+  }
+
+  /* kép fölül, bannerként */
+  .auth-main {
+    display: flex;
+    flex-direction: column;
+    padding: 0;
+  }
+  .auth-visual {
+    display: block;
+    order: -1;
+    height: 40vh;
+    min-height: 250px;
+    max-height: 360px;
+    border-radius: 0;
+  }
+  .auth-visual img { object-position: 50% 40%; }
+  .auth-features { display: none; }
+
+  /* űrlap kártya nélkül, közvetlenül a háttéren */
+  .auth-form-panel {
+    align-items: flex-start;
+    padding: 22px clamp(20px, 6vw, 34px) 40px;
+  }
+  .auth-card {
+    max-width: 500px;
+    max-height: none;
+    overflow: visible;
+    border: 0;
+    background: none;
+    padding: 0;
+    margin: 0 auto;
+  }
+}
+@media (max-width: 560px) {
+  .auth-header { padding: 14px 20px; }
+  .auth-have { display: none; }
+  .auth-visual { height: 36vh; min-height: 220px; }
+  .auth-mini-features { gap: 14px; }
+}

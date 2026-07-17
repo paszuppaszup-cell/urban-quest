@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<meta name="description" content="Urban Quest – a fiókod: foglalásaid, kedvenc küldetéseid, csapatod és adataid egy helyen.">
+<title>Fiókom – Urban Quest</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&family=Inter:wght@400..700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css?v=6">
+<link rel="stylesheet" href="uq-auth.css?v=2">
+<link rel="stylesheet" href="uq-account.css?v=1">
+<link rel="stylesheet" href="fiokom.css?v=2">
+</head>
+<body>
+
+<!-- ===================== IKON SPRITE ===================== -->
+<svg class="sprite" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <g id="i-compass"><circle cx="12" cy="12" r="9"/><path d="M14.8 9.2 13.4 13.4 9.2 14.8l1.4-4.2z"/></g>
+    <g id="i-puzzle"><path d="M8 3.5a1.5 1.5 0 0 1 3 0c0 .6-.3 1-.6 1.3-.2.2-.4.5-.4.8 0 .5.4.9.9.9h2.4c.9 0 1.7.8 1.7 1.7v2.4c0 .5.4.9.9.9.3 0 .6-.2.8-.4.3-.3.7-.6 1.3-.6a1.5 1.5 0 0 1 0 3c-.6 0-1-.3-1.3-.6-.2-.2-.5-.4-.8-.4-.5 0-.9.4-.9.9v2.9c0 .6-.5 1.2-1.2 1.2h-2.9c-.5 0-.9-.4-.9-.9 0-.3.2-.6.4-.8.3-.3.6-.7.6-1.3a1.5 1.5 0 0 0-3 0c0 .6.3 1 .6 1.3.2.2.4.5.4.8 0 .5-.4.9-.9.9H5.7c-.6 0-1.2-.5-1.2-1.2v-2.9c0-.5-.4-.9-.9-.9-.3 0-.6.2-.8.4"/><path d="M4.5 12.4V8.2c0-.9.8-1.7 1.7-1.7h2.4"/></g>
+    <g id="i-users"><circle cx="9" cy="8" r="3"/><path d="M3 20v-1a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v1"/><path d="M16.5 5.4a3 3 0 0 1 0 5.2"/><path d="M17.5 15.2A4 4 0 0 1 21 19v1"/></g>
+    <g id="i-trophy"><path d="M8 4h8v5a4 4 0 0 1-8 0z"/><path d="M8 5.5H5.5A1.5 1.5 0 0 0 4 7c0 2.2 1.8 4 4 4"/><path d="M16 5.5h2.5A1.5 1.5 0 0 1 20 7c0 2.2-1.8 4-4 4"/><path d="M12 13v3"/><path d="M9 20h6"/><path d="M10 16h4l.5 4h-5z"/></g>
+    <g id="i-calendar"><rect x="4" y="5" width="16" height="16" rx="2"/><path d="M4 9.5h16M8.5 3v4M15.5 3v4"/></g>
+    <g id="i-chevron-down"><path d="m6 9 6 6 6-6"/></g>
+    <g id="i-chevron-right"><path d="m9 6 6 6-6 6"/></g>
+    <g id="i-chevron-left"><path d="m15 6-6 6 6 6"/></g>
+    <g id="i-search"><circle cx="10.5" cy="10.5" r="6"/><path d="m15 15 4.5 4.5"/></g>
+    <g id="i-globe"><circle cx="12" cy="12" r="9"/><path d="M3.6 9h16.8M3.6 15h16.8"/><path d="M12 3a15 15 0 0 1 0 18a15 15 0 0 1 0-18z"/></g>
+    <g id="i-user-circle"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="10" r="2.6"/><path d="M6.5 18.4a6 6 0 0 1 11 0"/></g>
+    <g id="i-clock"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 1.8"/></g>
+    <g id="i-pin"><path d="M12 21s6.5-5.6 6.5-10.3A6.5 6.5 0 0 0 5.5 10.7C5.5 15.4 12 21 12 21z"/><circle cx="12" cy="10.5" r="2.4"/></g>
+    <g id="i-age"><path d="M4 20h16"/><path d="M5.5 20v-5.5a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2V20"/><path d="M5.5 16.5c1.4 0 1.4 1.2 2.8 1.2s1.4-1.2 2.8-1.2 1.4 1.2 2.8 1.2 1.4-1.2 2.8-1.2c.7 0 1 .3 1.4.6"/><path d="M12 12.5V9.5"/><path d="M12 7.2a1.2 1.2 0 1 0 0-2.4 1.2 1.2 0 0 0 0 2.4z"/></g>
+    <g id="i-heart"><path d="M12 19.5s-7-4.4-7-9A3.9 3.9 0 0 1 12 7.6 3.9 3.9 0 0 1 19 10.5c0 4.6-7 9-7 9z"/></g>
+    <g id="i-gift"><path d="M4 11.5h16V20a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1z"/><path d="M3 7.5h18v4H3z"/><path d="M12 7.5V21"/><path d="M12 7.5S11 3 8.5 3a2.2 2.2 0 0 0 0 4.5z"/><path d="M12 7.5S13 3 15.5 3a2.2 2.2 0 0 1 0 4.5z"/></g>
+    <g id="i-refresh"><path d="M20 11.5A8 8 0 0 0 6.3 6.3L4 8.5"/><path d="M4 4.5v4h4"/><path d="M4 12.5a8 8 0 0 0 13.7 5.2l2.3-2.2"/><path d="M20 19.5v-4h-4"/></g>
+    <g id="i-valid"><circle cx="12" cy="12" r="8.5"/><path d="M12 8v5.5"/><path d="m9.5 11.5 2.5 2.5 2.5-2.5"/></g>
+    <g id="i-brain"><path d="M10 4.5A2.5 2.5 0 0 0 5.5 6 2.5 2.5 0 0 0 4 8.3c0 .8.4 1.5 1 2a2.6 2.6 0 0 0-.6 1.7c0 .9.5 1.7 1.2 2.1-.1.3-.2.6-.2 1a2.5 2.5 0 0 0 2.5 2.5c.4 0 .8-.1 1.1-.2v1.1a2 2 0 0 0 4 0V6.5A2 2 0 0 0 10 4.5z"/><path d="M14 4.5A2.5 2.5 0 0 1 18.5 6 2.5 2.5 0 0 1 20 8.3c0 .8-.4 1.5-1 2 .4.5.6 1.1.6 1.7 0 .9-.5 1.7-1.2 2.1.1.3.2.6.2 1a2.5 2.5 0 0 1-2.5 2.5c-.4 0-.8-.1-1.1-.2"/></g>
+    <g id="i-smile"><circle cx="12" cy="12" r="9"/><path d="M9 10h.01M15 10h.01"/><path d="M8.5 14.5a4.2 4.2 0 0 0 7 0"/></g>
+    <g id="i-shield"><path d="M12 3.2 5 6v5c0 4.2 2.9 8 7 9.8 4.1-1.8 7-5.6 7-9.8V6z"/><path d="m9.2 11.8 2 2 3.6-3.8"/></g>
+    <g id="i-leaf"><path d="M5 19c0-8 5-13.5 15-13.5 0 0 .5 6-3 10.2C13.9 19.4 8.6 20.2 5 19z"/><path d="M8 16.5C10 12 13.5 9.5 17 8.5"/></g>
+    <g id="i-mail"><rect x="3.5" y="5.5" width="17" height="13" rx="2"/><path d="m4 7 8 5.5L20 7"/></g>
+    <g id="i-phone"><path d="M6.6 3.5h2.6l1.4 3.6-2 1.2a11 11 0 0 0 5.1 5.1l1.2-2 3.6 1.4v2.6a2 2 0 0 1-2.2 2A16.5 16.5 0 0 1 4.6 5.7a2 2 0 0 1 2-2.2z"/></g>
+    <g id="i-location"><path d="M12 21s6.5-5.6 6.5-10.3A6.5 6.5 0 0 0 5.5 10.7C5.5 15.4 12 21 12 21z"/><circle cx="12" cy="10.5" r="2.4"/></g>
+    <g id="i-menu"><path d="M4 7h16M4 12h16M4 17h16"/></g>
+    <g id="i-close"><path d="M6 6l12 12M18 6 6 18"/></g>
+    <g id="i-level"><path d="M6 20v-6M12 20V8M18 20v-9"/></g>
+    <g id="i-map"><path d="M9 5.5 3.5 8v11l5.5-2.5 6 2.5 5.5-2.5V6l-5.5 2.5z"/><path d="M9 5.5v11M15 8v11"/></g>
+    <g id="i-info"><circle cx="12" cy="12" r="9"/><path d="M12 11v5"/><path d="M12 7.6h.01"/></g>
+    <g id="i-check"><circle cx="12" cy="12" r="9"/><path d="m8.5 12.2 2.4 2.4 4.6-5"/></g>
+    <g id="i-arrow-right"><path d="M4 12h15"/><path d="m13 6 6 6-6 6"/></g>
+    <g id="i-back"><path d="M20 12H5"/><path d="m11 6-6 6 6 6"/></g>
+    <g id="i-walk"><circle cx="13" cy="4.5" r="1.6"/><path d="M11 21l1.5-6-2.5-2 1-5 3 2 2 1"/><path d="m10 12-2 3M14 15l1 6"/></g>
+    <g id="i-pause"><circle cx="12" cy="12" r="9"/><path d="M10 9v6M14 9v6"/></g>
+    <g id="i-offline"><path d="M4 8.5a13 13 0 0 1 16 0"/><path d="M7.5 12a8 8 0 0 1 9 0"/><path d="M10.5 15.2a3.5 3.5 0 0 1 3 0"/><path d="M12 18.4h.01"/><path d="m4 4 16 16"/></g>
+    <g id="i-rain"><path d="M7 15a4.5 4.5 0 0 1-.6-8.96A5 5 0 0 1 16 6.5a3.8 3.8 0 0 1 .8 7.5"/><path d="M8 18l-1 2M12 18l-1 2M16 18l-1 2"/></g>
+  </defs>
+
+  <!-- kitöltött (filled) ikonok -->
+  <symbol id="i-facebook" viewBox="0 0 24 24"><path fill="currentColor" d="M13.5 21v-8h2.7l.4-3.1h-3.1V7.9c0-.9.25-1.5 1.55-1.5h1.65V3.6c-.29-.04-1.27-.12-2.41-.12-2.39 0-4.02 1.46-4.02 4.13V9.9H7.5V13h2.77v8z"/></symbol>
+  <symbol id="i-instagram" viewBox="0 0 24 24"><path fill="currentColor" d="M12 2.2c3.2 0 3.58.01 4.85.07 1.17.05 1.8.25 2.23.41.56.22.96.48 1.38.9.42.42.68.82.9 1.38.16.42.36 1.06.41 2.23.06 1.27.07 1.65.07 4.85s-.01 3.58-.07 4.85c-.05 1.17-.25 1.8-.41 2.23-.22.56-.48.96-.9 1.38-.42.42-.82.68-1.38.9-.42.16-1.06.36-2.23.41-1.27.06-1.65.07-4.85.07s-3.58-.01-4.85-.07c-1.17-.05-1.8-.25-2.23-.41a3.8 3.8 0 0 1-1.38-.9 3.8 3.8 0 0 1-.9-1.38c-.16-.42-.36-1.06-.41-2.23C2.21 15.58 2.2 15.2 2.2 12s.01-3.58.07-4.85c.05-1.17.25-1.8.41-2.23.22-.56.48-.96.9-1.38.42-.42.82-.68 1.38-.9.42-.16 1.06-.36 2.23-.41C8.42 2.21 8.8 2.2 12 2.2m0 1.98c-3.15 0-3.5.01-4.74.07-1.14.05-1.76.24-2.18.4-.55.21-.94.47-1.35.88-.41.41-.67.8-.88 1.35-.16.42-.35 1.04-.4 2.18-.06 1.24-.07 1.59-.07 4.74s.01 3.5.07 4.74c.05 1.14.24 1.76.4 2.18.21.55.47.94.88 1.35.41.41.8.67 1.35.88.42.16 1.04.35 2.18.4 1.24.06 1.59.07 4.74.07s3.5-.01 4.74-.07c1.14-.05 1.76-.24 2.18-.4.55-.21.94-.47 1.35-.88.41-.41.67-.8.88-1.35.16-.42.35-1.04.4-2.18.06-1.24.07-1.59.07-4.74s-.01-3.5-.07-4.74c-.05-1.14-.24-1.76-.4-2.18a3.6 3.6 0 0 0-.88-1.35 3.6 3.6 0 0 0-1.35-.88c-.42-.16-1.04-.35-2.18-.4-1.24-.06-1.59-.07-4.74-.07m0 3.36a4.46 4.46 0 1 1 0 8.92 4.46 4.46 0 0 1 0-8.92m0 7.36a2.9 2.9 0 1 0 0-5.8 2.9 2.9 0 0 0 0 5.8m5.68-7.54a1.04 1.04 0 1 1-2.08 0 1.04 1.04 0 0 1 2.08 0"/></symbol>
+  <symbol id="i-youtube" viewBox="0 0 24 24"><path fill="currentColor" d="M21.6 7.2a2.5 2.5 0 0 0-1.76-1.77C18.28 5 12 5 12 5s-6.28 0-7.84.43A2.5 2.5 0 0 0 2.4 7.2 26 26 0 0 0 2 12a26 26 0 0 0 .4 4.8 2.5 2.5 0 0 0 1.76 1.77C5.72 19 12 19 12 19s6.28 0 7.84-.43a2.5 2.5 0 0 0 1.76-1.77A26 26 0 0 0 22 12a26 26 0 0 0-.4-4.8M10 14.9V9.1l5.2 2.9z"/></symbol>
+  <symbol id="i-tiktok" viewBox="0 0 24 24"><path fill="currentColor" d="M16.3 3h-2.6v11.3a2.4 2.4 0 1 1-2.4-2.4c.2 0 .4 0 .6.07V9.3a5.4 5.4 0 0 0-.6-.03 5 5 0 1 0 5 5V8.6a6 6 0 0 0 3.6 1.2V7.2a3.5 3.5 0 0 1-3.6-3.5z"/></symbol>
+  <symbol id="i-star" viewBox="0 0 24 24"><path fill="currentColor" d="M12 2.4l2.9 5.88 6.49.95-4.7 4.58 1.11 6.47L12 17.8l-5.8 3.05 1.1-6.47-4.69-4.58 6.49-.95z"/></symbol>
+
+  <!-- zászlók -->
+  <symbol id="f-hu" viewBox="0 0 18 12"><rect width="18" height="4" fill="#cd2a3e"/><rect y="4" width="18" height="4" fill="#fff"/><rect y="8" width="18" height="4" fill="#436f4d"/></symbol>
+  <symbol id="f-en" viewBox="0 0 18 12"><rect width="18" height="12" fill="#012169"/><path d="M0 0l18 12M18 0L0 12" stroke="#fff" stroke-width="2.4"/><path d="M0 0l18 12M18 0L0 12" stroke="#c8102e" stroke-width="1.4"/><path d="M9 0v12M0 6h18" stroke="#fff" stroke-width="4"/><path d="M9 0v12M0 6h18" stroke="#c8102e" stroke-width="2.4"/></symbol>
+  <symbol id="f-de" viewBox="0 0 18 12"><rect width="18" height="4" fill="#000"/><rect y="4" width="18" height="4" fill="#dd0000"/><rect y="8" width="18" height="4" fill="#ffce00"/></symbol>
+
+  <!-- logó: iránytű rózsa -->
+  <symbol id="i-logo" viewBox="0 0 64 64">
+    <circle cx="32" cy="32" r="29.5" fill="none" stroke="currentColor" stroke-width="2.4"/>
+    <circle cx="32" cy="32" r="24.5" fill="none" stroke="currentColor" stroke-width="1" opacity=".55"/>
+    <g stroke="currentColor" stroke-width="1.6" opacity=".75">
+      <path d="M32 2.5v5M32 56.5v5M2.5 32h5M56.5 32h5"/>
+      <path d="m11.1 11.1 3.5 3.5M49.4 49.4l3.5 3.5M52.9 11.1l-3.5 3.5M14.6 49.4l-3.5 3.5" opacity=".6"/>
+    </g>
+    <path d="M32 7 36 28 57 32 36 36 32 57 28 36 7 32 28 28z" fill="currentColor"/>
+    <path d="M32 32 44.5 19.5 38.5 38.5 19.5 44.5z" fill="currentColor" opacity=".38"/>
+    <circle cx="32" cy="32" r="3.4" fill="#0a0d0a"/>
+    <circle cx="32" cy="32" r="1.7" fill="currentColor"/>
+  </symbol>
+</svg>
+
+<!-- ===================== FEJLÉC ===================== -->
+<header class="site-header" id="siteHeader">
+  <div class="header-inner">
+
+    <a class="brand" href="index.html" aria-label="Urban Quest főoldal">
+      <svg class="brand-mark" viewBox="0 0 64 64" aria-hidden="true"><use href="#i-logo"/></svg>
+      <span class="brand-text">
+        <span class="brand-name">URBAN <span class="brand-name-alt">QUEST</span></span>
+        <span class="brand-tagline">KALANDOK. KÜLDETÉSEK. ÉLMÉNYEK.</span>
+      </span>
+    </a>
+
+    <nav class="main-nav" id="mainNav" aria-label="Fő navigáció">
+      <a href="index.html#kuldetesek">Küldetések</a>
+      <a href="index.html#hogyan">Hogyan működik?</a>
+      <a href="index.html#arak">Árak</a>
+      <a href="ranglista.html">Ranglista</a>
+      <a href="index.html#rolunk">Rólunk</a>
+      <a href="index.html#ajandek">Ajándékutalvány</a>
+      <a href="index.html#kapcsolat">Kapcsolat</a>
+      <a href="bejelentkezes.html" class="nav-mobile-only">Belépés</a>
+      <a href="regisztracio.html" class="nav-mobile-only nav-mobile-cta">Regisztráció</a>
+    </nav>
+
+    <div class="header-actions">
+      <div class="lang" id="langPicker">
+        <button class="lang-btn" type="button" aria-haspopup="listbox" aria-expanded="false">
+          <svg class="ico" aria-hidden="true"><use href="#i-globe"/></svg>
+          <span class="lang-current">HU</span>
+          <svg class="ico ico-xs chev" aria-hidden="true"><use href="#i-chevron-down"/></svg>
+        </button>
+        <ul class="lang-menu" role="listbox">
+          <li><button type="button" role="option" aria-selected="true" data-lang="HU">HU</button></li>
+          <li><button type="button" role="option" aria-selected="false" data-lang="EN">EN</button></li>
+          <li><button type="button" role="option" aria-selected="false" data-lang="DE">DE</button></li>
+        </ul>
+      </div>
+
+      <a class="login" href="bejelentkezes.html">
+        <svg class="ico" aria-hidden="true"><use href="#i-user-circle"/></svg>
+        <span>Belépés</span>
+      </a>
+
+      <a class="btn btn-lime" href="regisztracio.html">Regisztráció</a>
+    </div>
+
+    <button class="burger" id="burger" type="button" aria-label="Menü" aria-expanded="false">
+      <svg class="ico" aria-hidden="true"><use href="#i-menu"/></svg>
+    </button>
+  </div>
+</header>
+
+<!-- ===================== FIÓK OLDAL ===================== -->
+<main class="fiok-page">
+  <div class="container">
+    <div class="fiok-layout">
+
+      <!-- BAL: füles navigáció (mobilon felül vízszintes pill-sor) -->
+      <aside class="fiok-side">
+        <nav class="fiok-tabs" id="fiokTabs" aria-label="Fiók navigáció">
+          <a class="fiok-tab" href="#attekintes" data-tab="attekintes">
+            <svg class="ico" aria-hidden="true"><use href="#i-compass"/></svg><span>Áttekintés</span>
+          </a>
+          <a class="fiok-tab" href="#jatekok" data-tab="jatekok">
+            <svg class="ico" aria-hidden="true"><use href="#i-trophy"/></svg><span>Játékaim</span>
+          </a>
+          <a class="fiok-tab" href="#kedvencek" data-tab="kedvencek">
+            <svg class="ico" aria-hidden="true"><use href="#i-heart"/></svg><span>Kedvenceim</span>
+          </a>
+          <a class="fiok-tab" href="#csapatom" data-tab="csapatom">
+            <svg class="ico" aria-hidden="true"><use href="#i-users"/></svg><span>Csapatom</span>
+          </a>
+          <a class="fiok-tab" href="#adataim" data-tab="adataim">
+            <svg class="ico" aria-hidden="true"><use href="#i-user-circle"/></svg><span>Adataim</span>
+          </a>
+        </nav>
+      </aside>
+
+      <!-- JOBB: tartalompanel (fiokom.js tölti fel) -->
+      <section class="fiok-panel" id="fiokPanel" aria-live="polite"></section>
+
+    </div>
+  </div>
+</main>
+
+<script src="data.js?v=6"></script>
+<script src="uq-auth.js?v=3"></script>
+<script src="uq-account.js?v=2"></script>
+<script src="fiokom.js?v=2"></script>
+</body>
+</html>

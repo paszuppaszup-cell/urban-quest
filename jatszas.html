@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta name="description" content="Urban Quest – játék végigjátszása (teszt-mód): játszd végig a pálya állomásait és feladatait.">
+<title>Végigjátszás | Urban Quest</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&family=Inter:wght@400..700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css?v=6">
+<link rel="stylesheet" href="admin.css?v=9">
+<link rel="stylesheet" href="jatszas.css?v=2">
+</head>
+<body class="play-body">
+
+<svg class="sprite" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <g id="a-search"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.5 15.5 4 4"/></g>
+    <g id="a-eye"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3.2"/></g>
+    <g id="a-save"><path d="M5 3h11l3 3v15H5z"/><path d="M8 3v5h7V3M8 21v-6h8v6"/></g>
+    <g id="a-check"><path d="m5 12 5 5L20 6"/></g>
+    <g id="a-check-c"><circle cx="12" cy="12" r="9"/><path d="m8.3 12.2 2.4 2.4 5-5.2"/></g>
+    <g id="a-down"><path d="m6 9 6 6 6-6"/></g>
+    <g id="a-x"><path d="M6 6l12 12M18 6 6 18"/></g>
+    <g id="a-close"><path d="M6 6l12 12M18 6 6 18"/></g>
+    <g id="a-collapse"><path d="m15 6-6 6 6 6"/><path d="M9 6 3 12l6 6" opacity=".5"/></g>
+    <g id="a-route"><circle cx="6" cy="18" r="2.5"/><circle cx="18" cy="6" r="2.5"/><path d="M8.5 18H14a3.5 3.5 0 0 0 0-7H9a3.5 3.5 0 0 1 0-7h6.5"/></g>
+    <g id="a-game"><rect x="2.5" y="7" width="19" height="10" rx="4"/><path d="M7 11v3M5.5 12.5h3"/><circle cx="16" cy="11.5" r="1"/><circle cx="18" cy="13.5" r="1"/></g>
+    <g id="a-pin"><path d="M12 21s6.5-5.6 6.5-10.3A6.5 6.5 0 0 0 5.5 10.7C5.5 15.4 12 21 12 21z"/><circle cx="12" cy="10.5" r="2.4"/></g>
+    <g id="a-task"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 3.5h6v3H9zM8.5 11l1.5 1.5 3-3M8.5 16l1.5 1.5 3-3"/></g>
+    <g id="a-image"><rect x="3.5" y="5" width="17" height="14" rx="2"/><circle cx="8.5" cy="10" r="1.6"/><path d="m5 17 4.5-4 3 2.5L16 11l3.5 4"/></g>
+    <g id="a-clock"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 1.8"/></g>
+    <g id="a-users"><circle cx="9" cy="8" r="3"/><path d="M3 20v-1a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v1"/><path d="M16.5 5.4a3 3 0 0 1 0 5.2M17.5 15.2A4 4 0 0 1 21 19v1"/></g>
+    <g id="a-gear"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 12a7.4 7.4 0 0 0-.1-1.2l2-1.6-2-3.4-2.4 1a7.3 7.3 0 0 0-2-1.2l-.4-2.6H9.5l-.4 2.6a7.3 7.3 0 0 0-2 1.2l-2.4-1-2 3.4 2 1.6a7.4 7.4 0 0 0 0 2.4l-2 1.6 2 3.4 2.4-1a7.3 7.3 0 0 0 2 1.2l.4 2.6h4.9l.4-2.6a7.3 7.3 0 0 0 2-1.2l2.4 1 2-3.4-2-1.6c.06-.4.1-.8.1-1.2z"/></g>
+    <g id="a-plus"><path d="M12 5v14M5 12h14"/></g>
+    <g id="a-trash"><path d="M4 7h16M9 7V4.5h6V7M6 7l1 13h10l1-13M10 11v6M14 11v6"/></g>
+    <g id="a-play"><path d="M7 4.5 19 12 7 19.5z"/></g>
+    <g id="a-preview"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></g>
+    <g id="a-target"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="1"/></g>
+    <g id="a-star"><path d="M12 3.2l2.6 5.3 5.8.8-4.2 4.1 1 5.8-5.2-2.7-5.2 2.7 1-5.8-4.2-4.1 5.8-.8z"/></g>
+    <g id="a-layers"><path d="m12 3 9 5-9 5-9-5z"/><path d="m3 13 9 5 9-5M3 16.5l9 5 9-5" opacity=".55"/></g>
+    <g id="a-minus"><path d="M5 12h14"/></g>
+    <g id="a-expand"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></g>
+    <g id="a-map"><path d="M9 5.5 3.5 8v11l5.5-2.5 6 2.5 5.5-2.5V6l-5.5 2.5z"/><path d="M9 5.5v11M15 8v11"/></g>
+    <g id="a-diamond"><path d="M12 3 21 12 12 21 3 12z"/></g>
+    <g id="a-flag"><path d="M6 21V4M6 4.5h11l-2 4 2 4H6"/></g>
+    <g id="a-bolt"><path d="M13 2 4 14h7l-1 8 9-12h-7z"/></g>
+    <g id="a-arrow-left"><path d="M19 12H5M11 6l-6 6 6 6"/></g>
+    <g id="a-logout"><path d="M9 4H5v16h4M15 8l4 4-4 4M19 12H9"/></g>
+    <g id="a-camera"><rect x="3" y="7" width="18" height="13" rx="2.5"/><path d="M8 7l1.6-3h4.8L16 7"/><circle cx="12" cy="13.5" r="3.4"/></g>
+    <g id="a-qr"><rect x="4" y="4" width="6" height="6" rx="1"/><rect x="14" y="4" width="6" height="6" rx="1"/><rect x="4" y="14" width="6" height="6" rx="1"/><path d="M14 14h3v3.5M20.5 14v6.5M17 20.5h3.5"/></g>
+    <g id="a-lock"><rect x="5" y="10.5" width="14" height="10" rx="2"/><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5"/></g>
+    <g id="a-refresh"><path d="M20 12a8 8 0 1 1-2.4-5.7M20 4v4h-4"/></g>
+  </defs>
+  <symbol id="f-hu" viewBox="0 0 18 12"><rect width="18" height="4" fill="#cd2a3e"/><rect y="4" width="18" height="4" fill="#fff"/><rect y="8" width="18" height="4" fill="#436f4d"/></symbol>
+  <symbol id="f-en" viewBox="0 0 18 12"><rect width="18" height="12" fill="#012169"/><path d="M0 0l18 12M18 0L0 12" stroke="#fff" stroke-width="2.4"/><path d="M9 0v12M0 6h18" stroke="#fff" stroke-width="4"/><path d="M9 0v12M0 6h18" stroke="#c8102e" stroke-width="2.4"/></symbol>
+  <symbol id="f-de" viewBox="0 0 18 12"><rect width="18" height="4" fill="#000"/><rect y="4" width="18" height="4" fill="#dd0000"/><rect y="8" width="18" height="4" fill="#ffce00"/></symbol>
+  <symbol id="a-logo" viewBox="0 0 64 64">
+    <circle cx="32" cy="32" r="29.5" fill="none" stroke="currentColor" stroke-width="2.4"/>
+    <circle cx="32" cy="32" r="24.5" fill="none" stroke="currentColor" stroke-width="1" opacity=".55"/>
+    <g stroke="currentColor" stroke-width="1.6" opacity=".75"><path d="M32 2.5v5M32 56.5v5M2.5 32h5M56.5 32h5"/></g>
+    <path d="M32 7 36 28 57 32 36 36 32 57 28 36 7 32 28 28z" fill="currentColor"/>
+    <path d="M32 32 44.5 19.5 38.5 38.5 19.5 44.5z" fill="currentColor" opacity=".38"/>
+    <circle cx="32" cy="32" r="3.4" fill="#0a0d0a"/><circle cx="32" cy="32" r="1.7" fill="currentColor"/>
+  </symbol>
+</svg>
+
+<!-- ===================== FELSŐ SÁV ===================== -->
+<header class="play-top">
+  <a class="play-brand" href="jatekok.html">
+    <svg class="brand-mark" viewBox="0 0 64 64" aria-hidden="true"><use href="#a-logo"/></svg>
+    <span class="play-brand-text">
+      <span class="play-brand-name">URBAN <b>QUEST</b></span>
+      <span class="play-brand-sub" id="gameTitle">Végigjátszás</span>
+    </span>
+  </a>
+
+  <div class="play-top-right">
+    <span class="play-top-tag"><svg class="ico ico-sm" aria-hidden="true"><use href="#a-play"/></svg>Teszt-mód</span>
+    <a class="adm-btn play-back" id="playBack" href="jatekok.html"><svg class="ico ico-sm" aria-hidden="true"><use href="#a-arrow-left"/></svg>Vissza</a>
+  </div>
+</header>
+
+<!-- ===================== JÁTÉKTÉR ===================== -->
+<main class="play-wrap">
+  <div id="playRoot"></div>
+</main>
+
+<div class="uq-toast-wrap" id="uqToasts"></div>
+
+<script src="data.js?v=6"></script>
+<script src="quest-courses.js?v=1"></script>
+<script src="uq-auth.js?v=3"></script>
+<script src="uq-account.js?v=2"></script>
+<script src="jatszas.js?v=3"></script>
+</body>
+</html>

@@ -1,0 +1,305 @@
+/* =========================================================
+   URBAN QUEST — RANGLISTA (dashboard, egy képernyőre tömörítve)
+   ========================================================= */
+.rank-page { padding-bottom: 0; }
+
+:root { --rank-max: 1360px; }
+
+.rank-wrap {
+  width: 100%;
+  max-width: var(--rank-max);
+  margin-inline: auto;
+  padding-inline: clamp(14px, 2vw, 26px);
+}
+
+/* ---------- cím-sáv ---------- */
+.rank-hero {
+  position: relative;
+  overflow: hidden;
+  border-bottom: 1px solid var(--line-soft);
+  isolation: isolate;
+}
+.rank-hero-bg {
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  background:
+    linear-gradient(90deg, var(--bg) 0%, rgb(10 13 10 / .55) 45%, rgb(10 13 10 / .2) 100%),
+    linear-gradient(0deg, var(--bg) 0%, rgb(10 13 10 / 0) 60%);
+}
+.rank-hero-img {
+  position: absolute; inset: 0; z-index: -3;
+  width: 100%; height: 100%; object-fit: cover; opacity: .5;
+}
+.rank-hero .rank-wrap { padding-block: 13px 10px; }
+.rank-hero h1 {
+  font-size: clamp(26px, 3vw, 40px);
+  font-weight: 900; font-stretch: 66%;
+  text-transform: uppercase; color: #fff; line-height: 1;
+}
+.rank-hero p { margin-top: 6px; font-size: 13px; color: var(--text-2); }
+
+/* ---------- fő rács ---------- */
+.rank-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 296px;
+  gap: 12px;
+  padding-block: 12px 14px;
+  align-items: start;
+}
+.rank-main { display: flex; flex-direction: column; gap: 11px; min-width: 0; }
+.rank-side { display: flex; flex-direction: column; gap: 11px; }
+
+/* ---------- dobogó ---------- */
+.podium {
+  display: grid;
+  grid-template-columns: 1fr 1.12fr 1fr;
+  gap: 12px;
+  align-items: end;
+}
+.pod {
+  position: relative;
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  padding: 22px 12px 11px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: linear-gradient(180deg, rgb(255 255 255 / .02), rgb(255 255 255 / 0)), var(--bg-elev);
+  text-align: center;
+}
+.pod-1 {
+  padding-top: 30px;
+  border-color: rgb(158 213 43 / .5);
+  background: linear-gradient(180deg, rgb(158 213 43 / .08), rgb(20 26 17 / 0) 40%), #12160f;
+  box-shadow: 0 0 34px -12px rgb(158 213 43 / .5);
+}
+.pod-medal {
+  position: absolute; top: -20px; left: 50%; transform: translateX(-50%);
+  width: 40px; height: 40px; border-radius: 50%;
+  display: grid; place-items: center;
+  font-family: var(--font-display); font-weight: 900; font-size: 17px; color: #1a1400;
+  border: 2px solid rgb(0 0 0 / .3);
+}
+.pod-1 .pod-medal { width: 52px; height: 52px; top: -26px; font-size: 22px; background: radial-gradient(circle at 40% 35%, #ffe07a, #e0a71e); box-shadow: 0 6px 20px -6px rgb(224 167 30 / .8); }
+.pod-2 .pod-medal { background: radial-gradient(circle at 40% 35%, #e8ecf2, #9aa6b4); }
+.pod-3 .pod-medal { background: radial-gradient(circle at 40% 35%, #f0b483, #c17a3e); }
+.pod-crown { position: absolute; top: -46px; left: 50%; transform: translateX(-50%); color: #ffd257; }
+.pod-crown .ico { width: 24px; height: 24px; }
+.pod-logo {
+  width: 52px; height: 52px; border-radius: 14px;
+  display: grid; place-items: center;
+  border: 1px solid var(--line);
+  background: #0e120d;
+  color: var(--text-2);
+}
+.pod-1 .pod-logo { width: 62px; height: 62px; color: var(--lime); border-color: rgb(158 213 43 / .4); }
+.pod-logo .ico { width: 30px; height: 30px; }
+.pod-1 .pod-logo .ico { width: 38px; height: 38px; }
+.pod-name { font-size: 14px; font-weight: 700; color: #fff; margin-top: 2px; }
+.pod-1 .pod-name { font-size: 16px; }
+.pod-pts { font-family: var(--font-display); font-weight: 800; font-size: 22px; color: var(--lime); }
+.pod-1 .pod-pts { font-size: 30px; }
+.pod-pts small { font-family: var(--font-body); font-size: 11px; font-weight: 500; color: var(--muted); margin-left: 3px; }
+.pod-meta { display: flex; gap: 12px; font-size: 10.5px; color: var(--muted); }
+.pod-meta span { display: inline-flex; align-items: center; gap: 4px; }
+.pod-meta .ico { color: var(--dim); }
+
+/* ---------- szűrő ---------- */
+.rank-filter {
+  display: flex; align-items: center; gap: 6px;
+  padding: 5px;
+  background: var(--bg-elev);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+.rank-filter .rf {
+  flex: 1 1 0; min-width: 0;
+  display: flex; flex-direction: column; gap: 1px;
+  padding: 6px 12px; border-radius: 6px;
+  position: relative;
+}
+.rank-filter .rf + .rf::before { content: ""; position: absolute; left: 0; top: 8px; bottom: 8px; width: 1px; background: var(--line); }
+.rf-label { font-size: 8.5px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--dim); }
+.rf-val { font-size: 12px; font-weight: 500; color: var(--text); display: flex; align-items: center; justify-content: space-between; }
+.rf-val .ico { color: var(--muted); }
+.rank-filter .btn { flex: none; height: 38px; padding: 0 16px; }
+
+/* ---------- táblázat ---------- */
+.rank-table {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--bg-elev);
+  overflow: hidden;
+}
+.rank-row {
+  display: grid;
+  grid-template-columns: 62px minmax(150px, 1.3fr) 1.5fr 92px 96px 116px 1fr;
+  align-items: center;
+  gap: 8px;
+  padding: 0 16px;
+  min-height: 33px;
+  border-bottom: 1px solid var(--line-soft);
+  font-size: 12px;
+}
+.rank-row:last-child { border-bottom: 0; }
+.rank-head {
+  min-height: 29px;
+  background: rgb(255 255 255 / .015);
+}
+.rank-head span { font-size: 9.5px; font-weight: 700; letter-spacing: .09em; text-transform: uppercase; color: var(--dim); display: flex; align-items: center; gap: 5px; }
+.rank-body .rank-row:hover { background: rgb(158 213 43 / .04); }
+.rank-body .rank-row.is-top { background: rgb(255 255 255 / .02); }
+
+.rr-pos { display: flex; align-items: center; gap: 8px; font-weight: 700; color: var(--text-2); }
+.rr-medal { width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; font-family: var(--font-display); font-weight: 900; font-size: 12px; color: #1a1400; flex: none; }
+.rr-medal.m1 { background: radial-gradient(circle at 40% 35%, #ffe07a, #e0a71e); }
+.rr-medal.m2 { background: radial-gradient(circle at 40% 35%, #e8ecf2, #9aa6b4); }
+.rr-medal.m3 { background: radial-gradient(circle at 40% 35%, #f0b483, #c17a3e); }
+.rr-num { width: 24px; text-align: center; color: var(--muted); }
+
+.rr-team { display: flex; align-items: center; gap: 9px; min-width: 0; }
+.rr-logo { width: 26px; height: 26px; border-radius: 7px; display: grid; place-items: center; background: #0e120d; border: 1px solid var(--line); color: var(--muted); flex: none; }
+.rr-logo .ico { width: 15px; height: 15px; }
+.rr-team-name { font-weight: 700; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.rr-team-name .vf { color: var(--lime); margin-left: 4px; }
+
+.rr-track { display: flex; align-items: center; gap: 8px; color: var(--text-2); min-width: 0; }
+.rr-track .badge { flex: none; }
+.rr-track-name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.rr-pts { font-family: var(--font-display); font-weight: 800; font-size: 14px; color: var(--lime); }
+.rr-time { display: inline-flex; align-items: center; gap: 5px; color: var(--text); font-variant-numeric: tabular-nums; }
+.rr-time .ico { color: var(--dim); }
+.rr-date { color: var(--muted); }
+.rr-city { display: inline-flex; align-items: center; gap: 6px; color: var(--text-2); }
+.rr-city .ico { color: var(--dim); }
+
+.rank-more { display: flex; justify-content: center; padding: 6px; }
+.rank-more .btn { height: 34px; font-size: 10.5px; }
+
+.badge { position: static; }
+.badge-konnyu { background: var(--konnyu); }
+.badge-kozepes { background: var(--kozepes); }
+.badge-nehez { background: var(--nehez); }
+.badge-extrem { background: var(--extrem); color: #fff; }
+.rank-table .badge { padding: 2px 8px; font-size: 8px; border-radius: 4px; }
+
+/* ---------- közösségi statisztikák ---------- */
+.rank-community {
+  display: flex; align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--bg-elev);
+}
+.rank-community > h3 {
+  font-family: var(--font-body);
+  font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase;
+  color: #fff; display: flex; align-items: center; gap: 8px;
+  margin-right: 6px; white-space: nowrap;
+}
+.rank-community > h3 .ico { color: var(--lime); }
+.rc-grid { display: flex; flex: 1; gap: 6px; }
+.rc-stat { flex: 1; display: flex; align-items: center; gap: 10px; padding-left: 14px; position: relative; }
+.rc-stat + .rc-stat::before { content: ""; position: absolute; left: 0; top: 2px; bottom: 2px; width: 1px; background: var(--line-soft); }
+.rc-stat .ico { color: var(--lime); width: 22px; height: 22px; flex: none; }
+.rc-stat b { display: block; font-family: var(--font-display); font-weight: 800; font-size: 17px; color: #fff; line-height: 1; }
+.rc-stat span { font-size: 9.5px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+
+/* =========================================================
+   OLDALSÁV
+   ========================================================= */
+.side-card {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--bg-elev);
+  padding: 12px 14px;
+}
+.side-card > h3 {
+  font-family: var(--font-body);
+  font-size: 10.5px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase;
+  color: var(--text-2); margin-bottom: 9px;
+}
+
+/* heti bajnok */
+.champ {
+  background: linear-gradient(180deg, rgb(158 213 43 / .08), rgb(20 26 17 / 0) 55%), var(--bg-elev);
+  border-color: rgb(158 213 43 / .3);
+}
+.champ-date { display: flex; align-items: center; gap: 7px; font-size: 11px; color: var(--muted); margin-bottom: 11px; }
+.champ-date .ico { color: var(--muted); }
+.champ-team { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+.champ-logo { width: 46px; height: 46px; border-radius: 12px; display: grid; place-items: center; background: #0e120d; border: 1px solid rgb(158 213 43 / .4); color: var(--lime); flex: none; }
+.champ-logo .ico { width: 24px; height: 24px; }
+.champ-name { font-size: 16px; font-weight: 800; color: #fff; }
+.champ-pts { font-family: var(--font-display); font-weight: 800; font-size: 22px; color: var(--lime); }
+.champ-pts small { font-family: var(--font-body); font-size: 11px; font-weight: 500; color: var(--muted); margin-left: 4px; }
+
+.side-btn {
+  display: flex; align-items: center; justify-content: center; gap: 7px;
+  width: 100%; height: 36px; border-radius: 7px;
+  border: 1px solid var(--lime);
+  color: var(--lime);
+  font-size: 9.5px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase;
+  transition: background-color .18s;
+}
+.side-btn:hover { background: rgb(158 213 43 / .1); }
+.side-btn .ico { width: 14px; height: 14px; }
+
+/* játékos statisztikák */
+.pstats { display: grid; grid-template-columns: 1fr 1fr; gap: 9px 10px; margin-bottom: 10px; }
+.pstat span { display: block; font-size: 9.5px; color: var(--muted); margin-bottom: 2px; }
+.pstat b { font-family: var(--font-display); font-weight: 800; font-size: 19px; color: #fff; }
+.pstat.wide { grid-column: 1 / -1; padding-top: 10px; border-top: 1px solid var(--line-soft); }
+.pstat b .u { font-family: var(--font-body); font-size: 10px; font-weight: 500; color: var(--muted); margin-left: 3px; }
+.pstat.accent b { color: var(--lime); }
+.pstat.time b { display: inline-flex; align-items: center; gap: 6px; font-size: 17px; }
+.pstat.time .ico { color: var(--lime); width: 16px; height: 16px; }
+
+/* elérések */
+.ach { display: flex; flex-direction: column; gap: 9px; margin-bottom: 10px; }
+.ach-item { display: flex; align-items: flex-start; gap: 11px; }
+.ach-ico { width: 38px; height: 38px; border-radius: 10px; display: grid; place-items: center; background: rgb(158 213 43 / .1); border: 1px solid rgb(158 213 43 / .3); color: var(--lime); flex: none; }
+.ach-ico .ico { width: 19px; height: 19px; }
+.ach-body { flex: 1; min-width: 0; }
+.ach-top { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+.ach-title { font-size: 12px; font-weight: 700; color: #fff; }
+.ach-date { font-size: 9.5px; color: var(--dim); flex: none; }
+.ach-desc { font-size: 10.5px; color: var(--muted); line-height: 1.35; margin-top: 2px; }
+
+/* csatlakozz cta */
+.join-cta {
+  padding: 16px 16px;
+  border-radius: 12px;
+  background:
+    radial-gradient(120% 160% at 100% 100%, rgb(158 213 43 / .16) 0%, rgb(158 213 43 / 0) 55%),
+    linear-gradient(180deg, #131c0d, #0d1109);
+  border: 1px solid rgb(158 213 43 / .5);
+}
+.join-cta h3 { font-size: 15px; font-weight: 900; text-transform: uppercase; color: #fff; margin-bottom: 4px; }
+.join-cta p { font-size: 11.5px; color: var(--text-2); line-height: 1.4; margin-bottom: 12px; }
+.join-cta .btn { width: 100%; height: 40px; }
+
+/* ---------- reszponzív ---------- */
+@media (max-width: 1080px) {
+  .rank-layout { grid-template-columns: 1fr; }
+  .rank-side { display: grid; grid-template-columns: 1fr 1fr; }
+  .join-cta { grid-column: 1 / -1; }
+}
+@media (max-width: 820px) {
+  .rank-row { grid-template-columns: 54px 1.3fr 1.3fr 80px 96px; font-size: 11px; }
+  .rr-date, .rr-city { display: none; }
+  .rank-head span:nth-child(6), .rank-head span:nth-child(7) { display: none; }
+  .rank-community { flex-direction: column; align-items: stretch; }
+  .rc-grid { flex-wrap: wrap; }
+  .rc-stat { flex: 1 1 40%; }
+}
+@media (max-width: 620px) {
+  .podium { grid-template-columns: 1fr; }
+  .rank-side { grid-template-columns: 1fr; }
+  .rank-filter { flex-wrap: wrap; }
+  .rank-filter .rf { flex: 1 1 45%; }
+  .rank-filter .rf + .rf::before { display: none; }
+  .rank-row { grid-template-columns: 44px 1.4fr 76px; }
+  .rr-track, .rank-head span:nth-child(3), .rank-head span:nth-child(5) { display: none; }
+}

@@ -1,0 +1,182 @@
+/* =========================================================
+   URBAN QUEST — ADMIN / MÉDIA
+   (a .adm-*, .ed-*, .uq-* osztályokat az admin.css-ből örökli)
+   ========================================================= */
+
+/* ---------- felső sáv: split gomb + fotó avatar ---------- */
+.adm-split { display: inline-flex; }
+.adm-split .adm-btn-lime:first-child { border-top-right-radius: 0; border-bottom-right-radius: 0; }
+.adm-split-caret { border-top-left-radius: 0; border-bottom-left-radius: 0; padding: 0 8px; margin-left: 1px; }
+.adm-avatar-photo { padding: 0; overflow: hidden; background: none; }
+.adm-avatar-photo svg { width: 100%; height: 100%; }
+
+/* ---------- fő terület ---------- */
+.adm-main { display: flex; flex-direction: column; }
+
+/* ---------- médiatár fejléc ---------- */
+.jtk-head { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin: 4px 0 14px; flex-wrap: wrap; }
+.jtk-head h1 { font-size: 22px; font-weight: 800; color: #fff; }
+.jtk-head-actions { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+
+/* ---------- szűrő fülek ---------- */
+.med-tabs { display: inline-flex; align-items: center; gap: 3px; padding: 3px; border-radius: 9px; border: 1px solid var(--line); background: rgb(255 255 255 / .02); }
+.med-tab {
+  display: inline-flex; align-items: center; gap: 6px; cursor: pointer;
+  height: 30px; padding: 0 12px; border-radius: 7px;
+  font-family: var(--font-body); font-size: 12px; font-weight: 600; color: var(--muted);
+  transition: background-color .14s, color .14s;
+}
+.med-tab:hover { color: var(--text-2); background: rgb(255 255 255 / .04); }
+.med-tab.is-on { background: var(--lime); color: #0a0d0a; }
+.med-tab-n { display: inline-grid; place-items: center; min-width: 18px; height: 16px; padding: 0 5px; border-radius: 999px; background: rgb(255 255 255 / .1); font-size: 10px; font-weight: 700; }
+.med-tab.is-on .med-tab-n { background: rgb(10 13 10 / .18); color: #0a0d0a; }
+
+/* ---------- feltöltés dropzone ---------- */
+.med-dropzone {
+  display: flex; align-items: center; gap: 16px; width: 100%; cursor: pointer; text-align: left;
+  padding: 18px 20px; margin-bottom: 18px;
+  border: 1.5px dashed var(--line); border-radius: 12px;
+  background: rgb(255 255 255 / .012);
+  transition: border-color .16s, background-color .16s;
+}
+.med-dropzone:hover, .med-dropzone.is-drag { border-color: rgb(158 213 43 / .55); background: rgb(158 213 43 / .05); }
+.med-dropzone-ic { flex: none; width: 46px; height: 46px; border-radius: 11px; display: grid; place-items: center; background: rgb(158 213 43 / .1); border: 1px solid rgb(158 213 43 / .25); color: var(--lime); }
+.med-dropzone-ic .ico { width: 22px; height: 22px; }
+.med-dropzone:hover .med-dropzone-ic, .med-dropzone.is-drag .med-dropzone-ic { background: rgb(158 213 43 / .16); }
+.med-dropzone-txt { display: flex; flex-direction: column; gap: 3px; min-width: 0; flex: 1; }
+.med-dropzone-txt b { font-size: 14px; font-weight: 700; color: #fff; }
+.med-dropzone-txt small { font-size: 12px; color: var(--muted); }
+.med-dropzone-link { color: var(--lime); font-weight: 600; }
+.med-dropzone-hint { flex: none; font-size: 11px; color: var(--dim); }
+
+/* ---------- videó-link beillesztő sor ---------- */
+.med-linkadd {
+  display: flex; align-items: center; gap: 10px; width: 100%;
+  margin: 0 0 18px; padding: 10px 12px;
+  border: 1px solid var(--line); border-radius: 12px;
+  background: rgb(255 255 255 / .012);
+}
+.med-linkadd-ic { flex: none; width: 34px; height: 34px; border-radius: 9px; display: grid; place-items: center; background: rgb(120 132 224 / .12); border: 1px solid rgb(120 132 224 / .28); color: #b0b8f2; }
+.med-linkadd-ic .ico { width: 18px; height: 18px; }
+.med-linkadd-input {
+  flex: 1; min-width: 0; height: 38px; padding: 0 12px;
+  border: 1px solid var(--line); border-radius: 9px;
+  background: rgb(10 13 10 / .35); color: #fff;
+  font-family: var(--font-body); font-size: 13px;
+  transition: border-color .14s, background-color .14s;
+}
+.med-linkadd-input::placeholder { color: var(--dim); }
+.med-linkadd-input:focus { outline: none; border-color: rgb(158 213 43 / .5); background: rgb(158 213 43 / .05); }
+.med-linkadd-btn { flex: none; }
+
+/* ---------- média rács ---------- */
+.med-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(212px, 1fr)); gap: 14px; }
+
+.med-card {
+  display: flex; flex-direction: column; cursor: pointer; text-align: left; overflow: hidden;
+  border: 1px solid var(--line); border-radius: 12px; background: #0f130d;
+  transition: border-color .14s, transform .14s, box-shadow .14s;
+}
+.med-card:hover { border-color: rgb(158 213 43 / .4); transform: translateY(-2px); box-shadow: 0 14px 30px -18px rgb(0 0 0 / .8); }
+
+/* bélyegkép — CSS gradiens, mint a .jtk-thumb */
+.med-thumb { position: relative; aspect-ratio: 16 / 10; border-bottom: 1px solid var(--line-soft); background-size: cover; background-position: center; }
+.med-thumb-1 { background: linear-gradient(150deg,#3a2f1e,#1a1a10), radial-gradient(circle at 30% 70%, #6b5426, transparent 60%); }
+.med-thumb-2 { background: linear-gradient(150deg,#1c2740,#0f1622), radial-gradient(circle at 60% 40%, #2f4a72, transparent 60%); }
+.med-thumb-3 { background: linear-gradient(150deg,#26332e,#12201a), radial-gradient(circle at 40% 60%, #2f6b56, transparent 60%); }
+.med-thumb-4 { background: linear-gradient(150deg,#33241a,#1a120c), radial-gradient(circle at 50% 40%, #7a4e26, transparent 62%); }
+.med-thumb-5 { background: linear-gradient(150deg,#243318,#12200c), radial-gradient(circle at 45% 55%, #3f6b1f, transparent 60%); }
+.med-thumb-6 { background: linear-gradient(150deg,#2b2320,#171210), radial-gradient(circle at 55% 45%, #5a4436, transparent 60%); }
+.med-thumb-7 { background: linear-gradient(150deg,#2a1e33,#160f1e), radial-gradient(circle at 40% 50%, #55306b, transparent 60%); }
+.med-thumb-8 { background: linear-gradient(150deg,#1e3332,#0f201f), radial-gradient(circle at 55% 45%, #1f6b64, transparent 60%); }
+.med-thumb-9 { background: linear-gradient(150deg,#33161e,#1e0c11), radial-gradient(circle at 45% 55%, #8a2f45, transparent 60%); }
+.med-thumb-10 { background: linear-gradient(150deg,#33301a,#1e1c0c), radial-gradient(circle at 50% 50%, #7a6b1f, transparent 60%); }
+
+/* videó/hang lejátszó ikon a bélyegképen */
+.med-thumb-play { position: absolute; inset: 0; display: grid; place-items: center; }
+.med-thumb-play span { width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; background: rgb(10 13 10 / .55); border: 1px solid rgb(255 255 255 / .2); color: #fff; backdrop-filter: blur(2px); }
+.med-thumb-play .ico { width: 20px; height: 20px; }
+
+/* valós bélyegkép (feltöltött kép / videó) */
+.med-thumb-real { background: #0a0d0a; }
+.med-thumb-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; background: #0a0d0a; }
+
+/* kijelölő négyzet a kártya bal felső sarkában */
+.med-check { position: absolute; top: 8px; left: 8px; z-index: 3; width: 25px; height: 25px; border-radius: 7px; display: grid; place-items: center; cursor: pointer; background: rgb(10 13 10 / .5); border: 1.5px solid rgb(255 255 255 / .4); backdrop-filter: blur(3px); opacity: 0; transition: opacity .14s, background-color .14s, border-color .14s; }
+.med-card:hover .med-check, .med-check.is-checked { opacity: 1; }
+.med-check .ico { width: 14px; height: 14px; color: #fff; opacity: 0; transform: scale(.4); transition: opacity .14s, transform .14s; }
+.med-check.is-checked { background: var(--lime); border-color: var(--lime); }
+.med-check.is-checked .ico { color: #0a0d0a; opacity: 1; transform: scale(1); }
+
+/* kijelölt kártya kiemelése */
+.med-card.is-selected { border-color: var(--lime); box-shadow: 0 0 0 1px rgb(158 213 43 / .55); }
+
+/* típus-badge a bélyegkép jobb felső sarkában (a jelölő a bal oldalon van) */
+.med-badge { position: absolute; top: 9px; right: 9px; display: inline-flex; align-items: center; gap: 5px; padding: 4px 8px; border-radius: 6px; font-size: 10px; font-weight: 700; letter-spacing: .02em; backdrop-filter: blur(3px); }
+.med-badge .ico { width: 12px; height: 12px; }
+.med-badge-image { background: rgb(79 184 79 / .2); color: #9fe08a; box-shadow: inset 0 0 0 1px rgb(79 184 79 / .3); }
+.med-badge-video { background: rgb(120 132 224 / .22); color: #b0b8f2; box-shadow: inset 0 0 0 1px rgb(120 132 224 / .32); }
+.med-badge-audio { background: rgb(224 185 58 / .2); color: #ecca6a; box-shadow: inset 0 0 0 1px rgb(224 185 58 / .32); }
+
+/* kártya törzs */
+.med-body { padding: 11px 13px 13px; display: flex; flex-direction: column; gap: 4px; }
+.med-name { font-size: 13px; font-weight: 700; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.med-info { display: flex; align-items: center; gap: 8px; font-size: 11px; color: var(--muted); }
+.med-info .med-dot { width: 3px; height: 3px; border-radius: 50%; background: var(--dim); flex: none; }
+.med-uses { display: inline-flex; align-items: center; gap: 5px; margin-top: 4px; font-size: 11px; color: var(--text-2); }
+.med-uses .ico { width: 13px; height: 13px; color: var(--muted); }
+.med-uses.is-unused { color: var(--dim); }
+
+/* ---------- üres állapot ---------- */
+.jtk-empty { padding: 44px 16px; text-align: center; font-size: 12.5px; color: var(--muted); }
+
+/* =========================================================
+   ELŐNÉZET MODAL
+   ========================================================= */
+.med-modal-panel { max-width: 500px; }
+
+/* szerkeszthető cím (átnevezés) a modal fejlécében */
+.med-title-wrap { min-width: 0; }
+.med-title-input { width: 100%; max-width: 320px; font-family: var(--font-body); font-size: 15px; font-weight: 700; color: #fff; background: transparent; border: 1px solid transparent; border-radius: 6px; padding: 2px 6px; margin: -2px -6px; transition: border-color .14s, background-color .14s; }
+.med-title-input:hover { border-color: var(--line); }
+.med-title-input:focus { outline: none; border-color: rgb(158 213 43 / .55); background: rgb(158 213 43 / .06); }
+
+.med-preview { position: relative; aspect-ratio: 16 / 9; border-radius: 10px; border: 1px solid var(--line); overflow: hidden; display: grid; place-items: center; }
+.med-preview-ic { color: rgb(255 255 255 / .5); }
+.med-preview-ic .ico { width: 52px; height: 52px; }
+.med-preview-ic.is-media { color: inherit; }
+
+/* valós előnézeti média */
+.med-preview-real { background: #000; }
+.med-preview-media { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; background: #000; }
+.med-preview-audio { position: absolute; left: 14px; right: 14px; bottom: 14px; width: calc(100% - 28px); }
+
+.med-preview-badge { position: absolute; top: 11px; left: 11px; z-index: 2; display: inline-flex; align-items: center; gap: 5px; padding: 5px 9px; border-radius: 6px; font-size: 10.5px; font-weight: 700; backdrop-filter: blur(3px); }
+.med-preview-badge .ico { width: 13px; height: 13px; }
+
+.med-meta { display: flex; flex-direction: column; gap: 0; border: 1px solid var(--line-soft); border-radius: 10px; overflow: hidden; }
+.med-meta-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 13px; font-size: 12.5px; }
+.med-meta-row + .med-meta-row { border-top: 1px solid var(--line-soft); }
+.med-meta-row .k { color: var(--muted); }
+.med-meta-row .v { color: #fff; font-weight: 600; }
+
+/* törlés gomb */
+.med-btn-danger { color: #ef6a5f; border-color: rgb(224 58 47 / .35); }
+.med-btn-danger:hover { background: rgb(224 58 47 / .12); color: #ff8478; border-color: rgb(224 58 47 / .5); }
+.med-btn-danger .ico { color: currentColor; }
+
+/* ---------- reszponzív ---------- */
+@media (max-width: 1080px) {
+  .admin-body { height: auto; overflow: visible; }
+  .adm-shell { flex-direction: column; }
+}
+@media (max-width: 640px) {
+  .jtk-head-actions { width: 100%; }
+  .med-tabs { flex: 1; justify-content: space-between; }
+  .med-tab { padding: 0 9px; }
+  .med-dropzone-hint { display: none; }
+  .med-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 11px; }
+  .med-linkadd { flex-wrap: wrap; }
+  .med-linkadd-input { order: 3; flex-basis: 100%; }
+  .med-linkadd-btn { margin-left: auto; }
+}

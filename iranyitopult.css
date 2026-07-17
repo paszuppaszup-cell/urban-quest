@@ -1,0 +1,159 @@
+/* =========================================================
+   URBAN QUEST — ADMIN / IRÁNYÍTÓPULT
+   (a .adm-*, .uq-* osztályokat az admin.css-ből örökli)
+   ========================================================= */
+
+/* ---------- felső sáv: split gomb + fotó avatar ---------- */
+.adm-split { display: inline-flex; }
+.adm-split .adm-btn-lime:first-child { border-top-right-radius: 0; border-bottom-right-radius: 0; }
+.adm-split-caret { border-top-left-radius: 0; border-bottom-left-radius: 0; padding: 0 8px; margin-left: 1px; }
+.adm-avatar-photo { padding: 0; overflow: hidden; background: none; }
+.adm-avatar-photo svg { width: 100%; height: 100%; }
+
+/* ---------- fő terület ---------- */
+.adm-main { display: flex; flex-direction: column; }
+.adm-main > * { flex-shrink: 0; }
+.adm-course-actions .adm-btn { height: 36px; }
+
+/* ---------- kétoszlopos rács ---------- */
+.dash-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr);
+  gap: 14px;
+  align-items: start;
+  margin-top: 2px;
+}
+.dash-col { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.uq-pane + .dash-nested { margin-top: 0; }
+
+/* ---------- panel-fejléc (cím + vezérlők) ---------- */
+.dash-ph { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 16px; }
+.dash-title { font-family: var(--font-display); font-size: 15px; font-weight: 800; color: #fff; line-height: 1.1; }
+.dash-sub { font-size: 11px; color: var(--muted); margin-top: 4px; }
+
+/* ---------- szegmentált időszak-váltó ---------- */
+.dash-seg { flex: none; display: inline-flex; gap: 2px; padding: 3px; border: 1px solid var(--line); border-radius: 9px; background: rgb(255 255 255 / .03); }
+.dash-seg button {
+  padding: 5px 13px; border-radius: 6px;
+  font-family: var(--font-body); font-size: 11.5px; font-weight: 600;
+  color: var(--muted); transition: background-color .16s, color .16s;
+}
+.dash-seg button:hover { color: var(--text-2); }
+.dash-seg button.is-on { background: var(--lime); color: #0a0d0a; }
+
+/* ---------- CSS oszlopdiagram (a .uq-chart-ot bővíti) ---------- */
+.uq-chart { align-items: flex-end; }
+.dash-bar-wrap { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 7px; height: 100%; min-width: 0; }
+.dash-bar-val { font-size: 10px; font-weight: 700; color: var(--text-2); font-variant-numeric: tabular-nums; opacity: 0; transition: opacity .16s; }
+.dash-bar-wrap:hover .dash-bar-val { opacity: 1; }
+.dash-bar {
+  width: 100%; max-width: 44px; min-height: 4px;
+  border-radius: 7px 7px 3px 3px;
+  background: linear-gradient(180deg, var(--lime), rgb(158 213 43 / .32));
+  transition: height .32s cubic-bezier(.4,0,.2,1), filter .16s;
+}
+.dash-bar-wrap:hover .dash-bar { filter: brightness(1.12); }
+.dash-bar-wrap.is-peak .dash-bar { background: linear-gradient(180deg, var(--lime2, #bdf04a), rgb(158 213 43 / .45)); }
+.dash-bar-lbl { font-size: 10px; color: var(--muted); white-space: nowrap; }
+
+/* ---------- idővonal / legutóbbi aktivitás ---------- */
+.dash-tl { display: flex; flex-direction: column; }
+.dash-tl-item { display: flex; align-items: flex-start; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--line-soft); }
+.dash-tl-item:first-child { padding-top: 0; }
+.dash-tl-item:last-child { border-bottom: 0; padding-bottom: 0; }
+.dash-tl-ic { flex: none; width: 32px; height: 32px; border-radius: 9px; display: grid; place-items: center; background: rgb(158 213 43 / .1); border: 1px solid rgb(158 213 43 / .25); color: var(--lime); }
+.dash-tl-ic .ico { width: 16px; height: 16px; }
+.dash-tl-item.is-pub .dash-tl-ic { background: rgb(79 184 79 / .12); border-color: rgb(79 184 79 / .3); color: var(--konnyu); }
+.dash-tl-item.is-edit .dash-tl-ic { background: rgb(224 185 58 / .12); border-color: rgb(224 185 58 / .3); color: var(--kozepes); }
+.dash-tl-body { min-width: 0; flex: 1; }
+.dash-tl-body b { display: block; font-size: 12.5px; font-weight: 600; color: #fff; line-height: 1.35; }
+.dash-tl-body small { display: block; margin-top: 2px; font-size: 11px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dash-tl-time { flex: none; font-size: 10.5px; color: var(--dim); white-space: nowrap; padding-top: 1px; }
+
+/* ---------- legnépszerűbb pályák ---------- */
+.dash-pop { display: flex; flex-direction: column; gap: 15px; }
+.dash-pop-item { min-width: 0; }
+.dash-pop-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 8px; }
+.dash-pop-name { display: flex; align-items: center; gap: 10px; min-width: 0; font-size: 12.5px; font-weight: 600; color: var(--text); }
+.dash-pop-rank { flex: none; width: 20px; height: 20px; border-radius: 6px; display: grid; place-items: center; background: rgb(158 213 43 / .12); border: 1px solid rgb(158 213 43 / .25); color: var(--lime); font-family: var(--font-display); font-weight: 800; font-size: 10.5px; }
+.dash-pop-name span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dash-pop-val { flex: none; font-size: 12px; font-weight: 700; color: var(--lime); font-variant-numeric: tabular-nums; }
+.dash-pop-item .uq-bar-fill { background: linear-gradient(90deg, rgb(158 213 43 / .55), var(--lime)); }
+
+/* ---------- gyors műveletek ---------- */
+.dash-qa { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.dash-qa-btn {
+  display: flex; flex-direction: column; gap: 9px;
+  padding: 14px; border: 1px solid var(--line); border-radius: 11px;
+  background: #12160f; text-align: left;
+  transition: border-color .16s, background-color .16s, transform .16s;
+}
+.dash-qa-btn:hover { border-color: rgb(158 213 43 / .4); background: rgb(158 213 43 / .06); transform: translateY(-1px); }
+.dash-qa-ic { width: 34px; height: 34px; border-radius: 9px; display: grid; place-items: center; background: rgb(158 213 43 / .1); border: 1px solid rgb(158 213 43 / .25); color: var(--lime); }
+.dash-qa-ic .ico { width: 18px; height: 18px; }
+.dash-qa-btn b { font-size: 12.5px; font-weight: 700; color: #fff; }
+.dash-qa-btn small { font-size: 10.5px; color: var(--muted); }
+
+/* ---------- reszponzív ---------- */
+@media (max-width: 1080px) {
+  .dash-grid { grid-template-columns: 1fr; }
+}
+@media (max-width: 900px) {
+  .adm-search { max-width: none; }
+  .dash-qa { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 560px) {
+  .adm-course-head { flex-direction: column; align-items: stretch; }
+  .adm-course-actions { justify-content: flex-start; }
+}
+
+/* =========================================================
+   VALÓS-ADATVEZÉRELT DASHBOARD — új szekciók (6. increment)
+   ========================================================= */
+/* frissítve jelző */
+.dash-updated { font-size: 11px; color: var(--muted); align-self: center; margin-right: 2px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+/* második diagram: csapat-státusz */
+.dash-status { display: flex; flex-direction: column; gap: 13px; }
+.dash-st-row { display: grid; grid-template-columns: 92px 1fr 26px; align-items: center; gap: 12px; }
+.dash-st-label { display: inline-flex; align-items: center; gap: 8px; font-size: 12px; color: var(--text-2); }
+.dash-st-dot { width: 8px; height: 8px; border-radius: 50%; flex: none; }
+.dash-st-track { height: 8px; border-radius: 99px; background: rgb(255 255 255 / .06); overflow: hidden; }
+.dash-st-fill { height: 100%; border-radius: 99px; transition: width .35s ease; }
+.dash-st-val { text-align: right; font-family: var(--font-display); font-weight: 800; font-size: 14px; color: #fff; font-variant-numeric: tabular-nums; }
+
+/* pálya-bontás táblázat */
+.dash-rt { display: flex; flex-direction: column; }
+.dash-rt-head, .dash-rt-row { display: grid; grid-template-columns: minmax(0, 1fr) 40px 40px 44px 96px; align-items: center; gap: 8px; }
+.dash-rt-head { padding-bottom: 9px; border-bottom: 1px solid var(--line); }
+.dash-rt-head span { font-size: 9.5px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.dash-rt-head span:not(:first-child) { text-align: center; }
+.dash-rt-row > span:not(.dash-rt-name):not(.dash-rt-prog) { text-align: center; }
+.dash-rt-row { padding: 11px 0; border-bottom: 1px solid var(--line-soft); font-size: 12.5px; color: var(--text-2); font-variant-numeric: tabular-nums; }
+.dash-rt-row:last-child { border-bottom: 0; }
+.dash-rt-name { color: #fff; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dash-rt-prog { display: inline-flex; align-items: center; gap: 7px; justify-content: flex-end; }
+.dash-rt-mini { width: 40px; height: 6px; border-radius: 99px; background: rgb(255 255 255 / .08); overflow: hidden; flex: none; }
+.dash-rt-mini i { display: block; height: 100%; border-radius: 99px; background: var(--lime); }
+.dash-rt-pct { font-size: 11px; color: var(--text-2); min-width: 26px; text-align: right; }
+.dash-rt-dash { color: var(--dim); font-style: normal; }
+
+/* legnépszerűbb: átlag alcím */
+.dash-pop-sub { margin-top: 6px; font-size: 10.5px; color: var(--muted); }
+
+/* legutóbb hozzáadott: kategória-tag */
+.dash-tl-tag { flex: none; align-self: center; font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); background: rgb(255 255 255 / .05); border: 1px solid var(--line); border-radius: 6px; padding: 3px 7px; white-space: nowrap; }
+
+/* gyors műveletek: teljes szélességű pane */
+.dash-qa-pane { margin-top: 14px; }
+.dash-qa-pane .dash-qa { grid-template-columns: repeat(4, 1fr); }
+
+.dash-empty { font-size: 12px; color: var(--muted); padding: 10px 2px; }
+
+@media (max-width: 1080px) {
+  .dash-qa-pane .dash-qa { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 560px) {
+  .dash-updated { display: none; }
+  .dash-rt-head, .dash-rt-row { grid-template-columns: minmax(0, 1fr) 32px 32px 36px 74px; gap: 6px; }
+}

@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta name="description" content="Urban Quest admin – pálya- és játékszerkesztő felület.">
+<title>Admin – Pályaszerkesztő | Urban Quest</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&family=Inter:wght@400..700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
+<link rel="stylesheet" href="styles.css?v=5">
+<link rel="stylesheet" href="admin.css?v=8">
+<style>
+  /* Játék-választó a pálya fejlécben — sötét téma, lime fókusz */
+  .adm-game-select{
+    appearance:none;-webkit-appearance:none;-moz-appearance:none;
+    font:600 13px/1.2 'Inter',system-ui,sans-serif;
+    color:var(--text,#f1f4ec);
+    background-color:var(--bg-card,#12160f);
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238b957f' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'><path d='m6 9 6 6 6-6'/></svg>");
+    background-repeat:no-repeat;background-position:right 10px center;background-size:14px;
+    border:1px solid var(--line,#232a1e);border-radius:9px;
+    padding:8px 32px 8px 12px;cursor:pointer;max-width:230px;height:38px;
+    transition:border-color .15s ease, box-shadow .15s ease;
+  }
+  .adm-game-select:hover{ border-color:#3a4630; }
+  .adm-game-select:focus,.adm-game-select:focus-visible{
+    outline:none;border-color:var(--lime,#9ed52b);
+    box-shadow:0 0 0 3px rgba(158,213,43,.22);
+  }
+  .adm-game-select option{ background:#12160f;color:#f1f4ec; }
+</style>
+</head>
+<body class="admin-body">
+
+<svg class="sprite" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <g id="a-search"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.5 15.5 4 4"/></g>
+    <g id="a-eye"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3.2"/></g>
+    <g id="a-save"><path d="M5 3h11l3 3v15H5z"/><path d="M8 3v5h7V3M8 21v-6h8v6"/></g>
+    <g id="a-check"><path d="m5 12 5 5L20 6"/></g>
+    <g id="a-check-c"><circle cx="12" cy="12" r="9"/><path d="m8.3 12.2 2.4 2.4 5-5.2"/></g>
+    <g id="a-down"><path d="m6 9 6 6 6-6"/></g>
+    <g id="a-x"><path d="M6 6l12 12M18 6 6 18"/></g>
+    <g id="a-collapse"><path d="m15 6-6 6 6 6"/><path d="M9 6 3 12l6 6" opacity=".5"/></g>
+    <g id="a-route"><circle cx="6" cy="18" r="2.5"/><circle cx="18" cy="6" r="2.5"/><path d="M8.5 18H14a3.5 3.5 0 0 0 0-7H9a3.5 3.5 0 0 1 0-7h6.5"/></g>
+    <g id="a-game"><rect x="2.5" y="7" width="19" height="10" rx="4"/><path d="M7 11v3M5.5 12.5h3"/><circle cx="16" cy="11.5" r="1"/><circle cx="18" cy="13.5" r="1"/></g>
+    <g id="a-pin"><path d="M12 21s6.5-5.6 6.5-10.3A6.5 6.5 0 0 0 5.5 10.7C5.5 15.4 12 21 12 21z"/><circle cx="12" cy="10.5" r="2.4"/></g>
+    <g id="a-task"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 3.5h6v3H9zM8.5 11l1.5 1.5 3-3M8.5 16l1.5 1.5 3-3"/></g>
+    <g id="a-image"><rect x="3.5" y="5" width="17" height="14" rx="2"/><circle cx="8.5" cy="10" r="1.6"/><path d="m5 17 4.5-4 3 2.5L16 11l3.5 4"/></g>
+    <g id="a-clock"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 1.8"/></g>
+    <g id="a-users"><circle cx="9" cy="8" r="3"/><path d="M3 20v-1a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v1"/><path d="M16.5 5.4a3 3 0 0 1 0 5.2M17.5 15.2A4 4 0 0 1 21 19v1"/></g>
+    <g id="a-gear"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 12a7.4 7.4 0 0 0-.1-1.2l2-1.6-2-3.4-2.4 1a7.3 7.3 0 0 0-2-1.2l-.4-2.6H9.5l-.4 2.6a7.3 7.3 0 0 0-2 1.2l-2.4-1-2 3.4 2 1.6a7.4 7.4 0 0 0 0 2.4l-2 1.6 2 3.4 2.4-1a7.3 7.3 0 0 0 2 1.2l.4 2.6h4.9l.4-2.6a7.3 7.3 0 0 0 2-1.2l2.4 1 2-3.4-2-1.6c.06-.4.1-.8.1-1.2z"/></g>
+    <g id="a-plus"><path d="M12 5v14M5 12h14"/></g>
+    <g id="a-trash"><path d="M4 7h16M9 7V4.5h6V7M6 7l1 13h10l1-13M10 11v6M14 11v6"/></g>
+    <g id="a-play"><path d="M7 4.5 19 12 7 19.5z"/></g>
+    <g id="a-preview"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></g>
+    <g id="a-target"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="1"/></g>
+    <g id="a-star"><path d="M12 3.2l2.6 5.3 5.8.8-4.2 4.1 1 5.8-5.2-2.7-5.2 2.7 1-5.8-4.2-4.1 5.8-.8z"/></g>
+    <g id="a-layers"><path d="m12 3 9 5-9 5-9-5z"/><path d="m3 13 9 5 9-5M3 16.5l9 5 9-5" opacity=".55"/></g>
+    <g id="a-minus"><path d="M5 12h14"/></g>
+    <g id="a-expand"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></g>
+    <g id="a-map"><path d="M9 5.5 3.5 8v11l5.5-2.5 6 2.5 5.5-2.5V6l-5.5 2.5z"/><path d="M9 5.5v11M15 8v11"/></g>
+    <g id="a-diamond"><path d="M12 3 21 12 12 21 3 12z"/></g>
+    <g id="a-flag"><path d="M6 21V4M6 4.5h11l-2 4 2 4H6"/></g>
+    <g id="a-bolt"><path d="M13 2 4 14h7l-1 8 9-12h-7z"/></g>
+    <g id="a-logout"><path d="M9 4H5v16h4M15 8l4 4-4 4M19 12H9"/></g>
+    <g id="a-camera"><rect x="3" y="7" width="18" height="13" rx="2.5"/><path d="M8 7l1.6-3h4.8L16 7"/><circle cx="12" cy="13.5" r="3.4"/></g>
+    <g id="a-qr"><rect x="4" y="4" width="6" height="6" rx="1"/><rect x="14" y="4" width="6" height="6" rx="1"/><rect x="4" y="14" width="6" height="6" rx="1"/><path d="M14 14h3v3.5M20.5 14v6.5M17 20.5h3.5"/></g>
+    <g id="a-lock"><rect x="5" y="10.5" width="14" height="10" rx="2"/><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5"/></g>
+    <g id="a-refresh"><path d="M20 12a8 8 0 1 1-2.4-5.7M20 4v4h-4"/></g>
+  </defs>
+  <symbol id="f-hu" viewBox="0 0 18 12"><rect width="18" height="4" fill="#cd2a3e"/><rect y="4" width="18" height="4" fill="#fff"/><rect y="8" width="18" height="4" fill="#436f4d"/></symbol>
+  <symbol id="f-en" viewBox="0 0 18 12"><rect width="18" height="12" fill="#012169"/><path d="M0 0l18 12M18 0L0 12" stroke="#fff" stroke-width="2.4"/><path d="M9 0v12M0 6h18" stroke="#fff" stroke-width="4"/><path d="M9 0v12M0 6h18" stroke="#c8102e" stroke-width="2.4"/></symbol>
+  <symbol id="f-de" viewBox="0 0 18 12"><rect width="18" height="4" fill="#000"/><rect y="4" width="18" height="4" fill="#dd0000"/><rect y="8" width="18" height="4" fill="#ffce00"/></symbol>
+  <symbol id="a-logo" viewBox="0 0 64 64">
+    <circle cx="32" cy="32" r="29.5" fill="none" stroke="currentColor" stroke-width="2.4"/>
+    <circle cx="32" cy="32" r="24.5" fill="none" stroke="currentColor" stroke-width="1" opacity=".55"/>
+    <g stroke="currentColor" stroke-width="1.6" opacity=".75"><path d="M32 2.5v5M32 56.5v5M2.5 32h5M56.5 32h5"/></g>
+    <path d="M32 7 36 28 57 32 36 36 32 57 28 36 7 32 28 28z" fill="currentColor"/>
+    <path d="M32 32 44.5 19.5 38.5 38.5 19.5 44.5z" fill="currentColor" opacity=".38"/>
+    <circle cx="32" cy="32" r="3.4" fill="#0a0d0a"/><circle cx="32" cy="32" r="1.7" fill="currentColor"/>
+  </symbol>
+</svg>
+
+<!-- ===================== FELSŐ SÁV ===================== -->
+<header class="adm-top">
+  <a class="adm-brand" href="index.html">
+    <svg class="brand-mark" viewBox="0 0 64 64" aria-hidden="true"><use href="#a-logo"/></svg>
+    <span class="adm-brand-text"><span class="adm-brand-name">URBAN <b>QUEST</b></span><span class="adm-brand-sub">KALANDOK. KÜLDETÉSEK. ÉLMÉNYEK.</span></span>
+  </a>
+
+  <div class="adm-search">
+    <svg class="ico ico-sm" aria-hidden="true"><use href="#a-search"/></svg>
+    <input type="text" id="admSearch" placeholder="Keresés pályák, állomások, felhasználók között…">
+    <kbd>⌘ K</kbd>
+  </div>
+
+  <div class="adm-top-right">
+    <span class="adm-saved" id="admSaved"><svg class="ico ico-sm" aria-hidden="true"><use href="#a-check-c"/></svg>Mentve: 2 perce</span>
+    <button class="adm-btn" type="button" id="admPreview"><svg class="ico ico-sm" aria-hidden="true"><use href="#a-preview"/></svg>Előnézet</button>
+    <button class="adm-btn adm-btn-lime" type="button" id="admSave"><svg class="ico ico-sm" aria-hidden="true"><use href="#a-save"/></svg>Mentés</button>
+
+    <div class="uq-dd" data-dd>
+      <button class="adm-btn adm-status" type="button" data-dd-toggle><span class="dot" id="admStatusDot"></span><span class="adm-status-label" id="admStatusLabel">Közzétéve</span><svg class="ico ico-xs" aria-hidden="true"><use href="#a-down"/></svg></button>
+      <div class="uq-dd-menu">
+        <div class="uq-dd-label">Állapot</div>
+        <button class="uq-dd-item is-active" type="button" data-status="Közzétéve"><svg class="ico" aria-hidden="true"><use href="#a-check-c"/></svg>Közzétéve<svg class="ico ico-xs uq-dd-check" aria-hidden="true"><use href="#a-check"/></svg></button>
+        <button class="uq-dd-item" type="button" data-status="Piszkozat"><svg class="ico" aria-hidden="true"><use href="#a-task"/></svg>Piszkozat<svg class="ico ico-xs uq-dd-check" aria-hidden="true"><use href="#a-check"/></svg></button>
+        <div class="uq-dd-sep"></div>
+        <button class="uq-dd-item is-danger" type="button" data-status="Archivált"><svg class="ico" aria-hidden="true"><use href="#a-layers"/></svg>Archivált<svg class="ico ico-xs uq-dd-check" aria-hidden="true"><use href="#a-check"/></svg></button>
+      </div>
+    </div>
+
+    <div class="uq-dd" data-dd>
+      <button class="adm-user" type="button" data-dd-toggle>
+        <span class="adm-avatar">SZ</span>
+        <span class="adm-user-text"><b>Szabó Tamás</b><span>Adminisztrátor</span></span>
+        <svg class="ico ico-xs" aria-hidden="true"><use href="#a-down"/></svg>
+      </button>
+      <div class="uq-dd-menu">
+        <div class="uq-dd-label">Fiók</div>
+        <button class="uq-dd-item" type="button" data-user="Profil"><svg class="ico" aria-hidden="true"><use href="#a-users"/></svg>Profil</button>
+        <button class="uq-dd-item" type="button" data-user="Beállítások"><svg class="ico" aria-hidden="true"><use href="#a-gear"/></svg>Beállítások</button>
+        <div class="uq-dd-sep"></div>
+        <button class="uq-dd-item is-danger" type="button" data-user="Kijelentkezés"><svg class="ico" aria-hidden="true"><use href="#a-logout"/></svg>Kijelentkezés</button>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="adm-shell">
+  <!-- ===================== OLDALSÁV ===================== -->
+  <aside class="adm-side" id="admSide">
+    <button class="adm-collapse" type="button" data-side-toggle aria-label="Összecsukás"><svg class="ico ico-sm" aria-hidden="true"><use href="#a-collapse"/></svg></button>
+    <nav class="adm-nav">
+      <a class="adm-nav-item" href="iranyitopult.html" data-label="Irányítópult"><svg class="ico" aria-hidden="true"><use href="#a-home"/></svg><span>Irányítópult</span></a>
+      <a class="adm-nav-item is-active" href="admin.html" data-label="Pályák"><svg class="ico" aria-hidden="true"><use href="#a-route"/></svg><span>Pályák</span></a>
+      <a class="adm-nav-item" href="jatekok.html" data-label="Játékok"><svg class="ico" aria-hidden="true"><use href="#a-game"/></svg><span>Játékok</span></a>
+      <a class="adm-nav-item" href="allomasok.html" data-label="Állomások"><svg class="ico" aria-hidden="true"><use href="#a-pin"/></svg><span>Állomások</span></a>
+      <a class="adm-nav-item" href="feladatok.html" data-label="Feladatok"><svg class="ico" aria-hidden="true"><use href="#a-task"/></svg><span>Feladatok</span></a>
+      <a class="adm-nav-item" href="media.html" data-label="Média"><svg class="ico" aria-hidden="true"><use href="#a-image"/></svg><span>Média</span></a>
+      <a class="adm-nav-item" href="idozitesek.html" data-label="Időzítések"><svg class="ico" aria-hidden="true"><use href="#a-clock"/></svg><span>Időzítések</span></a>
+      <a class="adm-nav-item" href="csapatok.html" data-label="Csapatok"><svg class="ico" aria-hidden="true"><use href="#a-users"/></svg><span>Csapatok</span></a>
+      <a class="adm-nav-item" href="beallitasok.html" data-label="Beállítások"><svg class="ico" aria-hidden="true"><use href="#a-gear"/></svg><span>Beállítások</span></a>
+    </nav>
+    <div class="adm-side-foot">
+      <div class="adm-sysstat"><span class="adm-sysstat-label">Rendszer állapota</span><span class="adm-sysstat-ok"><span class="dot"></span><span>Minden rendben</span></span></div>
+      <div class="adm-ver">Verzió 2.4.1<br>© 2024 Urban Quest</div>
+    </div>
+  </aside>
+
+  <!-- ===================== FŐ TERÜLET ===================== -->
+  <main class="adm-main">
+    <!-- statisztika kártyák -->
+    <div class="adm-stats">
+      <div class="adm-stat"><span class="adm-stat-ic"><svg class="ico" aria-hidden="true"><use href="#a-route"/></svg></span><div><span class="adm-stat-label">Aktív pályák</span><b>24</b><span class="adm-stat-delta up">+3 ezen a héten</span></div></div>
+      <div class="adm-stat"><span class="adm-stat-ic"><svg class="ico" aria-hidden="true"><use href="#a-task"/></svg></span><div><span class="adm-stat-label">Piszkozatok</span><b>7</b><span class="adm-stat-delta">Szerkesztés alatt</span></div></div>
+      <div class="adm-stat"><span class="adm-stat-ic"><svg class="ico" aria-hidden="true"><use href="#a-users"/></svg></span><div><span class="adm-stat-label">Összes játékos</span><b>3 842</b><span class="adm-stat-delta up">+12% az előző héthez</span></div></div>
+      <div class="adm-stat"><span class="adm-stat-ic"><svg class="ico" aria-hidden="true"><use href="#a-target"/></svg></span><div><span class="adm-stat-label">Befejezési arány</span><b>62.4%</b><span class="adm-stat-delta up">+5.6% az előző héthez</span></div></div>
+    </div>
+
+    <!-- pálya fejléc -->
+    <div class="adm-course-head">
+      <div class="adm-course-title">
+        <h1 id="admCourseName">Városliget Felfedező <span class="adm-tag" id="admCourseTag">Közzétéve</span></h1>
+        <p id="admCourseSub">Budapest, Városliget · <span id="admCourseCount">12 állomás</span> · 2–3 óra</p>
+      </div>
+      <div class="adm-course-actions">
+        <select id="admGameSelect" class="adm-game-select" aria-label="Játék kiválasztása – minden játéknak saját pályája van"></select>
+        <button class="adm-btn" type="button" id="admCourseSettings"><svg class="ico ico-sm" aria-hidden="true"><use href="#a-gear"/></svg>Pálya beállítások</button>
+        <button class="adm-btn" type="button" id="admCourseTest"><svg class="ico ico-sm" aria-hidden="true"><use href="#a-play"/></svg>Pálya tesztelése</button>
+      </div>
+    </div>
+
+    <!-- fülek -->
+    <div class="adm-tabs" id="admTabs" role="tablist">
+      <button class="adm-tab is-active" type="button" role="tab" aria-selected="true" data-tab="szerkeszto">Szerkesztő</button>
+      <button class="adm-tab" type="button" role="tab" aria-selected="false" data-tab="attekintes">Áttekintés</button>
+      <button class="adm-tab" type="button" role="tab" aria-selected="false" data-tab="statisztikak">Statisztikák</button>
+      <button class="adm-tab" type="button" role="tab" aria-selected="false" data-tab="jatekos">Játékos nézet</button>
+    </div>
+
+    <div class="adm-tabpanels">
+    <!-- ===================== SZERKESZTŐ FÜL ===================== -->
+    <section class="adm-tabpanel is-active" data-panel="szerkeszto">
+    <div class="adm-editor">
+      <!-- ELEMEK -->
+      <section class="ed-panel ed-elements">
+        <div class="ed-panel-head"><h2>Elemek</h2><button class="ed-add" type="button" id="edAdd"><svg class="ico ico-xs" aria-hidden="true"><use href="#a-plus"/></svg>Új elem</button></div>
+        <div class="ed-list" id="stationList"></div>
+        <button class="ed-add-station" type="button" id="edAddStation"><svg class="ico ico-sm" aria-hidden="true"><use href="#a-plus"/></svg>Állomás hozzáadása</button>
+      </section>
+
+      <!-- TÉRKÉP -->
+      <section class="ed-panel ed-map">
+        <div class="ed-panel-head"><h2>Pálya térkép</h2><div class="ed-map-tools"><button type="button" id="edZoomOut" aria-label="Kicsinyítés"><svg class="ico ico-xs" aria-hidden="true"><use href="#a-minus"/></svg></button><span id="edZoomVal">100%</span><button type="button" id="edZoomIn" aria-label="Nagyítás"><svg class="ico ico-xs" aria-hidden="true"><use href="#a-plus"/></svg></button><button type="button" id="edZoomFit" aria-label="Kinagyítás"><svg class="ico ico-xs" aria-hidden="true"><use href="#a-expand"/></svg></button></div></div>
+        <div class="ed-map-canvas" id="edMapCanvas">
+          <div class="ed-leaflet" id="edLeaflet"></div>
+          <div class="ed-map-hint">Húzd a jelölőket a helyükre • kattints a térképre új állomáshoz</div>
+        </div>
+        <div class="ed-legend">
+          <span><i class="lg lg-start"></i>Kezdőpont</span>
+          <span><i class="lg lg-station"></i>Állomás</span>
+          <span><i class="lg lg-dec"></i>Döntési pont</span>
+          <span><i class="lg lg-end"></i>Záróállomás</span>
+          <span><i class="lg lg-off"></i>Nem elérhető</span>
+        </div>
+      </section>
+
+      <!-- ÁLLOMÁS BEÁLLÍTÁSOK -->
+      <section class="ed-panel ed-settings">
+        <div class="ed-panel-head"><h2>Állomás beállítások</h2><button class="ed-del" type="button" id="edDel"><svg class="ico ico-xs" aria-hidden="true"><use href="#a-trash"/></svg>Törlés</button></div>
+        <div class="ed-form" id="edForm">
+          <h3 class="ed-group">Általános adatok</h3>
+          <div class="ed-row"><label>Név</label><div class="ed-field ed-field-grow"><input type="text" data-field="name" value=""></div><div class="ed-field ed-field-sm"><label class="ed-inline">Sorszám</label><input type="text" data-field="num" value="" readonly></div></div>
+          <div class="ed-row"><label>Típus</label><div class="ed-field ed-select"><select data-field="type"><option>Kezdő állomás</option><option>Információs állomás</option><option>Feladat állomás</option><option>Döntési pont</option><option>Záróállomás</option></select><svg class="ico ico-xs" aria-hidden="true"><use href="#a-down"/></svg></div></div>
+          <div class="ed-row"><label>Leírás</label><div class="ed-field"><textarea rows="2" data-field="desc"></textarea></div></div>
+          <div class="ed-row"><label>Kép</label><div class="ed-image-row"><span class="ed-thumb" id="edThumb"></span><button class="ed-btn2" type="button" id="edImageBtn"><svg class="ico ico-xs" aria-hidden="true"><use href="#a-image"/></svg>Kép cseréje</button></div></div>
+
+          <h3 class="ed-group">Beállítások</h3>
+          <div class="ed-row"><label>Nehézség</label><div class="ed-field ed-select"><span class="ed-dot" id="edDot"></span><select data-field="difficulty"><option>Könnyű</option><option>Közepes</option><option>Nehéz</option><option>Extrém</option></select><svg class="ico ico-xs" aria-hidden="true"><use href="#a-down"/></svg></div></div>
+          <div class="ed-row"><label>Időlimit</label><div class="ed-field ed-field-grow"><svg class="ico ico-xs pre" aria-hidden="true"><use href="#a-clock"/></svg><input type="text" data-field="timeLimit" value=""></div><div class="ed-toggle-wrap"><span>Időlimit aktív</span><button class="ed-toggle" type="button" role="switch" data-field="timeLimitOn" aria-checked="false"><span></span></button></div></div>
+          <div class="ed-row"><label>Helyszín</label><div class="ed-field ed-field-grow"><input type="text" data-field="location" value=""></div><button class="ed-btn2" type="button" id="edLocBtn"><svg class="ico ico-xs" aria-hidden="true"><use href="#a-pin"/></svg>Térképen</button></div>
+          <div class="ed-row"><label>Nyelvek</label><div class="ed-langs" id="edLangs"></div></div>
+
+          <h3 class="ed-group">Feladat beállítások</h3>
+          <div class="ed-row"><label>Feladat típusa</label><div class="ed-field ed-select"><select data-field="taskType"><option>Kvíz kérdés</option><option>Fotó feladat</option><option>QR-kód</option><option>GPS pont</option></select><svg class="ico ico-xs" aria-hidden="true"><use href="#a-down"/></svg></div></div>
+          <div class="ed-row"><label>Kérdés</label><div class="ed-field"><input type="text" data-field="question" value=""></div></div>
+          <div class="ed-row"><label>Helyes válasz</label><div class="ed-field ed-field-grow"><input type="text" data-field="answer" value=""></div><div class="ed-field ed-field-sm"><label class="ed-inline">Pontszám</label><input type="text" data-field="score" value=""></div></div>
+
+          <h3 class="ed-group">Kapcsolt feladatok <span id="edTaskCount" class="ed-group-count"></span></h3>
+          <div class="ed-station-tasks" id="edStationTasks"></div>
+
+          <h3 class="ed-group">Jutalmak</h3>
+          <div class="ed-row"><label>Tapasztalati pont</label><div class="ed-field ed-field-grow"><input type="text" data-field="xp" value=""></div><div class="ed-field ed-select ed-field-grow"><label class="ed-inline">Kitűző</label><span class="ed-badge-ic"><svg class="ico ico-xs" aria-hidden="true"><use href="#a-star"/></svg></span><select data-field="badge"><option>Várvédő</option><option>Felfedező</option><option>Nyomozó</option></select><svg class="ico ico-xs" aria-hidden="true"><use href="#a-down"/></svg></div></div>
+
+          <h3 class="ed-group">Játékmenet logika</h3>
+          <div class="ed-logic"><span>Előző állomás teljesítése szükséges</span><button class="ed-toggle" type="button" role="switch" data-field="logicPrev" aria-checked="false"><span></span></button></div>
+          <div class="ed-logic"><span>Kötelező állomás</span><button class="ed-toggle" type="button" role="switch" data-field="logicMandatory" aria-checked="false"><span></span></button></div>
+          <div class="ed-logic"><span>Visszatérés engedélyezett</span><button class="ed-toggle" type="button" role="switch" data-field="logicReturn" aria-checked="false"><span></span></button></div>
+        </div>
+      </section>
+    </div>
+    </section>
+
+    <!-- ===================== ÁTTEKINTÉS FÜL ===================== -->
+    <section class="adm-tabpanel" data-panel="attekintes" id="panelAttekintes"></section>
+
+    <!-- ===================== STATISZTIKÁK FÜL ===================== -->
+    <section class="adm-tabpanel" data-panel="statisztikak" id="panelStatisztikak"></section>
+
+    <!-- ===================== JÁTÉKOS NÉZET FÜL ===================== -->
+    <section class="adm-tabpanel" data-panel="jatekos" id="panelJatekos"></section>
+    </div>
+  </main>
+</div>
+
+<!-- ===================== PÁLYA BEÁLLÍTÁSOK MODAL ===================== -->
+<div class="uq-modal" id="courseModal" role="dialog" aria-modal="true" aria-labelledby="cmTitle">
+  <div class="uq-modal-backdrop" data-modal-close></div>
+  <div class="uq-modal-panel" tabindex="-1">
+    <div class="uq-modal-head">
+      <div><h2 id="cmTitle">Pálya beállítások</h2><span class="uq-modal-sub">Városliget Felfedező</span></div>
+      <button class="uq-modal-x" type="button" data-modal-close aria-label="Bezárás"><svg class="ico ico-sm" aria-hidden="true"><use href="#a-x"/></svg></button>
+    </div>
+    <div class="uq-modal-body">
+      <div class="ed-row"><label>Név</label><div class="ed-field ed-field-grow"><input type="text" id="cmName" value="Városliget Felfedező"></div></div>
+      <div class="ed-row"><label>Leírás</label><div class="ed-field"><textarea rows="3" id="cmDesc">Fedezd fel a Városliget rejtett kincseit egy interaktív kalandtúrán, 12 izgalmas állomással.</textarea></div></div>
+    </div>
+    <div class="uq-modal-foot">
+      <button class="adm-btn" type="button" data-modal-close>Mégse</button>
+      <button class="adm-btn adm-btn-lime" type="button" id="cmSave"><svg class="ico ico-sm" aria-hidden="true"><use href="#a-save"/></svg>Mentés</button>
+    </div>
+  </div>
+</div>
+
+<!-- toast konténer + rejtett kép-input -->
+<div class="uq-toast-wrap" id="uqToasts"></div>
+<input type="file" id="edImageInput" accept="image/*" hidden>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+<script src="admin.js?v=9"></script>
+</body>
+</html>

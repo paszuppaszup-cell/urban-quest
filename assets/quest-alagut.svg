@@ -1,0 +1,240 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <!-- ==== light source at the far end ==== -->
+    <radialGradient id="tunnel-aperture" gradientUnits="userSpaceOnUse" cx="400" cy="272" r="62">
+      <stop offset="0" stop-color="#ffe6bd"/>
+      <stop offset="0.22" stop-color="#f0b968"/>
+      <stop offset="0.58" stop-color="#d3944a"/>
+      <stop offset="1" stop-color="#c8873c"/>
+    </radialGradient>
+    <radialGradient id="tunnel-core" gradientUnits="userSpaceOnUse" cx="400" cy="274" r="46">
+      <stop offset="0" stop-color="#fff0d4" stop-opacity="0.95"/>
+      <stop offset="0.45" stop-color="#f0b968" stop-opacity="0.55"/>
+      <stop offset="1" stop-color="#c8873c" stop-opacity="0"/>
+    </radialGradient>
+
+    <!-- ==== atmospheric bloom / haze ==== -->
+    <radialGradient id="tunnel-bloom" gradientUnits="userSpaceOnUse" cx="400" cy="274" r="185">
+      <stop offset="0" stop-color="#f0b968" stop-opacity="0.42"/>
+      <stop offset="0.30" stop-color="#dc9c50" stop-opacity="0.20"/>
+      <stop offset="0.62" stop-color="#c8873c" stop-opacity="0.07"/>
+      <stop offset="1" stop-color="#c8873c" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="tunnel-bloom2" gradientUnits="userSpaceOnUse" cx="400" cy="280" r="400">
+      <stop offset="0" stop-color="#e6a95c" stop-opacity="0.16"/>
+      <stop offset="0.45" stop-color="#a8703a" stop-opacity="0.05"/>
+      <stop offset="1" stop-color="#6b4523" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="tunnel-fogA" gradientUnits="userSpaceOnUse" cx="400" cy="272" r="330">
+      <stop offset="0" stop-color="#c8873c" stop-opacity="0.10"/>
+      <stop offset="0.55" stop-color="#8a5b2e" stop-opacity="0.03"/>
+      <stop offset="1" stop-color="#5a3a1e" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="tunnel-fogB" gradientUnits="userSpaceOnUse" cx="400" cy="272" r="200">
+      <stop offset="0" stop-color="#e0a35a" stop-opacity="0.13"/>
+      <stop offset="0.6" stop-color="#b0783c" stop-opacity="0.04"/>
+      <stop offset="1" stop-color="#8a5b2e" stop-opacity="0"/>
+    </radialGradient>
+
+    <!-- ==== wet floor ==== -->
+    <radialGradient id="tunnel-pool" gradientUnits="userSpaceOnUse" cx="400" cy="306" r="86">
+      <stop offset="0" stop-color="#ffd79c" stop-opacity="0.80"/>
+      <stop offset="0.4" stop-color="#eaad60" stop-opacity="0.45"/>
+      <stop offset="1" stop-color="#c8873c" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="tunnel-streak" gradientUnits="userSpaceOnUse" x1="400" y1="300" x2="400" y2="505">
+      <stop offset="0" stop-color="#f8cd8c" stop-opacity="0.55"/>
+      <stop offset="0.18" stop-color="#e3a75c" stop-opacity="0.30"/>
+      <stop offset="0.5" stop-color="#c8873c" stop-opacity="0.13"/>
+      <stop offset="1" stop-color="#a06a2e" stop-opacity="0.02"/>
+    </linearGradient>
+    <linearGradient id="tunnel-shadow" gradientUnits="userSpaceOnUse" x1="400" y1="398" x2="400" y2="505">
+      <stop offset="0" stop-color="#05060a" stop-opacity="0.92"/>
+      <stop offset="0.55" stop-color="#05060a" stop-opacity="0.62"/>
+      <stop offset="1" stop-color="#05060a" stop-opacity="0.22"/>
+    </linearGradient>
+
+    <!-- ==== ceiling darkening + vignette ==== -->
+    <linearGradient id="tunnel-ceil" gradientUnits="userSpaceOnUse" x1="400" y1="0" x2="400" y2="180">
+      <stop offset="0" stop-color="#000000" stop-opacity="0.85"/>
+      <stop offset="1" stop-color="#000000" stop-opacity="0"/>
+    </linearGradient>
+    <radialGradient id="tunnel-vig" gradientUnits="userSpaceOnUse" cx="400" cy="268" r="470" gradientTransform="translate(400,268) scale(1,0.78) translate(-400,-268)">
+      <stop offset="0" stop-color="#000000" stop-opacity="0"/>
+      <stop offset="0.38" stop-color="#000000" stop-opacity="0"/>
+      <stop offset="0.62" stop-color="#000000" stop-opacity="0.30"/>
+      <stop offset="0.82" stop-color="#000000" stop-opacity="0.72"/>
+      <stop offset="1" stop-color="#000000" stop-opacity="0.97"/>
+    </radialGradient>
+
+    <!-- ==== filters ==== -->
+    <filter id="tunnel-blurXS" x="-200%" y="-200%" width="500%" height="500%">
+      <feGaussianBlur stdDeviation="0.7"/>
+    </filter>
+    <filter id="tunnel-blurS" x="-120%" y="-120%" width="340%" height="340%">
+      <feGaussianBlur stdDeviation="2.4"/>
+    </filter>
+    <filter id="tunnel-blurM" x="-120%" y="-120%" width="340%" height="340%">
+      <feGaussianBlur stdDeviation="7"/>
+    </filter>
+    <filter id="tunnel-blurL" x="-120%" y="-120%" width="340%" height="340%">
+      <feGaussianBlur stdDeviation="16"/>
+    </filter>
+    <filter id="tunnel-blurXL" x="-120%" y="-120%" width="340%" height="340%">
+      <feGaussianBlur stdDeviation="30"/>
+    </filter>
+    <filter id="tunnel-rimblur" x="-150%" y="-150%" width="400%" height="400%">
+      <feGaussianBlur stdDeviation="1.1"/>
+    </filter>
+    <filter id="tunnel-grain" x="0%" y="0%" width="100%" height="100%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.82" numOctaves="3" stitchTiles="stitch" result="tunnel-noise"/>
+      <feColorMatrix in="tunnel-noise" type="saturate" values="0" result="tunnel-noiseg"/>
+      <feColorMatrix in="tunnel-noiseg" type="matrix"
+        values="1 0 0 0 0
+                1 0 0 0 0
+                1 0 0 0 0
+                0 0 0 0.55 0"/>
+    </filter>
+  </defs>
+
+  <!-- ============ 0. void ============ -->
+  <rect x="-200" y="-200" width="1200" height="900" fill="#040508"/>
+
+  <!-- ============ 1. far layers: nearest / darkest concentric arch ribs ============ -->
+  <g>
+    <path d="M -142.7 804.7 L -142.7 180.6 C -142.7 -89.2 100.3 -307.8 400 -307.8 C 699.7 -307.8 942.7 -89.2 942.7 180.6 L 942.7 804.7 Z" fill="#030407"/>
+    <path d="M -56.1 718.1 L -56.1 193.6 C -56.1 -33.1 148.1 -216.9 400 -216.9 C 651.9 -216.9 856.1 -33.1 856.1 193.6 L 856.1 718.1 Z" fill="#05060a"/>
+    <path d="M 16.7 645.3 L 16.7 204.5 C 16.7 14 188.3 -140.5 400 -140.5 C 611.7 -140.5 783.3 14 783.3 204.5 L 783.3 645.3 Z" fill="#030406"/>
+    <path d="M 77.9 584.1 L 77.9 213.7 C 77.9 53.6 222.1 -76.2 400 -76.2 C 577.9 -76.2 722.1 53.6 722.1 213.7 L 722.1 584.1 Z" fill="#070809"/>
+    <path d="M 129.3 532.7 L 129.3 221.4 C 129.3 86.8 250.5 -22.2 400 -22.2 C 549.5 -22.2 670.7 86.8 670.7 221.4 L 670.7 532.7 Z" fill="#050608"/>
+    <path d="M 172.5 489.5 L 172.5 227.9 C 172.5 114.8 274.4 23.1 400 23.1 C 525.6 23.1 627.5 114.8 627.5 227.9 L 627.5 489.5 Z" fill="#0d0d0e"/>
+    <path d="M 208.8 453.2 L 208.8 233.3 C 208.8 138.3 294.4 61.2 400 61.2 C 505.6 61.2 591.2 138.3 591.2 233.3 L 591.2 453.2 Z" fill="#08080a"/>
+  </g>
+
+  <!-- fog layer A: faint lit haze filling the near half of the bore -->
+  <rect x="-200" y="-200" width="1200" height="900" fill="url(#tunnel-fogA)"/>
+
+  <!-- ============ 2. mid layers ============ -->
+  <g>
+    <path d="M 239.3 422.7 L 239.3 237.9 C 239.3 158 311.2 93.3 400 93.3 C 488.8 93.3 560.7 158 560.7 237.9 L 560.7 422.7 Z" fill="#141210"/>
+    <path d="M 265 397 L 265 241.8 C 265 174.6 325.4 120.2 400 120.2 C 474.6 120.2 535 174.6 535 241.8 L 535 397 Z" fill="#0b0a0a"/>
+    <path d="M 286.5 375.5 L 286.5 245 C 286.5 188.6 337.3 142.8 400 142.8 C 462.7 142.8 513.5 188.6 513.5 245 L 513.5 375.5 Z" fill="#1e1a18"/>
+    <path d="M 304.6 357.4 L 304.6 247.7 C 304.6 200.3 347.3 161.8 400 161.8 C 452.7 161.8 495.4 200.3 495.4 247.7 L 495.4 357.4 Z" fill="#100e0c"/>
+    <path d="M 319.8 342.2 L 319.8 250 C 319.8 210.1 355.7 177.8 400 177.8 C 444.3 177.8 480.2 210.1 480.2 250 L 480.2 342.2 Z" fill="#2c2319"/>
+  </g>
+
+  <!-- fog layer B: hotter haze close to the source -->
+  <rect x="-200" y="-200" width="1200" height="900" fill="url(#tunnel-fogB)"/>
+
+  <!-- ============ 3. the last two ribs, strongly lit from behind ============ -->
+  <g>
+    <path d="M 332.6 329.4 L 332.6 251.9 C 332.6 218.4 362.8 191.2 400 191.2 C 437.2 191.2 467.4 218.4 467.4 251.9 L 467.4 329.4 Z" fill="#171310"/>
+    <path d="M 343.4 318.6 L 343.4 253.5 C 343.4 225.4 368.7 202.6 400 202.6 C 431.3 202.6 456.6 225.4 456.6 253.5 L 456.6 318.6 Z" fill="#402f20"/>
+    <path d="M 352.4 309.6 L 352.4 254.9 C 352.4 231.2 373.7 212 400 212 C 426.3 212 447.6 231.2 447.6 254.9 L 447.6 309.6 Z" fill="#201914"/>
+  </g>
+
+  <!-- rib edges catching the distant light -->
+  <g fill="none" stroke="#c8873c" stroke-linejoin="round">
+    <path d="M 343.4 318.6 L 343.4 253.5 C 343.4 225.4 368.7 202.6 400 202.6 C 431.3 202.6 456.6 225.4 456.6 253.5 L 456.6 318.6" stroke-width="1.2" stroke-opacity="0.30"/>
+    <path d="M 319.8 342.2 L 319.8 250 C 319.8 210.1 355.7 177.8 400 177.8 C 444.3 177.8 480.2 210.1 480.2 250 L 480.2 342.2" stroke-width="1.1" stroke-opacity="0.16"/>
+    <path d="M 286.5 375.5 L 286.5 245 C 286.5 188.6 337.3 142.8 400 142.8 C 462.7 142.8 513.5 188.6 513.5 245 L 513.5 375.5" stroke-width="1" stroke-opacity="0.07"/>
+  </g>
+
+  <!-- ============ 4. the light source itself ============ -->
+  <path d="M 360 302 L 360 256 C 360 236.1 377.9 220 400 220 C 422.1 220 440 236.1 440 256 L 440 302 Z" fill="url(#tunnel-aperture)"/>
+  <path d="M 360 302 L 360 256 C 360 236.1 377.9 220 400 220 C 422.1 220 440 236.1 440 256 L 440 302 Z" fill="url(#tunnel-core)" filter="url(#tunnel-blurS)"/>
+  <ellipse cx="400" cy="266" rx="34" ry="30" fill="#ffdfae" opacity="0.55" filter="url(#tunnel-blurM)"/>
+
+  <!-- ============ 5. wet floor: pool of light + long reflection streak ============ -->
+  <ellipse cx="400" cy="305" rx="74" ry="19" fill="url(#tunnel-pool)" filter="url(#tunnel-blurM)"/>
+  <path d="M 371 299 L 429 299 L 505 505 L 295 505 Z" fill="url(#tunnel-streak)" filter="url(#tunnel-blurM)"/>
+  <path d="M 386 300 L 414 300 L 452 505 L 348 505 Z" fill="url(#tunnel-streak)" opacity="0.75" filter="url(#tunnel-blurS)"/>
+
+  <!-- wet ripples cutting across the reflection -->
+  <g fill="#f0b968" filter="url(#tunnel-blurS)">
+    <ellipse cx="399" cy="331" rx="26" ry="1.6" opacity="0.20"/>
+    <ellipse cx="404" cy="352" rx="34" ry="1.8" opacity="0.15"/>
+    <ellipse cx="394" cy="378" rx="30" ry="2.1" opacity="0.13"/>
+    <ellipse cx="408" cy="409" rx="44" ry="2.4" opacity="0.11"/>
+    <ellipse cx="390" cy="443" rx="38" ry="2.8" opacity="0.09"/>
+    <ellipse cx="410" cy="478" rx="52" ry="3.2" opacity="0.07"/>
+  </g>
+  <g fill="#05060a" filter="url(#tunnel-blurS)">
+    <ellipse cx="392" cy="342" rx="30" ry="1.4" opacity="0.45"/>
+    <ellipse cx="410" cy="366" rx="26" ry="1.6" opacity="0.40"/>
+    <ellipse cx="392" cy="394" rx="34" ry="1.8" opacity="0.35"/>
+    <ellipse cx="404" cy="428" rx="40" ry="2" opacity="0.30"/>
+    <ellipse cx="396" cy="462" rx="46" ry="2.4" opacity="0.28"/>
+  </g>
+
+  <!-- ============ 6. the figure's long cast shadow, thrown toward the viewer ============ -->
+  <path d="M 386 396 L 414 396 L 462 505 L 338 505 Z" fill="url(#tunnel-shadow)" filter="url(#tunnel-blurM)"/>
+
+  <!-- ============ 7. bloom / glare over the geometry ============ -->
+  <rect x="-200" y="-200" width="1200" height="900" fill="url(#tunnel-bloom2)"/>
+  <rect x="-200" y="-200" width="1200" height="900" fill="url(#tunnel-bloom)"/>
+
+  <!-- volumetric shafts -->
+  <g fill="#f0b968" filter="url(#tunnel-blurL)">
+    <path d="M 380 246 L 396 246 L 292 505 L 176 505 Z" opacity="0.055"/>
+    <path d="M 406 244 L 420 244 L 646 505 L 522 505 Z" opacity="0.045"/>
+    <path d="M 392 238 L 408 238 L 424 505 L 372 505 Z" opacity="0.05"/>
+  </g>
+
+  <!-- ============ 8. THE SUBJECT — full black silhouette, backlit ============ -->
+  <g fill="#050609">
+    <!-- head -->
+    <ellipse cx="400" cy="260" rx="9" ry="10.6"/>
+    <!-- neck -->
+    <path d="M 395.6 266 L 404.4 266 L 404.4 278 L 395.6 278 Z"/>
+    <!-- torso, shoulders to hips with a crotch notch -->
+    <path d="M 382 281.5 C 387 275 413 275 418 281.5 L 415.5 324 L 408.5 330 L 400 323.5 L 391.5 330 L 384.5 324 Z"/>
+    <!-- left arm hanging at side -->
+    <path d="M 383.5 279 C 378 283 376.4 292 377.4 304 L 380 341 C 380.4 344.6 385.6 344.6 386 341 L 387.6 304 L 388.6 281 Z"/>
+    <!-- right arm hanging at side -->
+    <path d="M 416.5 279 C 422 283 423.6 292 422.6 304 L 420 341 C 419.6 344.6 414.4 344.6 414 341 L 412.4 304 L 411.4 281 Z"/>
+    <!-- left leg -->
+    <path d="M 386.4 321 L 398 321 L 397.6 360 L 397.2 396.5 C 397.2 400.4 388.6 400.8 388.6 396.5 L 389.2 360 Z"/>
+    <!-- right leg -->
+    <path d="M 402 321 L 413.6 321 L 410.8 360 L 411.4 396.5 C 411.4 400.4 402.8 400.8 402.8 396.5 L 402.4 360 Z"/>
+    <!-- feet -->
+    <ellipse cx="392.4" cy="399.6" rx="6.6" ry="2.6"/>
+    <ellipse cx="407.6" cy="399.6" rx="6.6" ry="2.6"/>
+  </g>
+
+  <!-- rim light barely catching one shoulder -->
+  <g fill="none" stroke-linecap="round" filter="url(#tunnel-rimblur)">
+    <path d="M 405 277 C 411.5 277.4 416.6 279.4 419 282.4 C 421.8 285.8 423.4 292.4 422.7 301" stroke="#f0b968" stroke-width="1.7" stroke-opacity="0.55"/>
+    <path d="M 422.4 305 L 421 327" stroke="#e0a35a" stroke-width="1.2" stroke-opacity="0.22"/>
+    <path d="M 403.5 250.6 C 407 252.4 409 255.8 409 259.6" stroke="#f0b968" stroke-width="1.1" stroke-opacity="0.28"/>
+    <path d="M 411.5 397 C 412.6 399.6 411.6 401 408 401.2" stroke="#e0a35a" stroke-width="1" stroke-opacity="0.18"/>
+  </g>
+
+  <!-- ============ 9. dust motes drifting in the beam ============ -->
+  <g fill="#ffdfae" filter="url(#tunnel-blurXS)">
+    <circle cx="352" cy="297" r="1.3" opacity="0.30"/>
+    <circle cx="368" cy="262" r="0.9" opacity="0.22"/>
+    <circle cx="381" cy="228" r="1.1" opacity="0.26"/>
+    <circle cx="424" cy="240" r="0.8" opacity="0.20"/>
+    <circle cx="443" cy="288" r="1.4" opacity="0.28"/>
+    <circle cx="461" cy="316" r="1" opacity="0.18"/>
+    <circle cx="336" cy="336" r="1.6" opacity="0.20"/>
+    <circle cx="470" cy="258" r="0.9" opacity="0.16"/>
+    <circle cx="412" cy="206" r="0.8" opacity="0.24"/>
+    <circle cx="392" cy="192" r="1" opacity="0.16"/>
+    <circle cx="327" cy="278" r="1.2" opacity="0.14"/>
+    <circle cx="477" cy="341" r="1.7" opacity="0.14"/>
+    <circle cx="358" cy="360" r="1.9" opacity="0.12"/>
+    <circle cx="437" cy="371" r="1.5" opacity="0.13"/>
+    <circle cx="300" cy="316" r="1.4" opacity="0.09"/>
+    <circle cx="502" cy="298" r="1.3" opacity="0.09"/>
+  </g>
+
+  <!-- ============ 10. foreground haze + heavy vignette ============ -->
+  <ellipse cx="400" cy="286" rx="230" ry="150" fill="#c8873c" opacity="0.05" filter="url(#tunnel-blurXL)"/>
+  <rect x="-200" y="-200" width="1200" height="900" fill="url(#tunnel-ceil)"/>
+  <rect x="-200" y="-200" width="1200" height="900" fill="url(#tunnel-vig)"/>
+
+  <!-- film grain -->
+  <rect x="0" y="0" width="800" height="500" filter="url(#tunnel-grain)" opacity="0.06"/>
+</svg>

@@ -1,0 +1,142 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <radialGradient id="danger-hot" cx="0.5" cy="0.46" r="0.62">
+      <stop offset="0"    stop-color="#ffb15c"/>
+      <stop offset="0.16" stop-color="#ff7a2e"/>
+      <stop offset="0.36" stop-color="#e03d19"/>
+      <stop offset="0.58" stop-color="#a01c10"/>
+      <stop offset="0.80" stop-color="#5a0d0a"/>
+      <stop offset="1"    stop-color="#280605"/>
+    </radialGradient>
+
+    <linearGradient id="danger-top" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0"   stop-color="#1a0504" stop-opacity="0.85"/>
+      <stop offset="0.4" stop-color="#3d0a06" stop-opacity="0.35"/>
+      <stop offset="1"   stop-color="#3d0a06" stop-opacity="0"/>
+    </linearGradient>
+
+    <linearGradient id="danger-hood" x1="0.2" y1="0" x2="0.9" y2="1">
+      <stop offset="0"   stop-color="#2a1614"/>
+      <stop offset="0.5" stop-color="#150c0c"/>
+      <stop offset="1"   stop-color="#070404"/>
+    </linearGradient>
+    <linearGradient id="danger-body" x1="0" y1="0" x2="1" y2="0.6">
+      <stop offset="0"   stop-color="#2b1715"/>
+      <stop offset="0.4" stop-color="#120a0a"/>
+      <stop offset="1"   stop-color="#050303"/>
+    </linearGradient>
+    <linearGradient id="danger-mask" x1="0.3" y1="0" x2="0.8" y2="1">
+      <stop offset="0" stop-color="#33211f"/>
+      <stop offset="1" stop-color="#150d0d"/>
+    </linearGradient>
+
+    <radialGradient id="danger-lens" cx="0.36" cy="0.32" r="0.8">
+      <stop offset="0"    stop-color="#8d5a3f"/>
+      <stop offset="0.35" stop-color="#2e1a16"/>
+      <stop offset="1"    stop-color="#0a0607"/>
+    </radialGradient>
+
+    <linearGradient id="danger-vig" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0"    stop-color="#160403" stop-opacity="0.75"/>
+      <stop offset="0.32" stop-color="#160403" stop-opacity="0.05"/>
+      <stop offset="0.72" stop-color="#160403" stop-opacity="0.08"/>
+      <stop offset="1"    stop-color="#0d0202" stop-opacity="0.8"/>
+    </linearGradient>
+    <radialGradient id="danger-vig2" cx="0.5" cy="0.5" r="0.72">
+      <stop offset="0.55" stop-color="#000" stop-opacity="0"/>
+      <stop offset="1"    stop-color="#000" stop-opacity="0.72"/>
+    </radialGradient>
+
+    <filter id="danger-b40" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="30"/></filter>
+    <filter id="danger-b18" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="14"/></filter>
+    <filter id="danger-b6"  x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="5"/></filter>
+    <filter id="danger-b2"  x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="1.6"/></filter>
+  </defs>
+
+  <!-- izzó, fojtó füst -->
+  <rect width="800" height="500" fill="url(#danger-hot)"/>
+  <rect width="800" height="500" fill="url(#danger-top)"/>
+
+  <!-- gomolygó füstfoszlányok -->
+  <g filter="url(#danger-b40)">
+    <ellipse cx="150" cy="150" rx="190" ry="80" fill="#7d1a0e" opacity="0.75"/>
+    <ellipse cx="660" cy="120" rx="200" ry="70" fill="#8d2110" opacity="0.7"/>
+    <ellipse cx="400" cy="60"  rx="300" ry="60" fill="#4d0c07" opacity="0.8"/>
+    <ellipse cx="230" cy="300" rx="170" ry="90" fill="#d1401b" opacity="0.35"/>
+    <ellipse cx="600" cy="290" rx="180" ry="95" fill="#e2521f" opacity="0.32"/>
+  </g>
+  <g filter="url(#danger-b18)" opacity="0.5">
+    <ellipse cx="300" cy="210" rx="120" ry="34" fill="#ff8a3c" opacity="0.25"/>
+    <ellipse cx="520" cy="190" rx="140" ry="30" fill="#ff7a2e" opacity="0.22"/>
+    <ellipse cx="120" cy="380" rx="130" ry="40" fill="#6d1109" opacity="0.6"/>
+    <ellipse cx="700" cy="400" rx="140" ry="45" fill="#5e0e08" opacity="0.6"/>
+  </g>
+
+  <!-- romos városkép a háttérben -->
+  <g opacity="0.55" filter="url(#danger-b6)">
+    <path d="M0 400 L0 352 L34 352 L34 330 L64 330 L64 356 L96 356 L96 318 L118 318 L124 300 L130 318 L152 318 L152 344 L188 344 L188 366 L214 366 L214 336 L244 336 L244 358 L280 358 L280 372 L520 372 L520 346 L548 346 L548 322 L566 322 L572 302 L578 322 L598 322 L598 350 L634 350 L634 328 L664 328 L664 356 L700 356 L700 336 L734 336 L734 360 L768 360 L768 342 L800 342 L800 400 Z"
+          fill="#3a0f0a"/>
+  </g>
+  <path d="M0 420 L0 386 L46 386 L46 364 L84 364 L84 392 L140 392 L140 370 L186 370 L186 396 L250 396 L250 382 L560 382 L560 398 L610 398 L610 372 L652 372 L652 394 L706 394 L706 376 L756 376 L756 398 L800 398 L800 420 Z"
+        fill="#1c0806"/>
+
+  <!-- ALAK: vállak / kabát -->
+  <path d="M120 500 L146 428 Q176 366 268 340 L532 340 Q624 366 654 428 L680 500 Z"
+        fill="url(#danger-body)"/>
+  <!-- gallér -->
+  <path d="M268 340 Q330 372 400 374 Q470 372 532 340 L548 356 Q470 396 400 396 Q330 396 252 356 Z"
+        fill="#0d0707" opacity="0.9"/>
+
+  <!-- kapucni -->
+  <path d="M296 372 Q276 300 288 232 Q302 156 400 148 Q498 156 512 232 Q524 300 504 372
+           Q470 340 400 336 Q330 340 296 372 Z"
+        fill="url(#danger-hood)"/>
+  <!-- kapucni belső árnyék -->
+  <path d="M320 356 Q306 292 318 238 Q332 176 400 170 Q468 176 482 238 Q494 292 480 356
+           Q450 330 400 328 Q350 330 320 356 Z"
+        fill="#080505" opacity="0.75"/>
+
+  <!-- GÁZMASZK -->
+  <path d="M340 208 Q340 170 400 168 Q460 170 460 208 L462 258 Q462 296 434 306 L366 306 Q338 296 338 258 Z"
+        fill="url(#danger-mask)"/>
+  <!-- maszk pereme -->
+  <path d="M340 208 Q340 170 400 168 Q460 170 460 208" fill="none" stroke="#5a3c33" stroke-width="2" opacity="0.55"/>
+
+  <!-- lencsék -->
+  <circle cx="371" cy="222" r="21" fill="#120b0c"/>
+  <circle cx="429" cy="222" r="21" fill="#120b0c"/>
+  <circle cx="371" cy="222" r="17" fill="url(#danger-lens)"/>
+  <circle cx="429" cy="222" r="17" fill="url(#danger-lens)"/>
+  <circle cx="371" cy="222" r="17" fill="none" stroke="#6b4437" stroke-width="1.6" opacity="0.8"/>
+  <circle cx="429" cy="222" r="17" fill="none" stroke="#6b4437" stroke-width="1.6" opacity="0.8"/>
+  <!-- csillanás a lencséken -->
+  <path d="M362 214 Q368 208 377 210" fill="none" stroke="#ffd9b0" stroke-width="3" stroke-linecap="round" opacity="0.9" filter="url(#danger-b2)"/>
+  <path d="M420 214 Q426 208 435 210" fill="none" stroke="#ffd9b0" stroke-width="3" stroke-linecap="round" opacity="0.9" filter="url(#danger-b2)"/>
+
+  <!-- szűrőbetét (henger) -->
+  <path d="M378 268 L422 268 L422 300 Q422 314 400 316 Q378 314 378 300 Z" fill="#241716"/>
+  <ellipse cx="400" cy="268" rx="22" ry="7" fill="#3a2523"/>
+  <ellipse cx="400" cy="314" rx="20" ry="8" fill="#150d0d"/>
+  <path d="M382 282 L418 282 M382 292 L418 292" stroke="#4a302c" stroke-width="1.4" opacity="0.7"/>
+  <!-- csillanás a szűrőn -->
+  <path d="M384 274 L384 306" stroke="#c98a63" stroke-width="2.4" opacity="0.45" filter="url(#danger-b2)"/>
+
+  <!-- maszkpántok -->
+  <path d="M340 226 Q322 232 316 250" fill="none" stroke="#221515" stroke-width="7" stroke-linecap="round"/>
+  <path d="M460 226 Q478 232 484 250" fill="none" stroke="#221515" stroke-width="7" stroke-linecap="round"/>
+
+  <!-- PEREMFÉNY: forró vörös kontúr a bal oldalon -->
+  <path d="M292 366 Q272 296 286 230 Q300 158 396 148"
+        fill="none" stroke="#ff6a30" stroke-width="3.4" opacity="0.75" filter="url(#danger-b2)"/>
+  <path d="M150 430 Q180 366 268 342"
+        fill="none" stroke="#ff5a24" stroke-width="3" opacity="0.5" filter="url(#danger-b2)"/>
+  <!-- halvány peremfény a jobb oldalon -->
+  <path d="M508 366 Q526 300 512 236"
+        fill="none" stroke="#c33a18" stroke-width="2.4" opacity="0.4" filter="url(#danger-b2)"/>
+  <path d="M650 430 Q622 368 534 342"
+        fill="none" stroke="#c33a18" stroke-width="2.2" opacity="0.35" filter="url(#danger-b2)"/>
+
+  <!-- vignetta -->
+  <rect width="800" height="500" fill="url(#danger-vig)"/>
+  <rect width="800" height="500" fill="url(#danger-vig2)"/>
+</svg>

@@ -1,0 +1,336 @@
+/* =========================================================
+   URBAN QUEST — bejelentkezett felület: személyes sáv + foglalás-modal
+   (A fiokom.html saját stílusa a fiokom.css-ben.)
+   ========================================================= */
+
+.uq-ac-ico { width: 20px; height: 20px; flex: none; }
+.uq-ac-ico-sm { width: 16px; height: 16px; }
+.uq-ac-ico-xs { width: 13px; height: 13px; }
+
+/* =========================================================
+   SZEMÉLYES SÁV (főoldal, hero alatt)
+   ========================================================= */
+.uq-personal {
+  padding: 26px 0 4px;
+  border-bottom: 1px solid var(--line-soft);
+  background: linear-gradient(180deg, rgb(158 213 43 / .04) 0%, transparent 100%);
+}
+.uq-personal[hidden] { display: none; }
+.uq-ps-inner { display: flex; flex-direction: column; gap: 16px; }
+
+.uq-ps-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.uq-ps-hi {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: clamp(20px, 3.4vw, 27px);
+  font-weight: 800;
+  letter-spacing: -.01em;
+}
+.uq-ps-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--lime);
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.uq-ps-link:hover { color: var(--lime-2); }
+
+/* következő foglalás kártya */
+.uq-ps-next {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  color: inherit;
+  text-decoration: none;
+  background: var(--bg-card);
+  border: 1px solid var(--line);
+  border-radius: 13px;
+  transition: border-color .15s ease;
+}
+.uq-ps-next:hover { border-color: var(--dim); }
+.uq-ps-next-ic {
+  display: grid; place-items: center;
+  width: 44px; height: 44px; flex: none;
+  color: var(--lime);
+  background: rgb(158 213 43 / .1);
+  border: 1px solid rgb(158 213 43 / .25);
+  border-radius: 11px;
+}
+.uq-ps-next-txt { display: flex; flex-direction: column; min-width: 0; flex: 1; }
+.uq-ps-next-lbl { font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.uq-ps-next-txt strong { font-size: 15px; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.uq-ps-next-meta { font-size: 12.5px; color: var(--text-2); }
+
+.uq-ps-badge {
+  flex: none;
+  padding: 4px 11px;
+  font-size: 11px;
+  font-weight: 700;
+  border-radius: 99px;
+  white-space: nowrap;
+}
+.uq-ps-badge.st-wait { color: var(--kozepes); background: rgb(224 185 58 / .12); border: 1px solid rgb(224 185 58 / .3); }
+.uq-ps-badge.st-ok   { color: var(--konnyu); background: rgb(79 184 79 / .12); border: 1px solid rgb(79 184 79 / .3); }
+.uq-ps-badge.st-no   { color: var(--muted);  background: rgb(139 149 127 / .1); border: 1px solid var(--line); }
+
+.uq-ps-sub { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin-top: 2px; }
+.uq-ps-sub h3 { margin: 0; font-family: var(--font-display); font-size: 15px; font-weight: 800; letter-spacing: .02em; text-transform: uppercase; }
+.uq-ps-sub a { font-size: 12.5px; color: var(--muted); text-decoration: none; }
+.uq-ps-sub a:hover { color: var(--lime); }
+
+/* kedvenc kártyák vízszintes sávban (a főoldali kártyastílust örökli) */
+.uq-ps-track {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(258px, 1fr);
+  gap: 16px;
+  overflow-x: auto;
+  padding-bottom: 8px;
+  scroll-snap-type: x proximity;
+  scrollbar-width: thin;
+}
+.uq-ps-track > .quest-card { scroll-snap-align: start; }
+
+.uq-ps-empty {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px 20px;
+  padding: 16px 18px;
+  background: var(--bg-card);
+  border: 1px dashed var(--line);
+  border-radius: 13px;
+}
+.uq-ps-empty p { margin: 0; color: var(--text-2); font-size: 14px; max-width: 60ch; }
+.uq-ps-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 16px;
+  color: #0a0d0a;
+  font-family: var(--font-display);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  text-decoration: none;
+  white-space: nowrap;
+  background: var(--lime);
+  border-radius: 8px;
+}
+.uq-ps-cta:hover { background: var(--lime-2); }
+
+/* =========================================================
+   RANGLISTA — a bejelentkezett felhasználó saját sora
+   ========================================================= */
+.rank-row.is-me {
+  background: rgb(158 213 43 / .08);
+  border: 1px solid rgb(158 213 43 / .4);
+  box-shadow: inset 3px 0 0 var(--lime);
+}
+.rr-me-tag {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 2px 8px;
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  color: #0a0d0a;
+  background: var(--lime);
+  border-radius: 99px;
+  vertical-align: middle;
+}
+
+/* =========================================================
+   FOGLALÁS-MODAL
+   ========================================================= */
+.uq-bk-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 300;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgb(4 6 4 / .78);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  opacity: 0;
+  transition: opacity .18s ease;
+  overflow-y: auto;
+}
+.uq-bk-overlay.is-open { opacity: 1; }
+
+.uq-bk {
+  position: relative;
+  width: min(430px, 100%);
+  padding: 26px 26px 22px;
+  background: linear-gradient(180deg, #171d13 0%, #10140d 100%);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  box-shadow: 0 40px 90px -30px rgb(0 0 0 / .95);
+  transform: translateY(10px) scale(.98);
+  transition: transform .22s cubic-bezier(.2, .8, .3, 1);
+}
+.uq-bk-overlay.is-open .uq-bk { transform: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  .uq-bk-overlay, .uq-bk { transition: none; }
+  .uq-bk { transform: none; }
+}
+
+.uq-bk-x {
+  position: absolute;
+  top: 12px; right: 12px;
+  display: grid; place-items: center;
+  width: 32px; height: 32px;
+  padding: 0;
+  color: var(--muted);
+  background: transparent;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: color .15s, border-color .15s;
+}
+.uq-bk-x:hover { color: var(--text); border-color: var(--dim); }
+
+.uq-bk-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 10px;
+  padding: 4px 10px;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--lime);
+  background: rgb(158 213 43 / .1);
+  border: 1px solid rgb(158 213 43 / .3);
+  border-radius: 99px;
+}
+.uq-bk-title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 24px;
+  font-weight: 800;
+  line-height: 1.1;
+  color: #fff;
+  text-wrap: balance;
+}
+.uq-bk-price { margin: 4px 0 16px; font-size: 15px; font-weight: 700; color: var(--lime); }
+.uq-bk-price span { color: var(--muted); font-weight: 500; font-size: 12.5px; }
+.uq-bk-sub { margin: 8px 0 16px; font-size: 14px; color: var(--text-2); }
+.uq-bk-sub strong { color: var(--text); }
+
+.uq-bk-form { display: flex; flex-direction: column; gap: 11px; }
+.uq-bk-row { display: flex; flex-direction: column; gap: 6px; }
+.uq-bk-lbl {
+  display: inline-flex; align-items: center; gap: 7px;
+  font-size: 12px; font-weight: 600; color: var(--muted);
+  letter-spacing: .02em;
+}
+.uq-bk-lbl .uq-ac-ico { color: var(--lime); }
+.uq-bk-row input,
+.uq-bk-row select {
+  height: 46px;
+  padding: 0 13px;
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: 14px;
+  background: #0c0f0b;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  outline: none;
+  transition: border-color .15s ease;
+}
+.uq-bk-row input:focus,
+.uq-bk-row select:focus { border-color: var(--lime); }
+.uq-bk-row select { appearance: none; -webkit-appearance: none; cursor: pointer; }
+/* date input sötét témában olvasható */
+.uq-bk-row input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(.7); cursor: pointer; }
+
+.uq-bk-err { margin: 0; font-size: 12.5px; color: var(--extrem, #e03a2f); }
+.uq-bk-err[hidden] { display: none; }
+
+.uq-bk-submit {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 48px;
+  margin-top: 4px;
+  color: #0a0d0a;
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  text-decoration: none;
+  background: var(--lime);
+  border: 0;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background .15s ease;
+}
+.uq-bk-submit:hover { background: var(--lime-2); }
+.uq-bk-submit:disabled { opacity: .8; cursor: default; }
+
+.uq-bk-note { margin: 12px 0 0; font-size: 12px; line-height: 1.5; color: var(--muted); text-align: center; }
+.uq-bk-note strong { color: var(--text-2); }
+
+/* siker-nézet */
+.uq-bk-ok {
+  display: grid; place-items: center;
+  width: 56px; height: 56px;
+  margin: 4px 0 12px;
+  color: #0a0d0a;
+  background: var(--konnyu, #4fb84f);
+  border-radius: 50%;
+}
+.uq-bk-ok .uq-ac-ico { width: 30px; height: 30px; stroke-width: 2.4; }
+.uq-bk-codebox {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 14px 0;
+  padding: 12px 14px;
+  background: #0c0f0b;
+  border: 1px dashed var(--line);
+  border-radius: 10px;
+}
+.uq-bk-codebox span { font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.uq-bk-codebox strong {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: .12em;
+  color: var(--lime);
+}
+.uq-bk-acts { display: flex; gap: 8px; margin-top: 14px; }
+.uq-bk-acts .uq-bk-submit { flex: 1; }
+.uq-bk-ghost {
+  flex: none;
+  padding: 0 16px;
+  height: 48px;
+  color: var(--muted);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  background: transparent;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  cursor: pointer;
+}
+.uq-bk-ghost:hover { color: var(--text); border-color: var(--dim); }
+
+@media (max-width: 480px) {
+  .uq-bk { padding: 22px 18px 18px; }
+  .uq-bk-title { font-size: 21px; }
+}
