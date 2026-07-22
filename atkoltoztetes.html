@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Adatátköltöztetés – Urban Quest</title>
+<link rel="stylesheet" href="styles.css">
+<style>
+  .mig-wrap { max-width: 900px; margin: 0 auto; padding: 32px 20px 80px; }
+  .mig-wrap h1 { font-size: 30px; margin: 0 0 8px; }
+  .mig-lead { color: var(--muted, #8a9a86); line-height: 1.6; margin: 0 0 28px; max-width: 62ch; }
+  .mig-card { background: rgba(255,255,255,.03); border: 1px solid rgba(255,255,255,.09);
+              border-radius: 14px; padding: 20px 22px; margin: 0 0 20px; }
+  .mig-card h3 { font-size: 15px; margin: 22px 0 10px; letter-spacing: .01em; }
+  .mig-card h3:first-child { margin-top: 0; }
+  .mig-forras { list-style: none; padding: 0; margin: 0; display: flex; flex-wrap: wrap; gap: 8px; }
+  .mig-forras li { background: rgba(255,255,255,.05); border-radius: 8px; padding: 8px 12px; font-size: 13px; }
+  .mig-forras b { color: var(--lime, #9ed52b); font-size: 15px; margin-right: 6px; }
+  .mig-forras span { color: var(--muted, #8a9a86); }
+  .mig-tabla { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+  .mig-tabla th { text-align: left; font-weight: 600; color: var(--muted, #8a9a86);
+                  border-bottom: 1px solid rgba(255,255,255,.12); padding: 8px 10px; font-size: 12px;
+                  text-transform: uppercase; letter-spacing: .05em; }
+  .mig-tabla td { padding: 9px 10px; border-bottom: 1px solid rgba(255,255,255,.05); }
+  .mig-tabla td:nth-child(3), .mig-tabla td:nth-child(4) { font-variant-numeric: tabular-nums; }
+  .mig-gond { margin: 0; padding-left: 20px; line-height: 1.65; }
+  .mig-gond li { color: #ffc98a; margin-bottom: 6px; }
+  .mig-ok, .mig-ok-sor { color: var(--lime, #9ed52b); }
+  .mig-warn { color: #ffc98a; margin: 2px 0 8px 14px; font-size: 13px; }
+  .mig-gond-sor { color: #ff9d9d; }
+  .mig-ures { color: var(--muted, #8a9a86); }
+  .mig-akcio { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-top: 4px; }
+  .mig-naplo { font-size: 13.5px; line-height: 1.5; }
+  .mig-naplo p { margin: 2px 0; }
+  .mig-fig { background: rgba(255,201,138,.10); border: 1px solid rgba(255,201,138,.3);
+             border-radius: 12px; padding: 14px 18px; margin: 0 0 20px; }
+  .mig-fig p { margin: 0 0 8px; }
+  .mig-fig p:last-child { margin-bottom: 0; }
+  .btn-ghost { background: transparent; border: 1px solid rgba(255,255,255,.18);
+               color: inherit; border-radius: 10px; padding: 10px 16px; cursor: pointer; font: inherit; }
+  .btn-ghost:hover { border-color: rgba(255,255,255,.35); }
+</style>
+</head>
+<body>
+
+<main class="mig-wrap">
+  <h1>Adatátköltöztetés</h1>
+  <p class="mig-lead">
+    Ez az oldal a <strong>te böngésződ</strong> helyi adatait és a beépített küldetéseket
+    költözteti át az adatbázisba, hogy más eszközön és más embernek is megjelenjenek.
+    Előbb csak felmér és megmutat — írni kizárólag a gombra kattintva fog.
+    Az átköltöztetés <strong>többször is futtatható</strong>, nem hoz létre duplikátumot.
+  </p>
+
+  <div class="mig-fig" id="jogFigy" hidden></div>
+
+  <section class="mig-card" id="elemzes">
+    <p class="mig-ures">Felmérés folyamatban…</p>
+  </section>
+
+  <section class="mig-card">
+    <h3>Átköltöztetés</h3>
+    <p class="mig-lead" style="margin-bottom:14px">
+      Minden pálya átkerül, majd rögtön publikálásra is kerül egy befagyasztott verzióval —
+      ettől lesz játszható és látható a nyilvános oldalon.
+    </p>
+    <div class="mig-akcio">
+      <button class="btn btn-lime" type="button" id="btnImport" disabled>Átköltöztetés indítása</button>
+      <button class="btn-ghost" type="button" id="btnUjraFelmer">Felmérés újra</button>
+      <a class="btn-ghost" href="iranyitopult.html" style="text-decoration:none">Vissza az adminba</a>
+    </div>
+    <div class="mig-naplo" id="naplo"></div>
+  </section>
+</main>
+
+<script src="data.js?v=6"></script>
+<script src="quest-courses.js?v=1"></script>
+<script src="uq-api.js?v=1"></script>
+<script src="atkoltoztetes.js?v=1"></script>
+</body>
+</html>
