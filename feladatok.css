@@ -15,6 +15,9 @@
 
 /* ---------- fő terület ---------- */
 .adm-main { display: flex; flex-direction: column; }
+/* a flex-gyerekek NE nyomódjanak össze — különben a lista beleszorul a képernyőbe
+   és nincs mit görgetni (a .adm-main overflow:auto-ja így tud működni) */
+.adm-main > * { flex-shrink: 0; }
 
 /* ---------- feladatok fejléc ---------- */
 .jtk-head { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin: 4px 0 14px; }
@@ -31,7 +34,7 @@
 .jtk-filter .ico { position: absolute; right: 10px; color: var(--muted); pointer-events: none; }
 
 /* ---------- táblázat ---------- */
-.jtk-table { border: 1px solid var(--line); border-radius: 12px; background: #0f130d; overflow: hidden; }
+.jtk-table { border: 1px solid var(--line); border-radius: 12px; background: #0f130d; overflow-x: auto; overflow-y: hidden; }
 .jtk-thead, .jtk-row {
   display: grid;
   grid-template-columns: minmax(212px, 1fr) 116px 150px 92px 96px 104px 104px;

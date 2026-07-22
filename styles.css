@@ -640,7 +640,7 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
   margin-top: 8px;
   font-size: 11.5px;
   line-height: 1.42;
-  color: var(--text-2);
+  color: #d3dbcd; /* azonos a részletoldal leírásával (.detail-desc) */
   display: -webkit-box;
   -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
@@ -813,7 +813,33 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
    MIÉRT VÁLASSZ MINKET
    ========================================================= */
 .why-section { padding-bottom: 30px; }
-.why-section .section-title { margin-bottom: 16px; }
+.why-section .section-title { margin-bottom: 12px; }
+
+/* bevezető (küldetés-nyilatkozat) a Rólunk szekcióban */
+.why-lead {
+  max-width: 78ch;
+  margin: 0 0 26px;
+  font-size: 14.5px;
+  line-height: 1.7;
+  color: #d3dbcd;
+}
+.why-lead strong { color: var(--lime); font-weight: 700; }
+
+/* „Hamarosan" címke az értékkártyán */
+.why-soon {
+  display: inline-block;
+  margin-left: 7px;
+  padding: 2px 7px;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: .07em;
+  text-transform: uppercase;
+  color: var(--kozepes);
+  background: rgb(224 185 58 / .13);
+  border: 1px solid rgb(224 185 58 / .32);
+  border-radius: 99px;
+  vertical-align: middle;
+}
 
 .why-grid {
   display: grid;

@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta name="description" content="Urban Quest admin – pálya varázsló, valós helyszínek keresése térképadatból.">
+<title>Admin – Pálya varázsló | Urban Quest</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&family=Inter:wght@400..700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css?v=5">
+<link rel="stylesheet" href="admin.css?v=7">
+<link rel="stylesheet" href="vendor/leaflet/leaflet.css">
+<link rel="stylesheet" href="palya-varazslo.css?v=19">
+</head>
+<body class="admin-body">
+
+<svg class="sprite" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <g id="a-search"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.5 15.5 4 4"/></g>
+    <g id="a-save"><path d="M5 3h11l3 3v15H5z"/><path d="M8 3v5h7V3M8 21v-6h8v6"/></g>
+    <g id="a-folder"><path d="M3 6.5h6l2 2.5h10V19H3z"/></g>
+    <g id="a-send"><path d="M21.5 3 11 13.5M21.5 3 15 21l-3.8-7.2L4 10z"/></g>
+    <g id="a-check-c"><circle cx="12" cy="12" r="9"/><path d="m8.3 12.2 2.4 2.4 5-5.2"/></g>
+    <g id="a-check"><path d="m5 12.5 4.5 4.5L19 7"/></g>
+    <g id="a-down"><path d="m6 9 6 6 6-6"/></g>
+    <g id="a-right"><path d="m9 6 6 6-6 6"/></g>
+    <g id="a-menu"><path d="M4 7h16M4 12h16M4 17h16"/></g>
+    <g id="a-logout"><path d="M14 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8"/><path d="M18 15l3-3-3-3M21 12H9"/></g>
+    <g id="a-home"><path d="M4 11 12 4l8 7"/><path d="M6 10v10h5v-6h2v6h5V10"/></g>
+    <g id="a-route"><circle cx="6" cy="18" r="2.5"/><circle cx="18" cy="6" r="2.5"/><path d="M8.5 18H14a3.5 3.5 0 0 0 0-7H9a3.5 3.5 0 0 1 0-7h6.5"/></g>
+    <g id="a-game"><rect x="2.5" y="7" width="19" height="10" rx="4"/><path d="M7 11v3M5.5 12.5h3"/><circle cx="16" cy="11.5" r="1"/><circle cx="18" cy="13.5" r="1"/></g>
+    <g id="a-pin"><path d="M12 21s6.5-5.6 6.5-10.3A6.5 6.5 0 0 0 5.5 10.7C5.5 15.4 12 21 12 21z"/><circle cx="12" cy="10.5" r="2.4"/></g>
+    <g id="a-task"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 3.5h6v3H9zM8.5 11l1.5 1.5 3-3M8.5 16l1.5 1.5 3-3"/></g>
+    <g id="a-image"><rect x="3.5" y="5" width="17" height="14" rx="2"/><circle cx="8.5" cy="10" r="1.6"/><path d="m5 17 4.5-4 3 2.5L16 11l3.5 4"/></g>
+    <g id="a-clock"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 1.8"/></g>
+    <g id="a-users"><circle cx="9" cy="8" r="3"/><path d="M3 20v-1a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v1"/><path d="M16.5 5.4a3 3 0 0 1 0 5.2M17.5 15.2A4 4 0 0 1 21 19v1"/></g>
+    <g id="a-gear"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 12a7.4 7.4 0 0 0-.1-1.2l2-1.6-2-3.4-2.4 1a7.3 7.3 0 0 0-2-1.2l-.4-2.6H9.5l-.4 2.6a7.3 7.3 0 0 0-2 1.2l-2.4-1-2 3.4 2 1.6a7.4 7.4 0 0 0 0 2.4l-2 1.6 2 3.4 2.4-1a7.3 7.3 0 0 0 2 1.2l.4 2.6h4.9l.4-2.6a7.3 7.3 0 0 0 2-1.2l2.4 1 2-3.4-2-1.6c.06-.4.1-.8.1-1.2z"/></g>
+    <g id="a-plus"><path d="M12 5v14M5 12h14"/></g>
+    <g id="a-wand"><path d="M4 20 14.5 9.5"/><path d="M16.8 7.2 19 5"/><path d="M13 4.5 13.8 7l2.5.8-2.5.8-.8 2.5-.8-2.5-2.5-.8 2.5-.8z"/><path d="M19.5 12l.5 1.6 1.6.5-1.6.5-.5 1.6-.5-1.6-1.6-.5 1.6-.5z"/></g>
+    <g id="a-book"><path d="M4 5.5A1.5 1.5 0 0 1 5.5 4H11v16H5.5A1.5 1.5 0 0 1 4 18.5z"/><path d="M20 5.5A1.5 1.5 0 0 0 18.5 4H13v16h5.5a1.5 1.5 0 0 0 1.5-1.5z"/></g>
+    <g id="a-refresh"><path d="M20 12a8 8 0 1 1-2.4-5.7"/><path d="M20 4v4h-4"/></g>
+    <g id="a-target"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="1"/></g>
+    <g id="a-close"><path d="M6 6l12 12M18 6 6 18"/></g>
+    <g id="a-trash"><path d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M6 7l1 13a1.5 1.5 0 0 0 1.5 1.4h7a1.5 1.5 0 0 0 1.5-1.4L18 7"/><path d="M10 11v6M14 11v6"/></g>
+    <g id="a-warn"><path d="M12 3.5 21.5 20h-19z"/><path d="M12 9.5v5M12 17.2v.1"/></g>
+  </defs>
+  <symbol id="a-logo" viewBox="0 0 64 64">
+    <circle cx="32" cy="32" r="29.5" fill="none" stroke="currentColor" stroke-width="2.4"/>
+    <circle cx="32" cy="32" r="24.5" fill="none" stroke="currentColor" stroke-width="1" opacity=".55"/>
+    <g stroke="currentColor" stroke-width="1.6" opacity=".75"><path d="M32 2.5v5M32 56.5v5M2.5 32h5M56.5 32h5"/></g>
+    <path d="M32 7 36 28 57 32 36 36 32 57 28 36 7 32 28 28z" fill="currentColor"/>
+    <path d="M32 32 44.5 19.5 38.5 38.5 19.5 44.5z" fill="currentColor" opacity=".38"/>
+    <circle cx="32" cy="32" r="3.4" fill="#0a0d0a"/><circle cx="32" cy="32" r="1.7" fill="currentColor"/>
+  </symbol>
+  <symbol id="ava" viewBox="0 0 64 64">
+    <rect width="64" height="64" fill="#2f4a24"/>
+    <circle cx="32" cy="26" r="12" fill="#c9d3bd"/>
+    <path d="M11 60c1-13 10-20 21-20s20 7 21 20z" fill="#c9d3bd"/>
+  </symbol>
+</svg>
+
+<!-- ===================== FELSŐ SÁV ===================== -->
+<header class="adm-top">
+  <a class="adm-brand" href="index.html">
+    <svg class="brand-mark" viewBox="0 0 64 64" aria-hidden="true"><use href="#a-logo"/></svg>
+    <span class="adm-brand-text"><span class="adm-brand-name">URBAN <b>QUEST</b></span><span class="adm-brand-sub">KALANDOK. KÜLDETÉSEK. ÉLMÉNYEK.</span></span>
+  </a>
+
+  <div class="adm-search">
+    <svg class="ico ico-sm" aria-hidden="true"><use href="#a-search"/></svg>
+    <input type="text" id="topSearch" placeholder="Keresés a találatok között…">
+    <kbd>⌘ K</kbd>
+  </div>
+
+  <div class="adm-top-right">
+    <button class="adm-btn" type="button" id="btnReset"><svg class="ico ico-sm" aria-hidden="true"><use href="#a-refresh"/></svg>Újrakezdés</button>
+    <div class="uq-dd" data-dd>
+      <button class="adm-user" type="button" data-dd-toggle>
+        <span class="adm-avatar adm-avatar-photo"><svg viewBox="0 0 64 64" aria-hidden="true"><use href="#ava"/></svg></span>
+        <span class="adm-user-text"><b>Szabó Tamás</b><span>Adminisztrátor</span></span>
+        <svg class="ico ico-xs" aria-hidden="true"><use href="#a-down"/></svg>
+      </button>
+      <div class="uq-dd-menu">
+        <div class="uq-dd-label">Fiók</div>
+        <button class="uq-dd-item" type="button" data-user="profile"><svg class="ico" aria-hidden="true"><use href="#a-users"/></svg>Profil</button>
+        <button class="uq-dd-item" type="button" data-user="settings"><svg class="ico" aria-hidden="true"><use href="#a-gear"/></svg>Beállítások</button>
+        <div class="uq-dd-sep"></div>
+        <button class="uq-dd-item is-danger" type="button" data-user="logout"><svg class="ico" aria-hidden="true"><use href="#a-logout"/></svg>Kijelentkezés</button>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="adm-shell">
+  <!-- ===================== OLDALSÁV ===================== -->
+  <aside class="adm-side" id="admSide">
+    <button class="adm-collapse" type="button" data-side-toggle aria-label="Oldalsáv összecsukása"><svg class="ico ico-sm" aria-hidden="true"><use href="#a-menu"/></svg></button>
+    <nav class="adm-nav">
+      <a class="adm-nav-item" href="iranyitopult.html" data-label="Irányítópult"><svg class="ico" aria-hidden="true"><use href="#a-home"/></svg><span class="adm-nav-txt">Irányítópult</span></a>
+      <a class="adm-nav-item" href="admin.html" data-label="Pályák"><svg class="ico" aria-hidden="true"><use href="#a-route"/></svg><span class="adm-nav-txt">Pályák</span></a>
+      <a class="adm-nav-item is-active" href="palya-varazslo.html" data-label="Varázsló"><svg class="ico" aria-hidden="true"><use href="#a-wand"/></svg><span class="adm-nav-txt">Varázsló</span></a>
+      <a class="adm-nav-item" href="jatekok.html" data-label="Játékok"><svg class="ico" aria-hidden="true"><use href="#a-game"/></svg><span class="adm-nav-txt">Játékok</span></a>
+      <a class="adm-nav-item" href="allomasok.html" data-label="Állomások"><svg class="ico" aria-hidden="true"><use href="#a-pin"/></svg><span class="adm-nav-txt">Állomások</span></a>
+      <a class="adm-nav-item" href="feladatok.html" data-label="Feladatok"><svg class="ico" aria-hidden="true"><use href="#a-task"/></svg><span class="adm-nav-txt">Feladatok</span></a>
+      <a class="adm-nav-item" href="media.html" data-label="Média"><svg class="ico" aria-hidden="true"><use href="#a-image"/></svg><span class="adm-nav-txt">Média</span></a>
+      <a class="adm-nav-item" href="idozitesek.html" data-label="Időzítések"><svg class="ico" aria-hidden="true"><use href="#a-clock"/></svg><span class="adm-nav-txt">Időzítések</span></a>
+      <a class="adm-nav-item" href="csapatok.html" data-label="Csapatok"><svg class="ico" aria-hidden="true"><use href="#a-users"/></svg><span class="adm-nav-txt">Csapatok</span></a>
+      <a class="adm-nav-item" href="beallitasok.html" data-label="Beállítások"><svg class="ico" aria-hidden="true"><use href="#a-gear"/></svg><span class="adm-nav-txt">Beállítások</span></a>
+    </nav>
+    <div class="adm-side-foot">
+      <div class="adm-sysstat"><span class="adm-sysstat-label">Rendszer állapota</span><span class="adm-sysstat-ok"><span class="dot"></span><span>Minden rendben</span></span></div>
+      <div class="adm-ver">Verzió 2.4.1<br>© 2024 Urban Quest</div>
+    </div>
+  </aside>
+
+  <!-- ===================== FŐ TERÜLET ===================== -->
+  <main class="adm-main">
+
+    <!-- lépéssor -->
+    <ol class="pv-steps" id="pvSteps">
+      <li class="pv-step is-active"><span class="pv-step-n">1</span><span class="pv-step-t">Helyszínek</span></li>
+      <li class="pv-step"><a href="palya-varazslo-vaz.html"><span class="pv-step-n">2</span><span class="pv-step-t">Váz</span></a></li>
+      <li class="pv-step"><span class="pv-step-n">3</span><span class="pv-step-t">Feladatok</span></li>
+      <li class="pv-step"><span class="pv-step-n">4</span><span class="pv-step-t">Sztori</span></li>
+      <li class="pv-step"><a href="palya-varazslo-ellenorzes.html"><span class="pv-step-n">5</span><span class="pv-step-t">Ellenőrzés</span></a></li>
+    </ol>
+
+    <div class="jtk-head">
+      <h1>Pálya varázsló <span class="pv-h-sub">1. lépés — valós helyszínek</span></h1>
+    </div>
+
+    <p class="pv-lead">
+      Válassz területet, és a rendszer lekéri az <b>OpenStreetMap</b> valós helyszíneit — névvel és pontos
+      koordinátával együtt. Pipáld ki, amelyik kell; a többit a varázsló tölti ki.
+    </p>
+
+    <!-- ============ TÉRKÉP ============ -->
+    <section class="pv-panel pv-mappanel" aria-label="Térkép">
+      <div class="pv-map-head">
+        <h2 class="pv-panel-h pv-panel-h-flush"><svg class="ico ico-sm" aria-hidden="true"><use href="#a-target"/></svg>Térkép</h2>
+        <span class="pv-hint pv-map-hint">Kattints a térképre vagy húzd a jelölőt — oda kerül a keresés középpontja.</span>
+        <button class="adm-btn pv-btn-sm" type="button" id="pvMapFit"><svg class="ico ico-sm" aria-hidden="true"><use href="#a-search"/></svg>Sugárhoz igazít</button>
+      </div>
+      <div class="pv-map" id="pvMap"></div>
+      <div class="pv-maplegend" id="pvMapLegend" hidden></div>
+      <div class="pv-lint pv-lint-warn" id="pvMapFail" hidden>
+        <svg class="ico ico-xs" aria-hidden="true"><use href="#a-warn"/></svg>A térkép nem töltődött be. A varázsló e nélkül is működik.
+      </div>
+    </section>
+
+    <div class="pv-grid">
+      <!-- ============ BAL: keresési beállítások ============ -->
+      <section class="pv-panel" aria-label="Keresési beállítások">
+        <h2 class="pv-panel-h"><svg class="ico ico-sm" aria-hidden="true"><use href="#a-target"/></svg>Terület</h2>
+
+        <label class="pv-field">
+          <span class="pv-label">Városrész</span>
+          <div class="pv-select">
+            <select id="pvArea"></select>
+            <svg class="ico ico-xs" aria-hidden="true"><use href="#a-down"/></svg>
+          </div>
+        </label>
+
+        <div class="pv-field pv-coords" id="pvCustomWrap" hidden>
+          <span class="pv-label">Saját középpont (szélesség, hosszúság)</span>
+          <div class="pv-coord-row">
+            <input type="text" id="pvLat" inputmode="decimal" placeholder="47.4979" aria-label="Szélesség">
+            <input type="text" id="pvLng" inputmode="decimal" placeholder="19.0402" aria-label="Hosszúság">
+          </div>
+          <span class="pv-hint">Google Mapsen jobb klikk a helyre → a koordináta másolható.</span>
+        </div>
+
+        <label class="pv-field">
+          <span class="pv-label">Sugár <b class="pv-radius-val" id="pvRadiusVal">800 m</b></span>
+          <input type="range" id="pvRadius" class="pv-range" min="200" max="2500" step="100" value="800">
+          <span class="pv-hint">Egy sétálható pálya jellemzően 600–1200 m sugarú körben fér el.</span>
+        </label>
+
+        <h2 class="pv-panel-h pv-panel-h2"><svg class="ico ico-sm" aria-hidden="true"><use href="#a-pin"/></svg>Mit keressen</h2>
+        <div class="pv-cats" id="pvCats"></div>
+
+        <button class="adm-btn adm-btn-lime pv-search-btn" type="button" id="pvSearch">
+          <svg class="ico ico-sm" aria-hidden="true"><use href="#a-search"/></svg>Helyszínek keresése
+        </button>
+        <div class="pv-status" id="pvStatus" role="status" aria-live="polite"></div>
+      </section>
+
+      <!-- ============ JOBB: találatok ============ -->
+      <section class="pv-panel pv-results" aria-label="Találatok">
+        <div class="pv-res-head">
+          <h2 class="pv-panel-h pv-panel-h-flush"><svg class="ico ico-sm" aria-hidden="true"><use href="#a-route"/></svg>Találatok <span class="pv-count" id="pvCount">—</span></h2>
+          <div class="pv-res-tools">
+            <div class="pv-select pv-select-sm">
+              <select id="pvSort" aria-label="Rendezés">
+                <option value="dist">Távolság szerint</option>
+                <option value="wiki">Wikipédia-adat előre</option>
+                <option value="name">Név szerint</option>
+                <option value="cat">Kategória szerint</option>
+              </select>
+              <svg class="ico ico-xs" aria-hidden="true"><use href="#a-down"/></svg>
+            </div>
+            <button class="adm-btn pv-btn-sm" type="button" id="pvSuggest" disabled>
+              <svg class="ico ico-sm" aria-hidden="true"><use href="#a-wand"/></svg>Javasolj 6-ot
+            </button>
+          </div>
+        </div>
+
+        <div class="pv-list" id="pvList">
+          <div class="pv-empty" id="pvEmpty">
+            <svg class="ico" aria-hidden="true"><use href="#a-pin"/></svg>
+            <b>Még nincs találat</b>
+            <span>Válassz területet balra, és nyomd meg a <i>Helyszínek keresése</i> gombot.</span>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- ============ ALSÓ SÁV: kiválasztás ============ -->
+    <div class="pv-bar" id="pvBar" hidden>
+      <div class="pv-bar-info">
+        <b id="pvSelCount">0</b> helyszín kiválasztva
+        <span class="pv-bar-meta" id="pvSelMeta"></span>
+      </div>
+      <div class="pv-bar-actions">
+        <button class="adm-btn" type="button" id="pvClearSel"><svg class="ico ico-sm" aria-hidden="true"><use href="#a-close"/></svg>Kijelölés törlése</button>
+        <button class="adm-btn adm-btn-lime" type="button" id="pvNext">Tovább a vázhoz<svg class="ico ico-sm" aria-hidden="true"><use href="#a-right"/></svg></button>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<div class="pv-toast" id="pvToast" role="status" aria-live="polite" hidden></div>
+
+<script src="admin.js?v=7"></script>
+<script src="vendor/leaflet/leaflet.js"></script>
+<script src="pv-map.js?v=1"></script>
+<script src="palya-varazslo.js?v=5"></script>
+</body>
+</html>
