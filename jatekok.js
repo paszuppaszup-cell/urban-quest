@@ -58,19 +58,71 @@
   const langChip = c => `<span class="jtk-lang"><svg class="flag" aria-hidden="true"><use href="#f-${c}"/></svg>${LANG_LBL[c]}</span>`;
   const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
-  /* egyedi azonosítók a szerkesztés/duplikálás követéséhez */
-  let uid = 0;
-  GAMES.forEach(g => { g.id = ++uid; });
+  /* ---------- adatréteg: Supabase (korábban localStorage) ----------
+     Eddig ez az oldal a böngésző tárolójába írt, ezért a szerkesztés
+     nem jutott el a publikus oldalra, és törölni sem lehetett semmit.
+     Most az adatbázis az egyetlen igazságforrás.
 
-  /* ---------- tartós tárolás (localStorage) ---------- */
-  const STORE = 'uq_games_v1';
-  function saveStore() { try { localStorage.setItem(STORE, JSON.stringify(GAMES)); } catch (e) {} }
-  (function loadStore() {
-    try {
-      const raw = localStorage.getItem(STORE);
-      if (raw) { const arr = JSON.parse(raw); if (Array.isArray(arr) && arr.length) { GAMES.splice(0, GAMES.length, ...arr); uid = GAMES.reduce((m, g) => Math.max(m, g.id || 0), 0); } }
-    } catch (e) {}
-  })();
+     Az azonosító UUID lett — a régi egész számú id-k két böngészőben
+     ütköztek volna. */
+
+  const STATUS_DB = { pub: 'pub', draft: 'draft', arch: 'archived' };
+  const STATUS_UI = { pub: 'pub', draft: 'draft', archived: 'arch' };
+  const DIFF_LBL = { konnyu: 'Könnyű', kozepes: 'Közepes', nehez: 'Nehéz', extrem: 'Extrém' };
+  const DIFF_DB  = { 'Könnyű': 'konnyu', 'Közepes': 'kozepes', 'Nehéz': 'nehez', 'Extrém': 'extrem' };
+
+  const ezres = (n) => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+
+  function dbSor(r) {
+    const langs = Array.isArray(r.languages) ? r.languages : ['hu'];
+    const ora = r.duration_min == null ? ''
+      : (r.duration_max && r.duration_max !== r.duration_min
+          ? r.duration_min + '–' + r.duration_max + ' óra'
+          : r.duration_min + ' óra');
+    return {
+      id: r.id,
+      name: r.name || '',
+      desc: r.summary || '',
+      longDesc: r.about || '',
+      subtitle: r.subtitle || '',
+      diff: DIFF_LBL[r.difficulty] || 'Közepes',
+      dur: ora,
+      loc: [r.city, r.area].filter(Boolean).join(', '),
+      langs: langs.slice(0, 3),
+      allLangs: langs,
+      more: Math.max(0, langs.length - 3),
+      status: STATUS_UI[r.status] || 'draft',
+      price: r.price_huf == null ? '' : (r.price_huf === 0 ? 'INGYENES' : ezres(r.price_huf)),
+      age: r.age_min == null ? '' : (r.age_min + '+'),
+      team: r.team_min == null ? '' : (r.team_min + '–' + (r.team_max || r.team_min) + ' fő'),
+      image: r.cover_image || '',
+      category: r.category || 'varosi',
+      doList: Array.isArray(r.do_list) ? r.do_list : [],
+      knowList: Array.isArray(r.know_list) ? r.know_list : [],
+      distance: r.distance_m == null ? '' : (r.distance_m / 1000).toFixed(1).replace('.', ',') + ' km',
+      rating: 0, reviews: 0,
+      thumb: (Math.abs(String(r.id).charCodeAt(0) + String(r.id).charCodeAt(1)) % 6) + 1,
+      // csak a felület számára — törlés előtti figyelmeztetéshez
+      _allomas: r.allomas_db, _feladat: r.feladat_db, _menet: r.menet_db,
+      _elo: r.van_elo_verzio, _slug: r.slug
+    };
+  }
+
+  // A mentést mostantól a save_course() RPC végzi soronként; nincs
+  // többé „az egész tömböt kiírom" minta.
+  function saveStore() { /* szándékosan üres — az adatbázis a forrás */ }
+
+  function betolt() {
+    if (!window.UQAPI) return Promise.reject(new Error('Hiányzik az adatréteg.'));
+    return UQAPI.rest('/v_admin_courses?select=*&order=sort_order.asc,name.asc')
+      .then(rows => {
+        GAMES.splice(0, GAMES.length, ...(rows || []).map(dbSor));
+        if (!GAMES.some(g => g.id === state.selectedId)) {
+          state.selectedId = GAMES.length ? GAMES[0].id : null;
+        }
+        return GAMES;
+      });
+  }
 
   const byId = id => GAMES.find(g => g.id === id);
   const firstSentence = (text) => {
@@ -80,8 +132,13 @@
     return (m ? m[0] : t).trim();
   };
 
+  /* A beépített minta-adat csak a szerkesztő alapértelmezéseihez kellett;
+     a lista az adatbázisból jön, ezért induláskor kiürítjük — különben
+     a demó pályák villannának fel a valódiak előtt. */
+  GAMES.splice(0, GAMES.length);
+
   /* ---------- állapot ---------- */
-  const state = { search: '', status: 'all', perPage: 10, page: 1, selectedId: GAMES[0].id };
+  const state = { search: '', status: 'all', perPage: 10, page: 1, selectedId: null };
 
   /* ---------- fő DOM-hivatkozások ---------- */
   const tbody = document.getElementById('gameRows');
@@ -160,6 +217,19 @@
     });
   }
 
+  /* Beágyazott ikonok: az oldal sprite-ja csak 6 szimbólumot tartalmaz,
+     ezért a sprite-hivatkozás itt üres gombot adna. */
+  const SVG_ARCHIVE =
+    '<svg class="ico ico-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" ' +
+    'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+    '<rect x="3" y="4" width="18" height="4" rx="1"/><path d="M5 8v11a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8"/>' +
+    '<path d="M10 12h4"/></svg>';
+  const SVG_TRASH =
+    '<svg class="ico ico-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" ' +
+    'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+    '<path d="M4 7h16"/><path d="M10 11v6M14 11v6"/>' +
+    '<path d="M6 7l1 12a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1l1-12"/><path d="M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>';
+
   function rowHTML(g) {
     const dk = DIFF_KEY[g.diff] || 'kozepes';
     const st = STATUS[g.status] || STATUS.draft;
@@ -178,6 +248,11 @@
         <button class="jtk-act jtk-act-edit" type="button" data-act="edit" aria-label="Szerkesztés">${ico('a-edit')}</button>
         <button class="jtk-act" type="button" data-act="copy" aria-label="Másolás">${ico('a-copy')}</button>
         <button class="jtk-act" type="button" data-act="preview" aria-label="Előnézet">${ico('a-eye')}</button>
+        <button class="jtk-act" type="button" data-act="archive"
+          aria-label="${g.status === 'arch' ? 'Visszaállítás' : 'Archiválás'}"
+          title="${g.status === 'arch' ? 'Visszaállítás piszkozatba' : 'Archiválás — eltűnik a publikus oldalról, az eredmények megmaradnak'}">${SVG_ARCHIVE}</button>
+        <button class="jtk-act jtk-act-del" type="button" data-act="delete"
+          aria-label="Végleges törlés" title="Végleges törlés — nincs visszaút">${SVG_TRASH}</button>
       </div>
     </div>`;
   }
@@ -277,7 +352,7 @@
 
   function markActive() {
     tbody.querySelectorAll('.jtk-row').forEach(r =>
-      r.classList.toggle('is-active', Number(r.dataset.id) === state.selectedId));
+      r.classList.toggle('is-active', r.dataset.id === String(state.selectedId)));
   }
 
   function selectGame(id, focus) {
@@ -290,72 +365,108 @@
     if (focus) fName.focus();
   }
 
-  function saveDrawer() {
-    const g = byId(state.selectedId);
-    if (!g) { toast('Nincs kiválasztott játék', { type: 'error' }); return; }
-    g.name = fName.value.trim() || 'Névtelen játék';
-    g.longDesc = fDesc.value;
-    g.desc = firstSentence(fDesc.value) || fDesc.value.trim();
-    g.diff = fDiff.value;
-    g.dur = fDur.value;
-    g.loc = fLoc.value;
-    g.price = fPrice.value;
-    g.status = STATUS_BY_LABEL[fStatus.value] || 'pub';
-    g.age = fAge.value;
-    g.subtitle = fSubtitle.value.trim();
-    g.image = fImage.value.trim();
-    g.rating = isNaN(parseFloat(fRating.value)) ? 4.5 : parseFloat(fRating.value);
-    g.reviews = isNaN(parseInt(fReviews.value, 10)) ? 0 : parseInt(fReviews.value, 10);
-    g.distance = fDistance.value.trim();
-    g.team = fTeam.value.trim();
-    g.category = fCategory.value;
-    g.doList = collectList(fDoList);
-    g.knowList = collectList(fKnowList);
+  /* ---- a felület formázott szövegeiből számok az adatbázisnak ---- */
+
+  const szam = (s) => { const m = String(s == null ? '' : s).replace(',', '.').match(/-?\d+(\.\d+)?/); return m ? Number(m[0]) : null; };
+  const tartomany = (s) => {
+    const t = String(s || '').replace(/,/g, '.');
+    const m = t.match(/(\d+(?:\.\d+)?)\s*[–-]\s*(\d+(?:\.\d+)?)/);
+    if (m) return [Math.round(+m[1]), Math.round(+m[2])];
+    const e = szam(t);
+    return e == null ? [null, null] : [Math.round(e), null];
+  };
+  const arFt = (s) => {
+    const t = String(s || '').trim();
+    if (!t) return null;
+    if (/ingyen/i.test(t)) return 0;
+    const m = t.replace(/[\s.]/g, '').match(/\d+/);
+    return m ? +m[0] : null;
+  };
+
+  function urlapPayload(id) {
+    const [dmin, dmax] = tartomany(fDur.value);
+    const [tmin, tmax] = tartomany(fTeam.value);
+    const loc = String(fLoc.value || '').split(',');
     const codes = currentDrawerLangs();
-    g.allLangs = codes.length ? codes : ['hu'];
-    g.langs = g.allLangs.slice(0, 3);
-    g.more = Math.max(0, g.allLangs.length - 3);
-    render();
-    toast('Játék elmentve', { sub: 'Minden módosítás mentve' });
+    const km = szam(fDistance.value);
+    return {
+      id: id || null,
+      name: fName.value.trim() || 'Névtelen játék',
+      about: fDesc.value,
+      summary: firstSentence(fDesc.value) || fDesc.value.trim(),
+      subtitle: fSubtitle.value.trim(),
+      difficulty: DIFF_DB[fDiff.value] || 'kozepes',
+      category: fCategory.value || 'varosi',
+      status: STATUS_DB[STATUS_BY_LABEL[fStatus.value] || 'draft'] || 'draft',
+      city: (loc[0] || '').trim() || null,
+      area: loc.length > 1 ? loc.slice(1).join(',').trim() : null,
+      cover_image: fImage.value.trim() || null,
+      price_huf: arFt(fPrice.value),
+      duration_min: dmin, duration_max: dmax,
+      team_min: tmin, team_max: tmax,
+      age_min: szam(fAge.value),
+      distance_m: km == null ? null : Math.round(km * 1000),
+      languages: codes.length ? codes : ['hu'],
+      do_list: collectList(fDoList),
+      know_list: collectList(fKnowList)
+    };
+  }
+
+  function saveDrawer() {
+    if (!state.selectedId) { toast('Nincs kiválasztott játék', { type: 'error' }); return; }
+    UQAPI.rest('/rpc/save_course', { method: 'POST', body: { p: urlapPayload(state.selectedId) } })
+      .then(() => ujratolt('Játék elmentve', 'A publikus oldalon is frissült'))
+      .catch(hibaToast);
   }
 
   function duplicateGame(id) {
-    const idx = GAMES.findIndex(x => x.id === id);
-    if (idx < 0) return;
-    const src = GAMES[idx];
-    const copy = Object.assign({}, src, {
-      id: ++uid,
-      name: src.name + ' (másolat)',
-      langs: src.langs.slice(),
-      allLangs: src.allLangs.slice()
-    });
-    GAMES.splice(idx + 1, 0, copy);
-    render();
-    toast('Játék duplikálva', { sub: copy.name });
+    const src = byId(id);
+    if (!src) return;
+    // A másolat CSAK a katalógus-adatokat viszi: az állomások és
+    // feladatok nem jönnek vele, mert azok a pályához tartoznak.
+    UQAPI.rest('/rpc/save_course', {
+      method: 'POST',
+      body: { p: {
+        name: src.name + ' (másolat)',
+        summary: src.desc, about: src.longDesc, subtitle: src.subtitle,
+        difficulty: DIFF_DB[src.diff] || 'kozepes',
+        category: src.category, status: 'draft',
+        city: (src.loc || '').split(',')[0].trim() || null,
+        languages: src.allLangs
+      } }
+    })
+      .then(() => ujratolt('Játék duplikálva', src.name + ' (másolat) — piszkozatként, állomások nélkül'))
+      .catch(hibaToast);
   }
 
   function newGame() {
-    const g = {
-      id: ++uid,
-      thumb: ((uid - 1) % 6) + 1,
-      name: 'Új játék',
-      desc: 'Rövid leírás a játékról.',
-      longDesc: 'Rövid leírás a játékról. Add meg a részleteket a szerkesztőben.',
-      diff: 'Könnyű', dur: '1–1,5 óra', loc: 'Budapest',
-      langs: ['hu'], more: 0, allLangs: ['hu'],
-      status: 'draft', price: '0', age: '6+',
-      subtitle: '', image: '', rating: 4.5, reviews: 0, distance: '', team: '2–6 fő',
-      category: 'varosi', doList: DEFAULT_DO.slice(), knowList: DEFAULT_KNOW.slice()
-    };
-    GAMES.unshift(g);
-    /* a szűrők törlése, hogy az új (piszkozat) sor biztosan látszódjon */
-    state.search = ''; topSearch.value = '';
-    state.status = 'all'; statusFilter.value = 'all';
-    state.page = 1;
-    state.selectedId = g.id;
-    render();
-    selectGame(g.id, true);
-    toast('Új játék létrehozva', { sub: 'Töltsd ki az adatokat, majd Mentés' });
+    // Az azonosítót az adatbázis adja (UUID) — a régi max+1 két
+    // böngészőben ütköző id-ket gyártott.
+    UQAPI.rest('/rpc/save_course', {
+      method: 'POST',
+      body: { p: {
+        name: 'Új játék',
+        about: 'Rövid leírás a játékról. Add meg a részleteket a szerkesztőben.',
+        summary: 'Rövid leírás a játékról.',
+        difficulty: 'konnyu', category: 'varosi', status: 'draft',
+        city: 'Budapest', languages: ['hu'],
+        do_list: DEFAULT_DO.slice(), know_list: DEFAULT_KNOW.slice()
+      } }
+    })
+      .then(r => {
+        const uj = Array.isArray(r) ? r[0] : r;
+        /* a szűrők törlése, hogy az új (piszkozat) sor biztosan látszódjon */
+        state.search = ''; topSearch.value = '';
+        state.status = 'all'; statusFilter.value = 'all';
+        state.page = 1;
+        state.selectedId = uj && uj.id;
+        return betolt().then(() => {
+          render();
+          if (state.selectedId) selectGame(state.selectedId, true);
+          toast('Új játék létrehozva', { sub: 'Töltsd ki az adatokat, majd Mentés' });
+        });
+      })
+      .catch(hibaToast);
   }
 
   /* =========================================================
@@ -380,19 +491,87 @@
   document.addEventListener('keydown', e => { if (e.key === 'Escape') closeAllMenus(); });
 
   /* =========================================================
+     ARCHIVÁLÁS / TÖRLÉS
+     ========================================================= */
+
+  function ujratolt(uzenet, alcim) {
+    return betolt().then(() => {
+      render();
+      if (uzenet) toast(uzenet, { type: 'ok', sub: alcim });
+      // a publikus oldal gyorstára is essen el, hogy azonnal frissüljön
+      try { localStorage.removeItem('uq_catalog_v1'); } catch (e) {}
+    });
+  }
+
+  function hibaToast(err) {
+    var m = String((err && err.message) || 'Ismeretlen hiba');
+    toast('Nem sikerült', { type: 'warn', sub: m });
+  }
+
+  function archiveGame(id) {
+    const g = byId(id);
+    if (!g) return;
+    const vissza = g.status === 'arch';
+    UQAPI.rest('/rpc/archive_course', {
+      method: 'POST', body: { p_course: id, p_archive: !vissza }
+    })
+      .then(() => ujratolt(
+        vissza ? 'Visszaállítva' : 'Archiválva',
+        vissza ? g.name + ' — piszkozatba került, újra közzéteheted'
+               : g.name + ' — eltűnt a publikus oldalról, az eredmények megmaradtak'))
+      .catch(hibaToast);
+  }
+
+  function deleteGame(id) {
+    const g = byId(id);
+    if (!g) return;
+
+    // Amit a törlés elvinne — mondjuk ki előre, ne utólag derüljön ki.
+    const veszit = [];
+    if (g._allomas) veszit.push(g._allomas + ' állomás');
+    if (g._feladat) veszit.push(g._feladat + ' feladat');
+    if (g._menet)   veszit.push(g._menet + ' játékmenet');
+
+    if (g._menet) {
+      toast('Nem törölhető véglegesen', {
+        type: 'warn',
+        sub: g.name + ' — már játszották (' + g._menet + ' menet). Archiváld helyette, így az eredmények megmaradnak.'
+      });
+      return;
+    }
+
+    const uzenet =
+      'VÉGLEGES TÖRLÉS — nincs visszaút.\n\n' + g.name + '\n' +
+      (veszit.length ? '\nEzzel együtt megszűnik: ' + veszit.join(', ') + '.\n' : '') +
+      '\nHa csak el akarod tüntetni a publikus oldalról, használd inkább az archiválást.\n\n' +
+      'Biztosan véglegesen törlöd?';
+
+    if (!window.confirm(uzenet)) return;
+
+    UQAPI.rest('/rpc/delete_course', { method: 'POST', body: { p_course: id } })
+      .then(() => {
+        if (state.selectedId === id) state.selectedId = null;
+        return ujratolt('Véglegesen törölve', g.name);
+      })
+      .catch(hibaToast);
+  }
+
+  /* =========================================================
      ESEMÉNYEK
      ========================================================= */
   /* táblázat: sor + művelet ikonok (delegálás) */
   tbody.addEventListener('click', e => {
     const row = e.target.closest('.jtk-row');
     if (!row) return;
-    const id = Number(row.dataset.id);
+    const id = row.dataset.id;   // UUID, nem szám
     const actBtn = e.target.closest('.jtk-act');
     if (actBtn) {
       const act = actBtn.dataset.act;
       if (act === 'edit') selectGame(id, true);
       else if (act === 'copy') duplicateGame(id);
       else if (act === 'preview') { const g = byId(id); if (g) toast('Előnézet: ' + g.name, { type: 'info', sub: 'A játék előnézete megnyílik' }); }
+      else if (act === 'archive') archiveGame(id);
+      else if (act === 'delete') deleteGame(id);
       return; /* nem folytatjuk a sor-kijelöléssel */
     }
     selectGame(id);
@@ -570,8 +749,37 @@
   }
 
   /* =========================================================
-     INDÍTÁS
+     INDÍTÁS — az adatbázisból töltünk, ezért aszinkron
      ========================================================= */
-  render();
-  selectGame(GAMES[0].id);
+  function indul() {
+    if (!window.UQAPI || !UQAPI.user()) {
+      emptyEl.hidden = false;
+      emptyEl.innerHTML =
+        '<p><b>Nem vagy bejelentkezve.</b></p>' +
+        '<p>A játékok szerkesztéséhez admin fiók kell.</p>' +
+        '<p><a class="adm-btn adm-btn-lime" href="bejelentkezes.html?next=jatekok.html">Bejelentkezés</a></p>';
+      return;
+    }
+    betolt()
+      .then(() => {
+        render();
+        if (state.selectedId) selectGame(state.selectedId);
+        if (!GAMES.length) {
+          emptyEl.hidden = false;
+          emptyEl.innerHTML =
+            '<p><b>Még nincs egyetlen pálya sem.</b></p>' +
+            '<p>Hozz létre újat, vagy hozd át a meglévőket az ' +
+            '<a href="atkoltoztetes.html">átköltöztetéssel</a>.</p>';
+        }
+      })
+      .catch(err => {
+        emptyEl.hidden = false;
+        emptyEl.innerHTML =
+          '<p><b>A játékok nem tölthetők be.</b></p>' +
+          '<p>' + esc(String(err && err.message || '')) + '</p>';
+      });
+  }
+
+  indul();
+  if (window.UQAPI) UQAPI.onAuth(() => indul());
 })();
