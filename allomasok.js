@@ -222,23 +222,65 @@
   }
 
   /* egyedi azonosítók */
-  let uid = 0;
-  STATIONS.forEach(s => { s.id = ++uid; });
+  /* ---------- adatréteg: Supabase (korábban localStorage) ----------
+     Eddig ez az oldal a böngésző tárolójába írt, ezért a szerkesztés
+     nem jutott el sem a játékhoz, sem a publikus oldalhoz. */
 
-  /* ---------- tartós tárolás (localStorage) ---------- */
-  const STORE = 'uq_stations_v1';
-  function saveStore() { try { localStorage.setItem(STORE, JSON.stringify(STATIONS)); } catch (e) {} }
-  (function loadStore() {
-    try {
-      const raw = localStorage.getItem(STORE);
-      if (raw) { const arr = JSON.parse(raw); if (Array.isArray(arr) && arr.length) { STATIONS.splice(0, STATIONS.length, ...arr); uid = STATIONS.reduce((m, s) => Math.max(m, s.id || 0), 0); } }
-    } catch (e) {}
-  })();
+  const KIND_DB  = { kezdo: 'kezdo', info: 'info', feladat: 'feladat', dontes: 'dontes', zaro: 'zaro' };
+  const DIFF_LBL = { konnyu: 'Könnyű', kozepes: 'Közepes', nehez: 'Nehéz', extrem: 'Extrém' };
+  const DIFF_DB  = { 'Könnyű': 'konnyu', 'Közepes': 'kozepes', 'Nehéz': 'nehez', 'Extrém': 'extrem' };
+
+  let COURSES = [];   // a pálya-választóhoz
+
+  function dbSor(r) {
+    return {
+      id: r.id,
+      courseId: r.course_id,
+      name: r.name || '',
+      route: r.course_name || '',
+      position: r.position,
+      type: KIND_DB[r.kind] || 'feladat',
+      diff: DIFF_LBL[r.difficulty] || 'Közepes',
+      status: r.status || 'active',
+      tasks: r.feladat_db || 0,
+      loc: r.address || '',
+      lat: r.lat == null ? '' : String(r.lat),
+      lng: r.lng == null ? '' : String(r.lng),
+      desc: r.description || '',
+      taskShort: r.task_short || '',
+      points: r.points || 0,
+      radius: r.radius_m || 50,
+      time: r.time_limit_s != null,
+      timeVal: r.time_limit_s ? Math.round(r.time_limit_s / 60) + ' perc' : '5 perc',
+      allLangs: ['hu']
+    };
+  }
+
+  // A mentést a save_station() RPC végzi soronként.
+  function saveStore() { /* szándékosan üres — az adatbázis a forrás */ }
+
+  function betolt() {
+    if (!window.UQAPI) return Promise.reject(new Error('Hiányzik az adatréteg.'));
+    return Promise.all([
+      UQAPI.rest('/v_admin_stations?select=*&order=course_name.asc,position.asc'),
+      UQAPI.rest('/v_admin_courses?select=id,name&order=sort_order.asc,name.asc')
+    ]).then(([sorok, palyak]) => {
+      COURSES = palyak || [];
+      STATIONS.splice(0, STATIONS.length, ...(sorok || []).map(dbSor));
+      if (!STATIONS.some(s => s.id === state.selectedId)) {
+        state.selectedId = STATIONS.length ? STATIONS[0].id : null;
+      }
+      return STATIONS;
+    });
+  }
 
   const byId = id => STATIONS.find(s => s.id === id);
 
+  /* A beépített minta-adat kiürül: a lista az adatbázisból jön. */
+  STATIONS.splice(0, STATIONS.length);
+
   /* ---------- állapot ---------- */
-  const state = { search: '', route: 'all', type: 'all', perPage: 10, page: 1, selectedId: STATIONS[0].id, sort: { key: null, dir: 1 }, selected: new Set() };
+  const state = { search: '', route: 'all', type: 'all', perPage: 10, page: 1, selectedId: null, sort: { key: null, dir: 1 }, selected: new Set() };
 
   /* ---------- fő DOM ---------- */
   const tbody = document.getElementById('stationRows');
@@ -448,7 +490,7 @@
 
   function markActive() {
     tbody.querySelectorAll('.jtk-row').forEach(r =>
-      r.classList.toggle('is-active', Number(r.dataset.id) === state.selectedId));
+      r.classList.toggle('is-active', r.dataset.id === String(state.selectedId)));
   }
 
   function selectStation(id, focus) {
@@ -461,93 +503,109 @@
     if (focus) fName.focus();
   }
 
+  function palyaIdNevbol(nev) {
+    const c = COURSES.find(x => x.name === nev);
+    return c ? c.id : null;
+  }
+
+  function ujratolt(uzenet, alcim) {
+    return betolt().then(() => {
+      render();
+      if (uzenet) toast(uzenet, { type: 'ok', sub: alcim });
+      try { localStorage.removeItem('uq_catalog_v1'); } catch (e) {}
+    });
+  }
+
+  function hibaToast(err) {
+    toast('Nem sikerült', { type: 'warn', sub: String((err && err.message) || 'Ismeretlen hiba') });
+  }
+
+  function perc(s) { const m = String(s || '').match(/\d+/); return m ? Number(m[0]) * 60 : null; }
+
   function saveDrawer() {
     const st = byId(state.selectedId);
     if (!st) { toast('Nincs kiválasztott állomás', { type: 'error' }); return; }
-    st.name = fName.value.trim() || 'Névtelen állomás';
-    st.type = fType.value || 'feladat';
-    st.route = fRoute.value;
-    st.desc = fDesc.value.trim();
-    st.diff = fDiff.value;
-    st.tasks = parseInt(fTasks.value, 10) || 0;
-    st.time = fTimeToggle.classList.contains('is-on');
-    st.timeVal = fTime.value;
-    st.loc = fLoc.value;
-    st.lat = fLat.value;
-    st.lng = fLng.value;
-    st.taskShort = fTaskShort.value.trim();
-    st.status = STATUS_BY_LABEL[fStatus.value] || 'active';
-    const codes = currentDrawerLangs();
-    st.allLangs = codes.length ? codes : ['hu'];
-    render();
-    toast('Állomás elmentve', { sub: st.name });
+    const idoBe = fTimeToggle.classList.contains('is-on');
+    UQAPI.rest('/rpc/save_station', { method: 'POST', body: { p: {
+      id: st.id,
+      course_id: palyaIdNevbol(fRoute.value) || st.courseId,
+      name: fName.value.trim() || 'Névtelen állomás',
+      kind: fType.value || 'feladat',
+      difficulty: DIFF_DB[fDiff.value] || 'kozepes',
+      status: STATUS_BY_LABEL[fStatus.value] || 'active',
+      description: fDesc.value.trim(),
+      task_short: fTaskShort.value.trim(),
+      address: fLoc.value,
+      lat: fLat.value, lng: fLng.value,
+      time_limit_s: idoBe ? perc(fTime.value) : null
+    } } })
+      .then(() => ujratolt('Állomás elmentve', fName.value.trim()))
+      .catch(hibaToast);
   }
 
   function duplicateStation(id) {
-    const idx = STATIONS.findIndex(x => x.id === id);
-    if (idx < 0) return;
-    const src = STATIONS[idx];
-    const copy = Object.assign({}, src, {
-      id: ++uid,
+    const src = byId(id);
+    if (!src) return;
+    // A másolat a feladatokat NEM viszi: azok az eredeti állomáshoz tartoznak.
+    UQAPI.rest('/rpc/save_station', { method: 'POST', body: { p: {
+      course_id: src.courseId,
       name: src.name + ' (másolat)',
-      status: 'draft',
-      allLangs: src.allLangs.slice()
-    });
-    STATIONS.splice(idx + 1, 0, copy);
-    render();
-    toast('Állomás duplikálva', { sub: copy.name });
+      kind: src.type, difficulty: DIFF_DB[src.diff] || 'kozepes', status: 'draft',
+      description: src.desc, task_short: src.taskShort,
+      address: src.loc, lat: src.lat, lng: src.lng
+    } } })
+      .then(() => ujratolt('Állomás duplikálva', src.name + ' (másolat) — feladatok nélkül'))
+      .catch(hibaToast);
   }
 
   function deleteStation(id) {
-    const idx = STATIONS.findIndex(x => x.id === id);
-    if (idx < 0) return;
-    const removed = STATIONS[idx];
-    STATIONS.splice(idx, 1);
-    state.selected.delete(id);
-    if (state.selectedId === id) {
-      if (STATIONS.length) {
-        state.selectedId = STATIONS[Math.min(idx, STATIONS.length - 1)].id;
-        fillDrawer(byId(state.selectedId));
-      } else {
-        drawer.classList.add('is-hidden');
-      }
-    }
-    render();
-    undoToast('Állomás törölve', removed.name, () => {
-      STATIONS.splice(Math.min(idx, STATIONS.length), 0, removed);
-      state.selectedId = removed.id;
-      fillDrawer(removed);
-      drawer.classList.remove('is-hidden');
-      render();
-      toast('Törlés visszavonva', { sub: removed.name });
-    });
+    const st = byId(id);
+    if (!st) return;
+
+    // A visszavonás itt nem lehetséges: a feladatok kaszkádolva mennek,
+    // és új azonosítót kapnának. Ezért inkább előre kérdezünk.
+    const uzenet =
+      'Állomás törlése — nincs visszavonás.\n\n' + st.name + '\n(' + st.route + ')\n' +
+      (st.tasks ? '\nEzzel együtt törlődik ' + st.tasks + ' feladat is.\n' : '') +
+      '\nA már publikált verziókat nem érinti, tehát a futó játékok nem törnek el.\n\n' +
+      'Biztosan törlöd?';
+    if (!window.confirm(uzenet)) return;
+
+    UQAPI.rest('/rpc/delete_station', { method: 'POST', body: { p_station: id } })
+      .then(() => {
+        state.selected.delete(id);
+        if (state.selectedId === id) { state.selectedId = null; drawer.classList.add('is-hidden'); }
+        return ujratolt('Állomás törölve', st.name);
+      })
+      .catch(hibaToast);
   }
 
   function newStation() {
-    const st = {
-      id: ++uid,
-      name: 'Új állomás',
-      route: 'Városliget Felfedező',
-      type: 'feladat',
-      diff: 'Könnyű',
-      tasks: 0,
-      loc: 'Budapest',
-      lat: '47.4979', lng: '19.0402',
-      status: 'draft',
-      allLangs: ['hu'],
-      time: false, timeVal: '5 perc',
-      desc: 'Rövid leírás az állomásról.',
-      taskShort: 'Add meg a feladat rövid leírását.'
-    };
-    STATIONS.unshift(st);
-    state.search = ''; topSearch.value = '';
-    state.route = 'all'; routeFilter.value = 'all';
-    state.type = 'all'; typeFilter.value = 'all';
-    state.page = 1;
-    state.selectedId = st.id;
-    render();
-    selectStation(st.id, true);
-    toast('Új állomás létrehozva', { sub: 'Töltsd ki az adatokat, majd Mentés' });
+    if (!COURSES.length) {
+      toast('Előbb pálya kell', { type: 'warn', sub: 'Hozz létre egy játékot a Játékok oldalon.' });
+      return;
+    }
+    // ahhoz a pályához, amit épp szűrsz — különben az elsőhöz
+    const cel = COURSES.find(c => c.name === state.route) || COURSES[0];
+    UQAPI.rest('/rpc/save_station', { method: 'POST', body: { p: {
+      course_id: cel.id,
+      name: 'Új állomás', kind: 'feladat', difficulty: 'konnyu', status: 'draft',
+      description: 'Rövid leírás az állomásról.',
+      task_short: 'Add meg a feladat rövid leírását.'
+    } } })
+      .then(r => {
+        const uj = Array.isArray(r) ? r[0] : r;
+        state.search = ''; topSearch.value = '';
+        state.type = 'all'; typeFilter.value = 'all';
+        state.page = 1;
+        state.selectedId = uj && uj.id;
+        return betolt().then(() => {
+          render();
+          if (state.selectedId) selectStation(state.selectedId, true);
+          toast('Új állomás létrehozva', { sub: cel.name + ' — töltsd ki, majd Mentés' });
+        });
+      })
+      .catch(hibaToast);
   }
 
   /* =========================================================
@@ -569,7 +627,7 @@
     if (e.target.closest('.jtk-check')) return; // jelölőnégyzet: ne nyissa a fiókot
     const row = e.target.closest('.jtk-row');
     if (!row) return;
-    const id = Number(row.dataset.id);
+    const id = row.dataset.id;   // UUID, nem szám
     const actBtn = e.target.closest('.jtk-act');
     if (actBtn) {
       const act = actBtn.dataset.act;
@@ -585,7 +643,7 @@
   tbody.addEventListener('change', e => {
     const input = e.target.closest('input[data-check]');
     if (!input) return;
-    const id = Number(input.dataset.check);
+    const id = input.dataset.check;   // UUID, nem szám
     if (input.checked) state.selected.add(id); else state.selected.delete(id);
     const row = input.closest('.jtk-row');
     if (row) row.classList.toggle('is-selected', input.checked);
@@ -718,8 +776,46 @@
   document.querySelector('.jtk-drawer-x').addEventListener('click', () => drawer.classList.add('is-hidden'));
 
   /* =========================================================
-     INDÍTÁS
+     INDÍTÁS — az adatbázisból töltünk, ezért aszinkron
      ========================================================= */
-  render();
-  selectStation(STATIONS[0].id);
+  function ures(html) {
+    emptyEl.hidden = false;
+    emptyEl.innerHTML = html;
+  }
+
+  function indul() {
+    if (!window.UQAPI || !UQAPI.user()) {
+      ures('<p><b>Nem vagy bejelentkezve.</b></p>' +
+           '<p>Az állomások szerkesztéséhez admin fiók kell.</p>' +
+           '<p><a class="adm-btn adm-btn-lime" href="bejelentkezes.html?next=allomasok.html">Bejelentkezés</a></p>');
+      return;
+    }
+    betolt()
+      .then(() => {
+        // a pálya-szűrő és a fiók pálya-választója a valós pályákból
+        if (routeFilter) {
+          const most = routeFilter.value;
+          routeFilter.innerHTML = '<option value="all">Minden pálya</option>' +
+            COURSES.map(c => `<option value="${esc(c.name)}">${esc(c.name)}</option>`).join('');
+          if ([...routeFilter.options].some(o => o.value === most)) routeFilter.value = most;
+        }
+        if (typeof fRoute !== 'undefined' && fRoute && fRoute.tagName === 'SELECT') {
+          fRoute.innerHTML = COURSES.map(c => `<option value="${esc(c.name)}">${esc(c.name)}</option>`).join('');
+        }
+        render();
+        if (state.selectedId) selectStation(state.selectedId);
+        if (!STATIONS.length) {
+          ures('<p><b>Még nincs egyetlen állomás sem.</b></p>' +
+               (COURSES.length
+                 ? '<p>Hozz létre újat a fenti gombbal.</p>'
+                 : '<p>Előbb pálya kell — hozz létre egyet a <a href="jatekok.html">Játékok</a> oldalon, ' +
+                   'vagy hozd át a meglévőket az <a href="atkoltoztetes.html">átköltöztetéssel</a>.</p>'));
+        }
+      })
+      .catch(err => ures('<p><b>Az állomások nem tölthetők be.</b></p><p>' +
+                         esc(String(err && err.message || '')) + '</p>'));
+  }
+
+  indul();
+  if (window.UQAPI) UQAPI.onAuth(() => indul());
 })();
