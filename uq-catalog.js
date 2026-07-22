@@ -78,10 +78,20 @@
       sorrend.push(r.slug);
     });
 
+    /* Ami KORÁBBAN az adatbázisból jött, de már nincs benne a friss
+       listában, azt el kell dobni: törölt vagy visszavont pálya
+       különben örökre a katalógusban ragadna annál, aki egyszer látta.
+       A data.js beégetett küldetéseihez nem nyúlunk — azokon nincs
+       fromDb jelölés, tehát megmaradnak, amíg át nem költöznek. */
+    Object.keys(window.QUESTS).forEach(function (id) {
+      var q = window.QUESTS[id];
+      if (q && q.fromDb && sorrend.indexOf(id) < 0) delete window.QUESTS[id];
+    });
+
     // Az adatbázisból jövő pályák előre; ami csak a data.js-ben van
     // (még nincs átköltöztetve), az mögéjük kerül, hogy ne tűnjön el.
     var maradek = (window.QUEST_ORDER || []).filter(function (id) {
-      return sorrend.indexOf(id) < 0;
+      return sorrend.indexOf(id) < 0 && !!window.QUESTS[id];
     });
     window.QUEST_ORDER = sorrend.concat(maradek);
     return true;

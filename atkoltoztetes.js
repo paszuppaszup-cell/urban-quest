@@ -24,6 +24,16 @@
   }
   function tomb(x) { return Array.isArray(x) ? x : []; }
 
+  /* A kódba égetett demó-tartalom megkülönböztethetetlen a valódi
+     munkától: ha egy tár kiürül, a seed magától visszatér. Ezért a
+     ismert demó neveket külön jelöljük, és alapból NEM hozzuk át. */
+  var DEMO_NEVEK = {
+    'Városliget Felfedező': 1, 'Liget Projekt': 1, 'Budai Vár Rejtélye': 1,
+    'Belváros Kódvadászat': 1, 'Belváros Nyomában': 1, 'Gellérthegy Titkai': 1,
+    'Margitsziget Kaland': 1, 'Óbuda Öröksége': 1, 'Küldetés a Gyárban': 1,
+    'Földalatti Nyomok': 1, 'Elveszett Örökség': 1, 'Új játék': 1
+  };
+
   /* ---------- értékkészletek: a magyar címke NEM adathordozó ---------- */
 
   var NEHEZ = { 'Könnyű': 'konnyu', 'Közepes': 'kozepes', 'Nehéz': 'nehez', 'Extrém': 'extrem' };
@@ -325,13 +335,26 @@
     if (!terv.palyak.length) {
       h.push('<p class="mig-ures">Nem találtam átköltöztethető pályát ebben a böngészőben.</p>');
     } else {
-      h.push('<table class="mig-tabla"><thead><tr><th>Pálya</th><th>Forrás</th><th>Állomás</th><th>Feladat</th><th>Állapot</th></tr></thead><tbody>');
-      terv.palyak.forEach(function (p) {
+      h.push('<table class="mig-tabla"><thead><tr><th></th><th>Pálya</th><th>Forrás</th><th>Állomás</th><th>Feladat</th><th>Állapot</th></tr></thead><tbody>');
+      terv.palyak.forEach(function (p, idx) {
         var fel = p.stations.reduce(function (a, s) { return a + s.tasks.length; }, 0);
-        h.push('<tr><td>' + esc(p.name) + '</td><td>' + esc(p.forras) + '</td><td>' + p.stations.length +
+        p.demo = !!DEMO_NEVEK[p.name];
+        p.kivalasztva = !p.demo;
+        h.push('<tr' + (p.demo ? ' class="mig-demo"' : '') + '>' +
+               '<td><input type="checkbox" class="mig-pipa" data-idx="' + idx + '"' +
+                 (p.kivalasztva ? ' checked' : '') + ' aria-label="Átköltöztetem"></td>' +
+               '<td>' + esc(p.name) + (p.demo ? ' <span class="mig-cimke">demó</span>' : '') + '</td>' +
+               '<td>' + esc(p.forras) + '</td><td>' + p.stations.length +
                '</td><td>' + fel + '</td><td>' + (p.status === 'pub' ? 'közzétett' : 'vázlat') + '</td></tr>');
       });
       h.push('</tbody></table>');
+
+      var demoDb = terv.palyak.filter(function (p) { return p.demo; }).length;
+      if (demoDb) {
+        h.push('<p class="mig-demo-info"><b>' + demoDb + ' pálya demó-tartalomnak tűnik</b> — ' +
+               'ezek a kódba égetett minta-adatok, amik akkor is visszatérnek, ha kitörlöd őket. ' +
+               'Alapból kihagyom őket; ha mégis kellenek, pipáld be.</p>');
+      }
     }
 
     h.push('<h3>Ami NEM jön át (' + terv.gondok.length + ')</h3>');
@@ -344,7 +367,25 @@
     }
 
     elemzes.innerHTML = h.join('');
-    if (gomb) gomb.disabled = !terv.palyak.length;
+
+    elemzes.querySelectorAll('.mig-pipa').forEach(function (cb) {
+      cb.addEventListener('change', function () {
+        terv.palyak[Number(cb.dataset.idx)].kivalasztva = cb.checked;
+        frissitGomb();
+      });
+    });
+    frissitGomb();
+  }
+
+  function valasztottak() {
+    return terv ? terv.palyak.filter(function (p) { return p.kivalasztva; }) : [];
+  }
+
+  function frissitGomb() {
+    if (!gomb) return;
+    var n = valasztottak().length;
+    gomb.disabled = !n;
+    gomb.textContent = n ? ('Átköltöztetés indítása (' + n + ' pálya)') : 'Nincs kiválasztva pálya';
   }
 
   /* =========================================================
@@ -352,22 +393,23 @@
      ========================================================= */
 
   function importal() {
-    if (!terv || !terv.palyak.length) return;
+    var lista = valasztottak();
+    if (!lista.length) return;
     gomb.disabled = true;
     naplo.innerHTML = '';
-    ir('<p>Indul az átköltöztetés…</p>');
+    ir('<p>Indul az átköltöztetés — ' + lista.length + ' pálya…</p>');
 
     var i = 0, ok = 0, hiba = 0;
 
     function lepes() {
-      if (i >= terv.palyak.length) {
+      if (i >= lista.length) {
         ir('<p class="' + (hiba ? 'mig-gond-sor' : 'mig-ok') + '"><b>Kész.</b> ' + ok + ' pálya átköltöztetve' +
            (hiba ? ', ' + hiba + ' hibára futott' : '') + '.</p>');
         ir('<p>Az import idempotens — ha valami hibázott, nyugodtan futtathatod újra.</p>');
-        gomb.disabled = false;
+        frissitGomb();
         return;
       }
-      var p = terv.palyak[i++];
+      var p = lista[i++];
       ir('<p>' + esc(p.name) + ' … ');
       UQAPI.rest('/rpc/import_course', { method: 'POST', body: { p: p } })
         .then(function (r) {

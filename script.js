@@ -105,7 +105,10 @@
   });
 
   /* ---------- szűrés ---------- */
-  const cards = Array.from(document.querySelectorAll('.quest-card'));
+  /* Nem const: a katalógus az adatbázisból tölt, és menet közben lecseréli
+     a kártyákat. Egy befagyasztott lista már eltávolított elemekkel
+     dolgozna — ettől tűnt el a kattintás, a szűrés és a karuszel. */
+  let cards = Array.from(document.querySelectorAll('.quest-card'));
   const empty = document.getElementById('carouselEmpty');
 
   function applyFilters() {
@@ -191,18 +194,38 @@
     const cid = card.dataset.id;
     if (cid) location.href = `kuldetes.html?id=${cid}`;
   };
-  cards.forEach((card) => {
-    card.classList.add('is-clickable');
-    card.setAttribute('role', 'link');
-    card.setAttribute('tabindex', '0');
-    card.addEventListener('click', (e) => {
-      if (e.target.closest('.fav')) return;
-      if (moved) return;
-      openQuest(card);
+  const jelolKartyak = () => {
+    cards.forEach((card) => {
+      card.classList.add('is-clickable');
+      card.setAttribute('role', 'link');
+      card.setAttribute('tabindex', '0');
     });
-    card.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') openQuest(card);
-    });
+  };
+  jelolKartyak();
+
+  /* Delegált kezelő a sávon: így az adatbázisból utólag betöltött
+     kártyák is kattinthatók, anélkül hogy újra kellene kötni bármit. */
+  track.addEventListener('click', (e) => {
+    const card = e.target.closest('.quest-card');
+    if (!card) return;
+    if (e.target.closest('.fav')) return;   // a szív a uq-account.js dolga
+    if (moved) return;                       // húzás volt, nem kattintás
+    openQuest(card);
+  });
+  track.addEventListener('keydown', (e) => {
+    if (e.key !== 'Enter') return;
+    const card = e.target.closest('.quest-card');
+    if (card) openQuest(card);
+  });
+
+  /* A katalógus betöltése után a kártyák új DOM-elemek: újra fel kell
+     venni őket, különben a szűrő és a karuszel a régiekkel számolna. */
+  document.addEventListener('uq:catalog', () => {
+    cards = Array.from(document.querySelectorAll('.quest-card'));
+    jelolKartyak();
+    if (window.UQAccount && window.UQAccount.syncFavs) window.UQAccount.syncFavs();
+    applyFilters();
+    updateNav();
   });
 
   /* ---------- aktív nav-elem görgetés szerint ---------- */
