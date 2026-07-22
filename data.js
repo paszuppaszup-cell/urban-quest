@@ -234,19 +234,15 @@ window.questCardHTML = function (id) {
       isAdmin: true
     };
   }
-  try {
-    var raw = window.localStorage && localStorage.getItem('uq_games_v1');
-    if (!raw) return;
-    var games = JSON.parse(raw);
-    if (!Array.isArray(games)) return;
-    var ids = [];
-    games.filter(function (g) { return g && g.status === 'pub'; }).forEach(function (g) {
-      var q = gameToQuest(g);
-      window.QUESTS[q.id] = q;
-      ids.push(q.id);
-    });
-    if (ids.length) {
-      window.QUEST_ORDER = ids.concat(window.QUEST_ORDER.filter(function (id) { return ids.indexOf(id) < 0; }));
-    }
-  } catch (e) {}
+  /* KIKAPCSOLVA — a katalógus forrása az adatbázis (uq-catalog.js).
+
+     Ez a blokk a böngésző uq_games_v1 tárolójából szúrt be küldetéseket
+     a nyilvános listába. Amíg nem volt backend, ennek volt értelme; most
+     viszont azt okozta, hogy régi, helyben maradt demó-játékok („Városliget
+     Felfedező”, „Budai Vár Rejtélye”) megjelentek a publikus oldalon —
+     olyanok is, amiket az adminban időközben archiváltak vagy töröltek.
+
+     A gameToQuest() fentebb szándékosan megmarad: a régi adat alakját
+     dokumentálja, és az átköltöztetéshez is hasznos referencia. */
+  return;
 })();

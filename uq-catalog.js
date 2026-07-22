@@ -67,8 +67,14 @@
     return q;
   }
 
-  function beolvaszt(rows) {
-    if (!rows || !rows.length) return false;
+  /* @param hiteles  true = a szerver válasza a teljes igazság
+     Ilyenkor a katalógus PONTOSAN az adatbázis tartalma lesz. Korábban
+     a data.js beégetett küldetéseit tartalékként meghagytuk, ezért egy
+     archivált pálya továbbra is látszott — a felhasználó archiválta, és
+     mégis ott maradt. A beégetett adat csak akkor tartalék, ha a
+     szerver egyáltalán nem válaszol. */
+  function beolvaszt(rows, hiteles) {
+    if (!rows) return false;
     window.QUESTS = window.QUESTS || {};
     var sorrend = [];
 
@@ -78,18 +84,16 @@
       sorrend.push(r.slug);
     });
 
-    /* Ami KORÁBBAN az adatbázisból jött, de már nincs benne a friss
-       listában, azt el kell dobni: törölt vagy visszavont pálya
-       különben örökre a katalógusban ragadna annál, aki egyszer látta.
-       A data.js beégetett küldetéseihez nem nyúlunk — azokon nincs
-       fromDb jelölés, tehát megmaradnak, amíg át nem költöznek. */
-    Object.keys(window.QUESTS).forEach(function (id) {
-      var q = window.QUESTS[id];
-      if (q && q.fromDb && sorrend.indexOf(id) < 0) delete window.QUESTS[id];
-    });
+    if (hiteles) {
+      // amit a szerver nem sorolt fel, az nem létezik
+      Object.keys(window.QUESTS).forEach(function (id) {
+        if (sorrend.indexOf(id) < 0) delete window.QUESTS[id];
+      });
+      window.QUEST_ORDER = sorrend;
+      return true;
+    }
 
-    // Az adatbázisból jövő pályák előre; ami csak a data.js-ben van
-    // (még nincs átköltöztetve), az mögéjük kerül, hogy ne tűnjön el.
+    // gyorstárból: csak kiegészítünk, nem törlünk
     var maradek = (window.QUEST_ORDER || []).filter(function (id) {
       return sorrend.indexOf(id) < 0 && !!window.QUESTS[id];
     });
@@ -112,15 +116,17 @@
   /* A gyorstárat AZONNAL beolvasztjuk, hogy ne villogjon a lap, és a
      friss adat megérkezésekor újrarajzolunk. */
   var gyors = cacheOlvas();
-  if (gyors && gyors.rows) beolvaszt(gyors.rows);
+  if (gyors && gyors.rows) beolvaszt(gyors.rows, true);
 
   function betolt() {
     if (!window.UQAPI) return Promise.resolve(false);
     return UQAPI.rest('/v_catalog?select=*&order=featured.desc,sort_order.asc,name.asc', { anon: !UQAPI.user() })
       .then(function (rows) {
-        if (!rows || !rows.length) return false;
-        cacheIr(rows);
-        beolvaszt(rows);
+        // Az ÜRES válasz is érvényes válasz: ha minden pályát archiváltak,
+        // a katalógus tényleg üres. Korábban a üres listát „hibának”
+        // vettük és meghagytuk a régi tartalmat.
+        cacheIr(rows || []);
+        beolvaszt(rows || [], true);
         ujrarajzol();
         return true;
       })

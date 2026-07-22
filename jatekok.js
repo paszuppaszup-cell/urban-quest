@@ -243,7 +243,9 @@
       <div class="jtk-cell-dur">${esc(g.dur)}</div>
       <div class="jtk-cell-loc">${esc(g.loc)}</div>
       <div class="jtk-langs">${langs}</div>
-      <div><span class="jtk-status ${st.cls}"><span class="dot"></span>${st.label}</span></div>
+      <div><span class="jtk-status ${st.cls}"><span class="dot"></span>${st.label}</span>${
+        nincsElo(g) ? '<span class="jtk-warn" title="Közzétett, de nincs befagyasztott verziója, ezért nem jelenik meg a publikus oldalon. Nyomd meg a Közzététel gombot.">nem látható</span>' : ''
+      }</div>
       <div class="jtk-actions">
         <button class="jtk-act jtk-act-edit" type="button" data-act="edit" aria-label="Szerkesztés">${ico('a-edit')}</button>
         <button class="jtk-act" type="button" data-act="copy" aria-label="Másolás">${ico('a-copy')}</button>
@@ -600,14 +602,34 @@
   perPageSel.addEventListener('change', () => { state.perPage = parseInt(perPageSel.value, 10) || 10; state.page = 1; render(); });
 
   /* a kiválasztott játék státuszának beállítása + mentés (render → saveStore) */
+  /* A státusz önmagában NEM tesz láthatóvá egy pályát: ahhoz befagyasztott
+     verzió is kell (course_versions). Ezért a közzététel két lépés, és a
+     másodikat is elvégezzük — különben a pálya „közzétett”, de láthatatlan. */
   function setSelectedStatus(status) {
     const g = byId(state.selectedId);
     if (!g) { toast('Nincs kiválasztott játék', { type: 'error' }); return false; }
-    g.status = status;
-    if (fStatus && STATUS[status]) { fStatus.value = STATUS[status].label; applyStatus(STATUS[status].label); }
-    render();
+    const id = g.id;
+
+    UQAPI.rest('/rpc/save_course', { method: 'POST', body: { p: { id: id, status: STATUS_DB[status] || status } } })
+      .then(() => {
+        if (status !== 'pub') return ujratolt('Piszkozatként mentve', g.name + ' — nem jelenik meg nyilvánosan');
+        // közzététel: friss verziót fagyasztunk be, ettől lesz látható és játszható
+        return UQAPI.rest('/rpc/publish_course', { method: 'POST', body: { p_course: id } })
+          .then(r => {
+            const v = Array.isArray(r) ? r[0] : r;
+            const figy = (v && v.warnings && v.warnings.length)
+              ? ' — figyelmeztetés: ' + v.warnings.join('; ')
+              : '';
+            return ujratolt('Közzétéve', g.name + ' (v' + (v && v.version) + ')' + figy);
+          });
+      })
+      .catch(hibaToast);
     return true;
   }
+
+  /* A pálya „közzétett”, de nincs élő verziója → nem látszik sehol.
+     Ezt ki kell mondani, mert semmi máson nem látszik. */
+  function nincsElo(g) { return g.status === 'pub' && g._elo === false; }
 
   /* felső sáv: Mentés / Közzététel */
   document.getElementById('btnSave').addEventListener('click', () => { saveStore(); toast('Módosítások mentve', { sub: 'Minden változás elmentve' }); });

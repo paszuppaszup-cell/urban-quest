@@ -34,6 +34,8 @@
   renderInfo();
   /* ---------- HASONLÓ ---------- */
   renderSimilar();
+  // a katalógus az adatbázisból tölt, és a beérkezéskor változhat a lista
+  document.addEventListener('uq:catalog', renderSimilar);
   /* ---------- fejléc interakciók ---------- */
   initHeader();
 
@@ -180,7 +182,16 @@
 
   function renderSimilar() {
     const track = document.getElementById('similarTrack');
-    const others = ORDER.filter(k => k !== id);
+    // Az ORDER a katalógusból jön; ha csak ez az egy küldetés van közzétéve,
+    // nincs mit ajánlani — ilyenkor a címsor se maradjon ott árván.
+    const others = (window.QUEST_ORDER || ORDER).filter(k => k !== id && window.QUESTS[k]);
+    const szekcio = track.closest('.similar-section');
+    if (!others.length) {
+      if (szekcio) szekcio.hidden = true;
+      track.innerHTML = '';
+      return;
+    }
+    if (szekcio) szekcio.hidden = false;
 
     track.innerHTML = others.map(k => window.questCardHTML(k)).join('');
 

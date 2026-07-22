@@ -125,6 +125,14 @@
     });
 
     empty.hidden = visible > 0;
+    if (!visible) {
+      /* Két különböző ok, két különböző üzenet: a „nincs találat” és a
+         „nincs egyáltalán küldetés” nem ugyanaz — utóbbinál a szűrő
+         állítgatása értelmetlen tanács lenne. */
+      empty.textContent = cards.length
+        ? 'Nincs a szűrésnek megfelelő küldetés. Próbálj tágabb szűrőt!'
+        : 'Jelenleg egyetlen küldetés sem elérhető. Nézz vissza később!';
+    }
     updateNav();
   }
 
