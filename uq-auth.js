@@ -11,26 +11,63 @@
 (function () {
   'use strict';
 
-  var KEY = 'uq_user_v1';
+  /* A fiók mostantól VALÓDI: Supabase Auth a uq-api.js-en keresztül.
+     Korábban bármilyen e-mail + bármilyen nem üres jelszó „sikeres"
+     belépés volt, és a jelszó sehol nem tárolódott.
+
+     A publikus API alakja szándékosan változatlan, hogy a többi oldal
+     (fiokom.js, kuldetes.js, jatszas.js, ranglista.js) ne törjön el. */
 
   function getUser() {
-    try {
-      var raw = localStorage.getItem(KEY);
-      if (!raw) return null;
-      var u = JSON.parse(raw);
-      return (u && u.email) ? u : null;
-    } catch (e) { return null; }
+    if (!window.UQAPI) return null;
+    var u = UQAPI.user();
+    if (!u || !u.email) return null;
+    var meta = u.user_metadata || {};
+    return {
+      id: u.id,
+      name: meta.display_name || String(u.email).split('@')[0],
+      email: u.email,
+      avatar: (meta.avatar === undefined ? '' : meta.avatar),
+      teamName: meta.team_name || '',
+      phone: meta.phone || '',
+      lang: meta.lang || 'hu',
+      since: u.created_at || ''
+    };
   }
+
+  /* Profilmódosítás. Régen ez volt a „bejelentkezés" is — ma a belépés a
+     signIn/signUp dolga, ez már csak a felhasználó saját adatait írja.
+     A megjelenítendő nevet a profiles táblába is átvezetjük, mert a
+     ranglista onnan olvas. */
   function setUser(u) {
-    try { localStorage.setItem(KEY, JSON.stringify(u)); } catch (e) { /* kvóta */ }
-    document.dispatchEvent(new CustomEvent('uq:auth', { detail: u }));
-    mountHeader();
+    if (!u || !window.UQAPI || !UQAPI.user()) return Promise.resolve(null);
+    var meta = {};
+    ['name', 'avatar', 'teamName', 'phone', 'lang'].forEach(function (k) {
+      if (u[k] !== undefined) meta[k === 'name' ? 'display_name' : (k === 'teamName' ? 'team_name' : k)] = u[k];
+    });
+
+    return UQAPI.rest('/profiles?user_id=eq.' + UQAPI.user().id, {
+      method: 'PATCH',
+      body: { display_name: u.name, avatar: (u.avatar === '' ? null : u.avatar) },
+      prefer: 'return=minimal'
+    }).catch(function () { /* a profil frissítése ne blokkolja a felületet */ })
+      .then(function () {
+        // a helyi munkamenet metaadata is kövesse, hogy azonnal látszódjon
+        var s = UQAPI.session();
+        if (s && s.user) {
+          s.user.user_metadata = Object.assign({}, s.user.user_metadata || {}, meta);
+        }
+        document.dispatchEvent(new CustomEvent('uq:auth', { detail: getUser() }));
+        mountHeader();
+        return getUser();
+      });
   }
+
   function clearUser() {
-    try { localStorage.removeItem(KEY); } catch (e) {}
-    document.dispatchEvent(new CustomEvent('uq:auth', { detail: null }));
-    mountHeader();
+    if (!window.UQAPI) return Promise.resolve();
+    return UQAPI.signOut().then(function () { mountHeader(); });
   }
+
   function isRegistered() { return !!getUser(); }
 
   var esc = function (s) {
@@ -148,19 +185,46 @@
       }
 
       var btn = form.querySelector('.uq-ma-submit');
+      var eredetiFelirat = btn.textContent;
       btn.disabled = true;
       btn.textContent = 'Egy pillanat…';
-      setTimeout(function () {
-        var user = { name: name, email: email, since: new Date().toISOString() };
-        setUser(user);
-        btn.innerHTML = svg('check', 'uq-ma-ico uq-ma-ico-sm') + 'Sikeres regisztráció!';
-        btn.classList.add('is-done');
-        setTimeout(function () {
-          var cb = doneCb;
-          closeModal();
-          if (cb) cb(user);
-        }, 800);
-      }, 550);
+
+      if (!window.UQAPI) {
+        err.textContent = 'A regisztráció most nem elérhető.';
+        err.hidden = false;
+        btn.disabled = false; btn.textContent = eredetiFelirat;
+        return;
+      }
+
+      UQAPI.signUp(email, pwd, { display_name: name })
+        .then(function (user) {
+          if (!user) throw new Error('A regisztráció nem hozott létre munkamenetet.');
+          btn.innerHTML = svg('check', 'uq-ma-ico uq-ma-ico-sm') + 'Sikeres regisztráció!';
+          btn.classList.add('is-done');
+          mountHeader();
+          setTimeout(function () {
+            var cb = doneCb;
+            closeModal();
+            if (cb) cb(getUser());
+          }, 800);
+        })
+        .catch(function (e) {
+          var m = String(e && e.message || '');
+          // A Supabase angolul válaszol; a gyakori eseteket magyarul mondjuk el.
+          if (/already registered|already exists/i.test(m)) {
+            m = 'Ezzel az e-mail címmel már van fiók. Jelentkezz be helyette.';
+          } else if (/password/i.test(m) && /short|least/i.test(m)) {
+            m = 'A jelszó túl rövid.';
+          } else if (/invalid/i.test(m) && /email/i.test(m)) {
+            m = 'Ez az e-mail cím nem érvényes.';
+          } else if (!UQAPI.online()) {
+            m = 'Nincs internetkapcsolat. Próbáld újra, ha van jel.';
+          }
+          err.textContent = m || 'A regisztráció nem sikerült.';
+          err.hidden = false;
+          btn.disabled = false;
+          btn.textContent = eredetiFelirat;
+        });
     });
   }
 
@@ -249,7 +313,10 @@
     });
     document.addEventListener('keydown', function (e) { if (e.key === 'Escape') openMenu(false); });
     var out = chip.querySelector('.uq-usermenu-out');
-    if (out) out.addEventListener('click', function () { clearUser(); location.href = 'index.html'; });
+    // a kijelentkezés hálózati művelet: előbb fejezze be, csak utána navigáljunk
+    if (out) out.addEventListener('click', function () {
+      Promise.resolve(clearUser()).then(function () { location.href = 'index.html'; });
+    });
   }
 
   /* mobil menü: Belépés/Regisztráció helyett Kijelentkezés */
@@ -268,8 +335,7 @@
         out.href = '#';
         out.addEventListener('click', function (e) {
           e.preventDefault();
-          clearUser();
-          location.reload();
+          Promise.resolve(clearUser()).then(function () { location.reload(); });
         });
         nav.appendChild(out);
       }
@@ -289,6 +355,10 @@
     closeModal: closeModal,
     mountHeader: mountHeader
   };
+
+  // A munkamenet a uq-api.js-ben él (token-frissítés, lejárat), a fejléc
+  // pedig kövesse minden változását — nem csak a saját hívásainkat.
+  if (window.UQAPI) UQAPI.onAuth(function () { mountHeader(); });
 
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', mountHeader);

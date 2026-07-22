@@ -1,105 +1,270 @@
 /* =========================================================
    URBAN QUEST — RANGLISTA
+
+   Valós adat a Supabase-ből (urban_quest.v_leaderboard_course).
+   Korábban 15 beégetett sor volt itt, aminek semmi köze nem volt
+   a tényleges menetekhez.
    ========================================================= */
 (function () {
   'use strict';
 
-  const ico = (id, cls) => `<svg class="${cls || 'ico'}" aria-hidden="true"><use href="#${id}"/></svg>`;
-  const esc = (s) => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-
-  /* ---------- táblázat adatok ---------- */
-  // [helyezés, csapat, verified, tagok, pálya, nehézség(badge), pont, idő, dátum, város, csapat-ikon]
-  const ROWS = [
-    [1, 'Peak Hunters', true, '4 fő', 'Budai Nyomok', 'extrem', 'Extrém', '12 560', '01:47:32', '2024.05.25.', 'Budapest', 'i-mountain'],
-    [2, 'Wild Paths', true, '4 fő', 'Duna Rejtélye', 'nehez', 'Nehéz', '9 420', '02:18:47', '2024.05.24.', 'Budapest', 'i-mountain'],
-    [3, 'Urban Explorers', true, '4 fő', 'Várnegyed Nyomában', 'nehez', 'Nehéz', '8 175', '02:23:10', '2024.05.23.', 'Budapest', 'i-city'],
-    [4, 'Trail Blazers', false, '', 'Gellért Kaland', 'kozepes', 'Közepes', '7 880', '02:05:31', '2024.05.25.', 'Budapest', 'i-shield'],
-    [5, 'Nature Seekers', false, '', 'Duna Rejtélye', 'nehez', 'Nehéz', '7 450', '02:26:14', '2024.05.24.', 'Budapest', 'i-map'],
-    [6, 'City Raiders', false, '', 'Alagút 7', 'extrem', 'Extrém', '6 980', '02:41:09', '2024.05.22.', 'Budapest', 'i-city'],
-    [7, 'Wanderers', false, '', 'Várnegyed Nyomában', 'nehez', 'Nehéz', '6 250', '02:48:33', '2024.05.23.', 'Budapest', 'i-flag'],
-    [8, 'The Adventurers', false, '', 'Budai Nyomok', 'extrem', 'Extrém', '5 890', '02:55:20', '2024.05.21.', 'Budapest', 'i-mountain'],
-    [9, 'Pathfinders', false, '', 'Gellért Kaland', 'kozepes', 'Közepes', '5 340', '03:01:45', '2024.05.22.', 'Budapest', 'i-target'],
-    [10, 'Explora Crew', true, '', 'Duna Rejtélye', 'nehez', 'Nehéz', '5 120', '03:08:11', '2024.05.20.', 'Budapest', 'i-users'],
-    [11, 'Night Owls', false, '', 'Alagút 7', 'extrem', 'Extrém', '4 970', '03:14:52', '2024.05.19.', 'Budapest', 'i-shield'],
-    [12, 'Compass Crew', false, '', 'Gellért Kaland', 'kozepes', 'Közepes', '4 720', '03:19:08', '2024.05.18.', 'Budapest', 'i-map'],
-    [13, 'Riddle Masters', false, '', 'Duna Rejtélye', 'nehez', 'Nehéz', '4 510', '03:25:41', '2024.05.17.', 'Budapest', 'i-flag'],
-    [14, 'Te csapatod', false, '4 fő', 'Belvárosi Rejtélyek', 'kozepes', 'Közepes', '4 860', '02:31:45', '2024.05.16.', 'Budapest', 'i-users'],
-    [15, 'Lost Legends', false, '', 'Budai Nyomok', 'extrem', 'Extrém', '4 290', '03:31:20', '2024.05.15.', 'Budapest', 'i-mountain']
-  ];
-
-  /* a bejelentkezett felhasználó valódi neve kerül a „Te csapatod" sorba;
-     ha nincs belépve, ez a sor kimarad */
-  const meUser = (window.UQAuth && window.UQAuth.getUser) ? window.UQAuth.getUser() : null;
-  const meName = meUser ? ((meUser.teamName && meUser.teamName.trim()) || meUser.name || 'Te csapatod') : null;
-  const rows = ROWS
-    .filter(r => r[1] !== 'Te csapatod' || meUser)
-    .map(r => r[1] === 'Te csapatod' ? r.map((v, i) => i === 1 ? meName : v).concat(['me']) : r);
-
-  const rowHTML = (r) => {
-    const [pos, team, verified, members, track, diffCls, diffLabel, pts, time, date, city, logo, flag] = r;
-    const isMe = flag === 'me';
-    const posCell = pos <= 3
-      ? `<span class="rr-medal m${pos}">${pos}</span>`
-      : `<span class="rr-num">${pos}</span>`;
-    const vf = verified ? '<span class="vf" title="Ellenőrzött">✓</span>' : '';
-    const meTag = isMe ? '<span class="rr-me-tag">Te</span>' : '';
-    return `
-    <div class="rank-row${pos <= 3 ? ' is-top' : ''}${isMe ? ' is-me' : ''}">
-      <span class="rr-pos">${posCell}</span>
-      <span class="rr-team">
-        <span class="rr-logo">${ico(logo, 'ico')}</span>
-        <span class="rr-team-name">${esc(team)}${vf}${meTag}</span>
-      </span>
-      <span class="rr-track">
-        <span class="rr-track-name">${track}</span>
-        <span class="badge badge-${diffCls}">${diffLabel}</span>
-      </span>
-      <span class="rr-pts">${pts}</span>
-      <span class="rr-time">${ico('i-clock', 'ico ico-xs')}${time}</span>
-      <span class="rr-date">${date}</span>
-      <span class="rr-city">${ico('i-pin', 'ico ico-xs')}${city}</span>
-    </div>`;
+  var ico = function (id, cls) {
+    return '<svg class="' + (cls || 'ico') + '" aria-hidden="true"><use href="#' + id + '"/></svg>';
+  };
+  var esc = function (s) {
+    return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c];
+    });
   };
 
-  const body = document.getElementById('rankBody');
-  const meIdx = rows.findIndex(r => r[12] === 'me');
-  let shown = Math.max(10, meIdx >= 0 ? meIdx + 1 : 0); // a „Te" sor rögtön látsszon
-  const render = () => { body.innerHTML = rows.slice(0, shown).map(rowHTML).join(''); };
-  render();
+  /* ---------- formázás ---------- */
 
-  const more = document.getElementById('loadMore');
-  if (more) more.addEventListener('click', () => {
-    shown = Math.min(rows.length, shown + 5);
-    render();
-    if (shown >= rows.length) more.style.display = 'none';
-  });
+  function ido(ms) {
+    var s = Math.max(0, Math.round(Number(ms || 0) / 1000));
+    var h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), sec = s % 60;
+    var p = function (n) { return (n < 10 ? '0' : '') + n; };
+    return p(h) + ':' + p(m) + ':' + p(sec);
+  }
 
-  /* ---------- fejléc interakciók ---------- */
-  const header = document.getElementById('siteHeader');
+  function datum(iso) {
+    if (!iso) return '';
+    var d = new Date(iso);
+    if (isNaN(d)) return '';
+    return d.getFullYear() + '.' + ('0' + (d.getMonth() + 1)).slice(-2) + '.' + ('0' + d.getDate()).slice(-2) + '.';
+  }
+
+  function pont(n) {
+    // ezres tagolás nem törő szóközzel, ahogy a többi oldalon
+    return String(Number(n || 0)).replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+  }
+
+  /* A csapatikon ma nem tárolt adat. A névből választunk egyet
+     determinisztikusan, hogy legalább ne ugráljon újratöltéskor. */
+  var IKONOK = ['i-mountain', 'i-city', 'i-shield', 'i-map', 'i-flag', 'i-target', 'i-users'];
+  function ikon(nev) {
+    var h = 0, s = String(nev || '');
+    for (var i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0;
+    return IKONOK[h % IKONOK.length];
+  }
+
+  /* ---------- megjelenítés ---------- */
+
+  var body = document.getElementById('rankBody');
+  var more = document.getElementById('loadMore');
+  var sorok = [];
+  var mutatva = 10;
+  var enNevem = null;
+
+  function allapot(html) {
+    if (body) body.innerHTML = '<div class="rank-empty">' + html + '</div>';
+    if (more) more.style.display = 'none';
+    var pod = document.getElementById('podium');
+    if (pod) { pod.hidden = true; pod.innerHTML = ''; }
+  }
+
+  function sorHTML(r, helyezes) {
+    var enVagyok = enNevem && r.player_name === enNevem;
+    var pos = helyezes <= 3
+      ? '<span class="rr-medal m' + helyezes + '">' + helyezes + '</span>'
+      : '<span class="rr-num">' + helyezes + '</span>';
+    return '' +
+      '<div class="rank-row' + (helyezes <= 3 ? ' is-top' : '') + (enVagyok ? ' is-me' : '') + '">' +
+        '<span class="rr-pos">' + pos + '</span>' +
+        '<span class="rr-team">' +
+          '<span class="rr-logo">' + ico(ikon(r.player_name), 'ico') + '</span>' +
+          '<span class="rr-team-name">' + esc(r.player_name) +
+            (enVagyok ? '<span class="rr-me-tag">Te</span>' : '') +
+          '</span>' +
+        '</span>' +
+        '<span class="rr-track">' +
+          '<span class="rr-track-name">' + esc(r.course_name) + '</span>' +
+          '<span class="badge badge-' + esc(r.difficulty) + '">' + esc(r.difficulty_label) + '</span>' +
+        '</span>' +
+        '<span class="rr-pts">' + pont(r.points) + '</span>' +
+        '<span class="rr-time">' + ico('i-clock', 'ico ico-xs') + ido(r.elapsed_ms) + '</span>' +
+        '<span class="rr-date">' + datum(r.finished_at) + '</span>' +
+        '<span class="rr-city">' + ico('i-pin', 'ico ico-xs') + esc(r.city || '') + '</span>' +
+      '</div>';
+  }
+
+  /* A dobogó korábban három kitalált csapatot mutatott. Most valós adat,
+     és ha nincs elég befejezett menet, egyáltalán nem jelenik meg —
+     üres táblázat fölött hamis győztesekkel rosszabb lenne, mint semmi. */
+  function podiumHTML(r, hely) {
+    return '' +
+      '<div class="pod pod-' + hely + '">' +
+        (hely === 1 ? '<span class="pod-crown">' + ico('i-crown', 'ico') + '</span>' : '') +
+        '<span class="pod-medal">' + hely + '</span>' +
+        '<span class="pod-logo">' + ico(ikon(r.player_name), 'ico') + '</span>' +
+        '<span class="pod-name">' + esc(r.player_name) + '</span>' +
+        '<span class="pod-pts">' + pont(r.points) + '<small>pont</small></span>' +
+        '<span class="pod-meta">' +
+          '<span>' + ico('i-clock', 'ico ico-xs') + ido(r.elapsed_ms) + '</span>' +
+          '<span>' + ico('i-pin', 'ico ico-xs') + esc(r.city || '') + '</span>' +
+        '</span>' +
+      '</div>';
+  }
+
+  function renderPodium() {
+    var pod = document.getElementById('podium');
+    if (!pod) return;
+    if (sorok.length < 3) { pod.hidden = true; pod.innerHTML = ''; return; }
+    // a vizuális sorrend 2–1–3, ahogy egy valódi dobogón
+    pod.innerHTML = podiumHTML(sorok[1], 2) + podiumHTML(sorok[0], 1) + podiumHTML(sorok[2], 3);
+    pod.hidden = false;
+  }
+
+  function render() {
+    body.innerHTML = sorok.slice(0, mutatva).map(function (r, i) {
+      return sorHTML(r, i + 1);
+    }).join('');
+    if (more) more.style.display = (mutatva >= sorok.length) ? 'none' : '';
+    renderPodium();
+    sajatStat();
+  }
+
+  function betolt() {
+    if (!window.UQAPI) {
+      allapot('<p>A ranglista nem érhető el: hiányzik az adatréteg.</p>');
+      return;
+    }
+
+    allapot('<p>Ranglista betöltése…</p>');
+
+    var u = UQAPI.user();
+    if (u) enNevem = (u.user_metadata && u.user_metadata.display_name) || (u.email || '').split('@')[0];
+
+    // Az összesített sorrend a nézetből jön (overall_rank), a kliens nem rendez.
+    UQAPI.rest('/v_leaderboard_course?select=*&order=points.desc,elapsed_ms.asc&limit=100', { anon: !u })
+      .then(function (rows) {
+        sorok = rows || [];
+        if (!sorok.length) {
+          allapot(
+            '<p><strong>Még senki nem fejezett be pályát.</strong></p>' +
+            '<p>Amint az első csapat végigjátszik egy küldetést, itt jelenik meg az eredménye.</p>');
+          return;
+        }
+        render();
+      })
+      .catch(function (err) {
+        var offline = !UQAPI.online();
+        allapot(
+          '<p><strong>' + (offline ? 'Nincs internetkapcsolat.' : 'A ranglista most nem elérhető.') + '</strong></p>' +
+          '<p>' + esc(err && err.message ? err.message : '') + '</p>' +
+          '<button type="button" class="btn btn-lime" id="rankRetry">Újrapróbálom</button>');
+        var b = document.getElementById('rankRetry');
+        if (b) b.addEventListener('click', betolt);
+      });
+  }
+
+  /* ---------- közösségi számok ---------- */
+
+  function szoveg(id, ertek) {
+    var el = document.getElementById(id);
+    if (el) el.textContent = ertek;
+  }
+
+  function statok() {
+    if (!window.UQAPI) return;
+    UQAPI.rest('/v_stats?select=*&limit=1', { anon: !UQAPI.user() })
+      .then(function (rows) {
+        kiirStatok((rows && rows[0]) || {});
+      })
+      .catch(function () { /* a számok elmaradnak, a lap ettől még működik */ });
+  }
+
+  function kiirStatok(s) {
+    szoveg('stTeams', pont(s.teams));
+    szoveg('stFinished', pont(s.finished));
+    szoveg('stCourses', pont(s.courses));
+    szoveg('stPoints', pont(s.total_points));
+    szoveg('stCities', pont(s.cities));
+  }
+
+  function bajnok() {
+    if (!window.UQAPI) return;
+    var kartya = document.getElementById('champCard');
+    UQAPI.rest('/v_weekly_champion?select=*&limit=1', { anon: !UQAPI.user() })
+      .then(function (rows) {
+        var b = rows && rows[0];
+        if (!b || !kartya) return;               // e héten még senki — marad rejtve
+        szoveg('champName', b.player_name);
+        szoveg('champPts', pont(b.points));
+        var vege = new Date(b.finished_at);
+        var kezd = new Date(vege.getTime() - 6 * 864e5);
+        szoveg('champDate', datum(kezd) + ' – ' + datum(vege));
+        kartya.hidden = false;
+      })
+      .catch(function () {});
+  }
+
+  /* A saját statisztika a már letöltött ranglistából számol — nincs
+     külön kérés, és nem is látszik semmi, amíg nincs valós menet. */
+  function sajatStat() {
+    var kartya = document.getElementById('pstatCard');
+    if (!kartya || !enNevem) return;
+    var enyeim = sorok.filter(function (r) { return r.player_name === enNevem; });
+    if (!enyeim.length) return;
+
+    var osszPont = enyeim.reduce(function (a, r) { return a + Number(r.points || 0); }, 0);
+    var osszIdo  = enyeim.reduce(function (a, r) { return a + Number(r.elapsed_ms || 0); }, 0);
+    var helyezes = sorok.findIndex(function (r) { return r.player_name === enNevem; }) + 1;
+
+    szoveg('psRank', helyezes + '.');
+    szoveg('psPoints', pont(osszPont));
+    szoveg('psDone', String(enyeim.length));
+    szoveg('psAvg', ido(Math.round(osszIdo / enyeim.length)));
+    kartya.hidden = false;
+  }
+
+  if (body) {
+    betolt();
+    statok();
+    bajnok();
+    if (more) more.addEventListener('click', function () {
+      mutatva = Math.min(sorok.length, mutatva + 5);
+      render();
+    });
+    // belépés/kilépés után a „Te" jelölés és a saját statisztika is frissüljön
+    if (window.UQAPI) UQAPI.onAuth(function () { betolt(); statok(); });
+  }
+
+  /* ---------- fejléc interakciók (változatlan) ---------- */
+  var header = document.getElementById('siteHeader');
   if (header) {
-    const onScroll = () => header.classList.toggle('is-stuck', window.scrollY > 8);
+    var onScroll = function () { header.classList.toggle('is-stuck', window.scrollY > 8); };
     window.addEventListener('scroll', onScroll, { passive: true });
     onScroll();
   }
-  const burger = document.getElementById('burger');
-  const nav = document.getElementById('mainNav');
+  var burger = document.getElementById('burger');
+  var nav = document.getElementById('mainNav');
   if (burger && nav) {
-    burger.addEventListener('click', () => {
-      const open = nav.classList.toggle('is-open');
+    burger.addEventListener('click', function () {
+      var open = nav.classList.toggle('is-open');
       burger.setAttribute('aria-expanded', String(open));
     });
-    nav.addEventListener('click', (e) => { if (e.target.tagName === 'A') { nav.classList.remove('is-open'); burger.setAttribute('aria-expanded', 'false'); } });
+    nav.addEventListener('click', function (e) {
+      if (e.target.tagName === 'A') { nav.classList.remove('is-open'); burger.setAttribute('aria-expanded', 'false'); }
+    });
   }
-  const lang = document.getElementById('langPicker');
+  var lang = document.getElementById('langPicker');
   if (lang) {
-    const btn = lang.querySelector('.lang-btn');
-    const cur = lang.querySelector('.lang-current');
-    btn.addEventListener('click', (e) => { e.stopPropagation(); const open = lang.classList.toggle('is-open'); btn.setAttribute('aria-expanded', String(open)); });
-    lang.querySelectorAll('[data-lang]').forEach(opt => opt.addEventListener('click', () => {
-      if (cur) cur.textContent = opt.dataset.lang;
-      lang.querySelectorAll('[role="option"]').forEach(o => o.setAttribute('aria-selected', String(o === opt)));
-      lang.classList.remove('is-open');
-    }));
-    document.addEventListener('click', () => lang.classList.remove('is-open'));
+    var lbtn = lang.querySelector('.lang-btn');
+    var cur = lang.querySelector('.lang-current');
+    lbtn.addEventListener('click', function (e) {
+      e.stopPropagation();
+      var open = lang.classList.toggle('is-open');
+      lbtn.setAttribute('aria-expanded', String(open));
+    });
+    lang.querySelectorAll('[data-lang]').forEach(function (opt) {
+      opt.addEventListener('click', function () {
+        if (cur) cur.textContent = opt.dataset.lang;
+        lang.querySelectorAll('[role="option"]').forEach(function (o) {
+          o.setAttribute('aria-selected', String(o === opt));
+        });
+        lang.classList.remove('is-open');
+      });
+    });
+    document.addEventListener('click', function () { lang.classList.remove('is-open'); });
   }
 })();

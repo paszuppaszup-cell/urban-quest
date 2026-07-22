@@ -109,31 +109,8 @@
     <div class="rank-layout">
       <!-- FŐ OSZLOP -->
       <div class="rank-main">
-        <!-- dobogó -->
-        <div class="podium">
-          <div class="pod pod-2">
-            <span class="pod-medal">2</span>
-            <span class="pod-logo"><svg class="ico" aria-hidden="true"><use href="#i-mountain"/></svg></span>
-            <span class="pod-name">Wild Paths</span>
-            <span class="pod-pts">9 420<small>pont</small></span>
-            <span class="pod-meta"><span><svg class="ico ico-xs" aria-hidden="true"><use href="#i-clock"/></svg>02:18:47</span><span><svg class="ico ico-xs" aria-hidden="true"><use href="#i-pin"/></svg>Budapest</span></span>
-          </div>
-          <div class="pod pod-1">
-            <span class="pod-crown"><svg class="ico" aria-hidden="true"><use href="#i-crown"/></svg></span>
-            <span class="pod-medal">1</span>
-            <span class="pod-logo"><svg class="ico" aria-hidden="true"><use href="#i-mountain"/></svg></span>
-            <span class="pod-name">Peak Hunters</span>
-            <span class="pod-pts">12 560<small>pont</small></span>
-            <span class="pod-meta"><span><svg class="ico ico-xs" aria-hidden="true"><use href="#i-clock"/></svg>01:47:32</span><span><svg class="ico ico-xs" aria-hidden="true"><use href="#i-pin"/></svg>Budapest</span></span>
-          </div>
-          <div class="pod pod-3">
-            <span class="pod-medal">3</span>
-            <span class="pod-logo"><svg class="ico" aria-hidden="true"><use href="#i-city"/></svg></span>
-            <span class="pod-name">Urban Explorers</span>
-            <span class="pod-pts">8 175<small>pont</small></span>
-            <span class="pod-meta"><span><svg class="ico ico-xs" aria-hidden="true"><use href="#i-clock"/></svg>02:23:10</span><span><svg class="ico ico-xs" aria-hidden="true"><use href="#i-pin"/></svg>Budapest</span></span>
-          </div>
-        </div>
+        <!-- dobogó — a ranglista.js tölti fel valós adatból; üresen rejtve marad -->
+        <div class="podium" id="podium" hidden></div>
 
         <!-- szűrő -->
         <form class="rank-filter" id="rankFilter" autocomplete="off">
@@ -159,48 +136,40 @@
         <div class="rank-community">
           <h3><svg class="ico ico-sm" aria-hidden="true"><use href="#i-users"/></svg>Közösségi statisztikák</h3>
           <div class="rc-grid">
-            <div class="rc-stat"><svg class="ico" aria-hidden="true"><use href="#i-users"/></svg><div><b>124</b><span>Összes csapat</span></div></div>
-            <div class="rc-stat"><svg class="ico" aria-hidden="true"><use href="#i-map"/></svg><div><b>1 248</b><span>Teljesített pályák</span></div></div>
-            <div class="rc-stat"><svg class="ico" aria-hidden="true"><use href="#i-shield"/></svg><div><b>5 732</b><span>Összes küldetés</span></div></div>
-            <div class="rc-stat"><svg class="ico" aria-hidden="true"><use href="#i-trophy"/></svg><div><b>1 248 560</b><span>Összes pontszám</span></div></div>
-            <div class="rc-stat"><svg class="ico" aria-hidden="true"><use href="#i-city"/></svg><div><b>6</b><span>Aktív városok</span></div></div>
+            <div class="rc-stat"><svg class="ico" aria-hidden="true"><use href="#i-users"/></svg><div><b id="stTeams">–</b><span>Összes csapat</span></div></div>
+            <div class="rc-stat"><svg class="ico" aria-hidden="true"><use href="#i-map"/></svg><div><b id="stFinished">–</b><span>Teljesített pályák</span></div></div>
+            <div class="rc-stat"><svg class="ico" aria-hidden="true"><use href="#i-shield"/></svg><div><b id="stCourses">–</b><span>Elérhető küldetés</span></div></div>
+            <div class="rc-stat"><svg class="ico" aria-hidden="true"><use href="#i-trophy"/></svg><div><b id="stPoints">–</b><span>Összes pontszám</span></div></div>
+            <div class="rc-stat"><svg class="ico" aria-hidden="true"><use href="#i-city"/></svg><div><b id="stCities">–</b><span>Aktív városok</span></div></div>
           </div>
         </div>
       </div>
 
       <!-- OLDALSÁV -->
       <aside class="rank-side">
-        <div class="side-card champ">
+        <!-- Heti bajnok — a ranglista.js tölti; ha a héten senki nem végzett, rejtve marad -->
+        <div class="side-card champ" id="champCard" hidden>
           <h3>Heti bajnok</h3>
-          <p class="champ-date"><svg class="ico ico-sm" aria-hidden="true"><use href="#i-calendar"/></svg>2024. május 20 – május 26.</p>
+          <p class="champ-date"><svg class="ico ico-sm" aria-hidden="true"><use href="#i-calendar"/></svg><span id="champDate"></span></p>
           <div class="champ-team">
             <span class="champ-logo"><svg class="ico" aria-hidden="true"><use href="#i-shield"/></svg></span>
-            <div><div class="champ-name">Trail Blazers</div><div class="champ-pts">2 350<small>pont</small></div></div>
+            <div><div class="champ-name" id="champName"></div><div class="champ-pts"><span id="champPts"></span><small>pont</small></div></div>
           </div>
-          <button class="side-btn" type="button"><svg class="ico" aria-hidden="true"><use href="#i-trophy"/></svg>Heti bajnokok előzményei</button>
         </div>
 
-        <div class="side-card">
+        <!-- Saját statisztika — csak bejelentkezve, csak valós menetekből -->
+        <div class="side-card" id="pstatCard" hidden>
           <h3>Játékos statisztikáid</h3>
           <div class="pstats">
-            <div class="pstat"><span>Helyezésed</span><b>14.<span class="u">/ 124 csapat</span></b></div>
-            <div class="pstat accent"><span>Összesített pontszám</span><b>4 860<span class="u">pont</span></b></div>
-            <div class="pstat"><span>Teljesített pályák</span><b>12</b></div>
-            <div class="pstat"><span>Győzelmek</span><b>3</b></div>
-            <div class="pstat time wide"><span>Átlagos időeredmény</span><b><svg class="ico" aria-hidden="true"><use href="#i-clock"/></svg>02:31:45</b></div>
+            <div class="pstat"><span>Helyezésed</span><b id="psRank">–</b></div>
+            <div class="pstat accent"><span>Összesített pontszám</span><b><span id="psPoints">0</span><span class="u">pont</span></b></div>
+            <div class="pstat"><span>Teljesített pályák</span><b id="psDone">0</b></div>
+            <div class="pstat time wide"><span>Átlagos időeredmény</span><b><svg class="ico" aria-hidden="true"><use href="#i-clock"/></svg><span id="psAvg">–</span></b></div>
           </div>
-          <button class="side-btn" type="button"><svg class="ico" aria-hidden="true"><use href="#i-chart"/></svg>Részletes statisztikák</button>
         </div>
 
-        <div class="side-card">
-          <h3>Legutóbbi eléréseid</h3>
-          <div class="ach">
-            <div class="ach-item"><span class="ach-ico"><svg class="ico" aria-hidden="true"><use href="#i-bolt"/></svg></span><div class="ach-body"><div class="ach-top"><span class="ach-title">Gyorsasági specialista</span><span class="ach-date">2024.05.24</span></div><p class="ach-desc">Teljesíts egy pályát 2 órán belül.</p></div></div>
-            <div class="ach-item"><span class="ach-ico"><svg class="ico" aria-hidden="true"><use href="#i-city"/></svg></span><div class="ach-body"><div class="ach-top"><span class="ach-title">Városfelfedező</span><span class="ach-date">2024.05.18</span></div><p class="ach-desc">Teljesíts 5 különböző városban.</p></div></div>
-            <div class="ach-item"><span class="ach-ico"><svg class="ico" aria-hidden="true"><use href="#i-target"/></svg></span><div class="ach-body"><div class="ach-top"><span class="ach-title">Kitartó kaland</span><span class="ach-date">2024.05.12</span></div><p class="ach-desc">Teljesíts 10 pályát.</p></div></div>
-          </div>
-          <button class="side-btn" type="button"><svg class="ico" aria-hidden="true"><use href="#i-trophy"/></svg>Összes elérés megtekintése</button>
-        </div>
+        <!-- A teljesítmény-jelvények funkció még nem létezik: kitalált jelvényeket
+             dátummal mutatni félrevezető lenne, ezért a blokk egyelőre kimarad. -->
 
         <div class="join-cta">
           <h3>Csatlakozz a kalandhoz!</h3>
@@ -212,7 +181,8 @@
   </div>
 </main>
 
-<script src="uq-auth.js?v=3"></script>
+<script src="uq-api.js?v=1"></script>
+  <script src="uq-auth.js?v=3"></script>
 <script src="uq-account.js?v=2"></script>
 <script src="ranglista.js?v=2"></script>
 </body>
