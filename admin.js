@@ -56,95 +56,188 @@
   let current = 2; // Vajdahunyad vára kezdetben kijelölve
 
   /* =========================================================
-     JÁTÉK-VÁLASZTÓ + PER-JÁTÉK PÁLYA MENTÉS (localStorage)
-     Minden játéknak SAJÁT pályája (állomások) van, játékonként mentve.
-     uq_courses_v1: { "<játék neve>": [ {állomás…}, … ], … }
+     JÁTÉK-VÁLASZTÓ + PÁLYA MENTÉS — SUPABASE
+     Korábban ez a térképes szerkesztő a böngésző uq_courses_v1
+     tárolójába írt, teljesen külön az Állomások oldaltól. Ezért a
+     legördülő beégetett demó neveket mutatott, és a térképen végzett
+     szerkesztés sehol máshol nem látszott. Most az adatbázis a forrás,
+     ugyanaz, amit az Állomások / Feladatok / Játékok oldalak használnak.
+
+     FONTOS: ez a szerkesztő KIZÁRÓLAG az állomás-sorokat kezeli (név,
+     típus, nehézség, koordináta, leírás). Az állomásba ágyazott
+     „taskType/question/answer” mezők csak UI-alapértékek — a feladatokat
+     a Feladatok oldal szerkeszti, hogy ne legyen két igazságforrás.
      ========================================================= */
-  const GAMES_STORE = 'uq_games_v1';
-  const COURSES_STORE = 'uq_courses_v1';
-  const GAMES_SEED = ['Városliget Felfedező', 'Budai Vár Rejtélye', 'Küldetés a Gyárban', 'Földalatti Nyomok', 'Margitsziget Kaland', 'Elveszett Örökség'];
-  const DEFAULT_GAME = 'Városliget Felfedező';
-  let currentGame = DEFAULT_GAME;
 
   function clone(o) { try { return JSON.parse(JSON.stringify(o)); } catch (e) { return Object.assign({}, o); } }
 
-  // Játék-nevek: uq_games_v1 lehet {id,name} objektum-tömb VAGY string-tömb; üres → seed.
-  function readGameNames() {
-    try {
-      const raw = localStorage.getItem(GAMES_STORE);
-      if (raw) {
-        const arr = JSON.parse(raw);
-        if (Array.isArray(arr) && arr.length) {
-          const names = arr.map(g => (g && typeof g === 'object') ? g.name : g).filter(Boolean);
-          if (names.length) return names;
+  var COURSES_INDEX = [];       // [{id, name}]
+  var currentCourseId = null;
+  var currentGame = '';          // megjelenítendő név (a fejléchez, modalhoz)
+
+  var LABEL_KIND = { 'Kezdő állomás': 'kezdo', 'Információs állomás': 'info', 'Feladat állomás': 'feladat', 'Döntési pont': 'dontes', 'Záróállomás': 'zaro', 'Záró állomás': 'zaro' };
+  var KIND_LABEL = { kezdo: 'Kezdő állomás', info: 'Információs állomás', feladat: 'Feladat állomás', dontes: 'Döntési pont', zaro: 'Záróállomás' };
+  var LABEL_DIFF = { 'Könnyű': 'konnyu', 'Közepes': 'kozepes', 'Nehéz': 'nehez', 'Extrém': 'extrem' };
+  var DIFF_LABEL = { konnyu: 'Könnyű', kozepes: 'Közepes', nehez: 'Nehéz', extrem: 'Extrém' };
+
+  function parseLoc2(str) {
+    var p = String(str || '').split(',').map(function (x) { return parseFloat(x); });
+    return { lat: isFinite(p[0]) ? p[0] : null, lng: isFinite(p[1]) ? p[1] : null };
+  }
+  function percToS(s) { var m = String(s || '').match(/\d+/); return m ? Number(m[0]) * 60 : null; }
+
+  function dbToStation(r) {
+    return mk({
+      id: r.id,
+      name: r.name || 'Állomás',
+      type: KIND_LABEL[r.kind] || 'Feladat állomás',
+      desc: r.description || '',
+      difficulty: DIFF_LABEL[r.difficulty] || 'Közepes',
+      location: (r.lat != null && r.lng != null) ? (r.lat + ', ' + r.lng) : '47.5149, 19.0800',
+      timeLimitOn: r.time_limit_s != null,
+      timeLimit: r.time_limit_s ? (Math.round(r.time_limit_s / 60) + ' perc') : '10 perc'
+    });
+  }
+
+  function stationPayload(s) {
+    var loc = parseLoc2(s.location);
+    // position SZÁNDÉKOSAN kimarad — a sorrendet a reorder_stations állítja
+    // egyetlen tranzakcióban, így nincs pozíció-ütközés a mentés közben.
+    return {
+      id: s.id || null,
+      course_id: currentCourseId,
+      name: s.name || 'Névtelen állomás',
+      kind: LABEL_KIND[s.type] || 'feladat',
+      difficulty: LABEL_DIFF[s.difficulty] || 'kozepes',
+      description: s.desc || '',
+      lat: loc.lat, lng: loc.lng,
+      time_limit_s: s.timeLimitOn ? percToS(s.timeLimit) : null
+    };
+  }
+
+  /* ---- debounce-olt szinkron az adatbázisba ---- */
+  var syncTimer = null, syncing = false, syncQueued = false;
+
+  function saveCourse() { scheduleSync(); }   // a régi név megmarad, a hívók változatlanok
+
+  function scheduleSync() {
+    if (!currentCourseId || !window.UQAPI) return;
+    clearTimeout(syncTimer);
+    syncTimer = setTimeout(function () { syncToDb(); }, 900);
+  }
+
+  function syncToDb() {
+    if (!currentCourseId || !window.UQAPI) return Promise.resolve();
+    if (syncing) { syncQueued = true; return Promise.resolve(); }
+    syncing = true;
+    var courseId = currentCourseId;
+    var snapshot = state.slice();          // az objektumok osztottak, az új id-k visszaíródnak
+    var order = [];
+
+    /* Ha a szinkron közben pályát váltanak, az EGÉSZ menetet eldobjuk.
+       Enélkül a félbehagyott mentés után a törlés-lépés kitörölné azokat
+       az állomásokat, amiket még nem sikerült elmenteni — adatvesztés. */
+    var megszakadt = false;
+
+    return UQAPI.rest('/v_admin_stations?select=id&course_id=eq.' + courseId)
+      .then(function (rows) {
+        var toDelete = {};
+        (rows || []).forEach(function (r) { toDelete[r.id] = true; });
+
+        // sorosan mentünk: az új sorok id-t kapnak, amit visszaírunk a state-be
+        return snapshot.reduce(function (chain, s) {
+          return chain.then(function () {
+            if (megszakadt) return;
+            if (currentCourseId !== courseId) { megszakadt = true; return; }
+            return UQAPI.rest('/rpc/save_station', { method: 'POST', body: { p: stationPayload(s) } })
+              .then(function (r) {
+                var id = (Array.isArray(r) ? r[0] : r).id;
+                s.id = id; order.push(id); delete toDelete[id];
+              });
+          });
+        }, Promise.resolve()).then(function () { return toDelete; });
+      })
+      .then(function (toDelete) {
+        // csak akkor törlünk, ha MINDEN állomás sikeresen elmentődött
+        if (megszakadt || currentCourseId !== courseId) return;
+        var ids = Object.keys(toDelete);
+        return ids.reduce(function (chain, id) {
+          return chain.then(function () {
+            return UQAPI.rest('/rpc/delete_station', { method: 'POST', body: { p_station: id } }).catch(function () {});
+          });
+        }, Promise.resolve());
+      })
+      .then(function () {
+        if (megszakadt || !order.length || currentCourseId !== courseId) return;
+        return UQAPI.rest('/rpc/reorder_stations', { method: 'POST', body: { p_course: courseId, p_ids: order } });
+      })
+      .then(function () {
+        try { localStorage.removeItem('uq_catalog_v1'); } catch (e) {}
+      })
+      .catch(function (e) {
+        toast('Mentés nem sikerült', { type: 'error', sub: (e && e.message) || 'hálózati hiba' });
+      })
+      .then(function () {
+        syncing = false;
+        if (syncQueued) { syncQueued = false; scheduleSync(); }
+      });
+  }
+
+  // Egy pálya betöltése a state-be (const state — HELYBEN mutálva).
+  function loadCourse(courseId) {
+    currentCourseId = courseId;
+    var idx = COURSES_INDEX.find(function (c) { return c.id === courseId; });
+    currentGame = idx ? idx.name : currentGame;
+
+    return UQAPI.rest('/v_admin_stations?select=*&course_id=eq.' + courseId + '&order=position.asc')
+      .then(function (rows) {
+        var arr;
+        if (rows && rows.length) {
+          arr = rows.map(dbToStation);
+        } else {
+          // üres pálya: egy induló állomás, hogy a térkép ne legyen üres
+          arr = [mk({ name: 'Kezdő állomás', type: 'Kezdő állomás', location: '47.5138, 19.0783' })];
         }
-      }
-    } catch (e) {}
-    return GAMES_SEED.slice();
+        arr.forEach(function (s) { delete s.mx; delete s.my; });
+        state.splice(0, state.length, ...arr);
+        current = 0;
+        initMapCoords();
+        renderList();
+        renderNodes();
+        loadForm(current);
+        updateCourseCount();
+        var h1 = $('#admCourseName');
+        if (h1 && h1.childNodes[0]) h1.childNodes[0].textContent = currentGame + ' ';
+        var cmName = $('#cmName'); if (cmName) cmName.value = currentGame;
+        var sel = $('#admGameSelect'); if (sel) sel.value = courseId;
+        refreshActiveTab();
+        if (map) {
+          setTimeout(function () {
+            map.invalidateSize();
+            if (markers.length) { try { map.fitBounds(L.featureGroup(markers).getBounds().pad(0.2)); } catch (e) {} }
+          }, 100);
+        }
+      });
   }
 
-  // Pálya-tár (játék neve → állomás-tömb)
-  function readCourses() {
-    try { const o = JSON.parse(localStorage.getItem(COURSES_STORE) || '{}'); return (o && typeof o === 'object') ? o : {}; }
-    catch (e) { return {}; }
-  }
-  function writeCourses(o) { try { localStorage.setItem(COURSES_STORE, JSON.stringify(o)); } catch (e) {} }
-  // Az aktuális állapot (state) mentése az aktuális játék pályájaként.
-  // A state sima adat (nincs benne Leaflet-marker referencia), így a JSON-klón elég.
-  function saveCourse() {
-    if (!currentGame) return;
-    const courses = readCourses();
-    courses[currentGame] = state.map(clone);
-    writeCourses(courses);
-  }
-
-  // Egy játék pályájának betöltése a state-be (const state — HELYBEN mutálva, sosem újraosztva).
-  function loadCourse(gameName) {
-    currentGame = gameName;
-    const c = readCourses()[gameName];
-    let arr;
-    if (c && c.length) {
-      arr = c.map(clone);
-    } else {
-      // ÚJ pálya alapértelmezés: egyetlen kezdő állomás, hogy a térkép ne legyen üres
-      arr = [mk({ name: 'Kezdő állomás', type: 'Kezdő állomás', location: '47.5138, 19.0783' })];
-    }
-    arr.forEach(s => { delete s.mx; delete s.my; }); // mx/my újraszámolandó
-    state.splice(0, state.length, ...arr);           // const state HELYBEN mutálva
-    current = 0;
-    initMapCoords();  // mx/my újraszámítás a play-mód mini-térképéhez
-    renderList();
-    renderNodes();    // Leaflet jelölők + útvonalak újrarajzolása
-    loadForm(current);
-    updateCourseCount();
-    // fejléc cím = a játék neve (a .adm-tag megmarad az első szöveges csomópont után)
-    const h1 = $('#admCourseName');
-    if (h1 && h1.childNodes[0]) h1.childNodes[0].textContent = gameName + ' ';
-    const cmName = $('#cmName'); if (cmName) cmName.value = gameName; // modal név szinkron
-    const sel = $('#admGameSelect'); if (sel) sel.value = gameName;
-    refreshActiveTab();
-    // Leaflet: méret újraszámítás + nézet a pályához igazítása
-    if (map) {
-      setTimeout(function () {
-        map.invalidateSize();
-        if (markers.length) { try { map.fitBounds(L.featureGroup(markers).getBounds().pad(0.2)); } catch (e) {} }
-      }, 100);
-    }
-  }
-
-  // Játék-választó feltöltése + esemény
+  // Pálya-választó feltöltése + váltás
   function initGameSelector() {
-    const sel = $('#admGameSelect');
+    var sel = $('#admGameSelect');
     if (!sel) return;
-    const names = readGameNames();
-    if (names.indexOf(currentGame) === -1) names.unshift(currentGame);
-    sel.innerHTML = names.map(n => '<option value="' + esc(n) + '">' + esc(n) + '</option>').join('');
-    sel.value = currentGame;
-    sel.addEventListener('change', () => {
+    sel.innerHTML = COURSES_INDEX.map(function (c) {
+      return '<option value="' + esc(c.id) + '">' + esc(c.name) + '</option>';
+    }).join('');
+    if (currentCourseId) sel.value = currentCourseId;
+    sel.addEventListener('change', function () {
       saveForm(current);
-      saveCourse();            // az aktuális pálya mentése VÁLTÁS ELŐTT
-      loadCourse(sel.value);   // az új játék pályájának betöltése
-      toast('Pálya betöltve', { type: 'info', sub: sel.value });
+      // a folyamatban lévő szerkesztést VÁLTÁS ELŐTT kiírjuk
+      clearTimeout(syncTimer);
+      Promise.resolve(syncToDb()).then(function () {
+        return loadCourse(sel.value);
+      }).then(function () {
+        var c = COURSES_INDEX.find(function (x) { return x.id === sel.value; });
+        toast('Pálya betöltve', { type: 'info', sub: c ? c.name : '' });
+      });
     });
   }
 
@@ -1162,19 +1255,52 @@
      ========================================================= */
   initLeaflet();       // valós Leaflet + OSM térkép
 
-  /* Per-játék pálya: a beépített demo-pálya perzisztálása (ha még nincs),
-     a játék-választó feltöltése, majd az aktuális játék pályájának betöltése.
-     A loadCourse elvégzi: syncMxMy/initMapCoords, renderList, renderNodes,
-     loadForm, updateCourseCount és a Leaflet nézet-igazítást. */
-  (function initCourses() {
-    const courses = readCourses();
-    if (!courses[DEFAULT_GAME] || !courses[DEFAULT_GAME].length) {
-      courses[DEFAULT_GAME] = state.map(clone); // az induló beépített pálya megőrzése
-      writeCourses(courses);
+  /* A pálya-választó és a betöltés az ADATBÁZISBÓL jön. Ez a blokk CSAK a
+     Pályák szerkesztőn (admin.html) fut — a varázsló-oldalak is betöltik az
+     admin.js-t, de ott nincs #admGameSelect, és a uq-api.js sincs betöltve. */
+  function initCourses() {
+    if (!$('#admGameSelect')) return;   // nem a Pályák szerkesztő → kihagyjuk
+
+    var hiba = function (cim, alcim) {
+      var h1 = $('#admCourseName');
+      if (h1 && h1.childNodes[0]) h1.childNodes[0].textContent = cim + ' ';
+      toast(cim, { type: 'warn', sub: alcim });
+    };
+
+    if (!window.UQAPI || !UQAPI.user()) {
+      hiba('Bejelentkezés szükséges', 'A pályaszerkesztéshez admin fiók kell.');
+      var sel0 = $('#admGameSelect');
+      if (sel0) sel0.innerHTML = '<option>— jelentkezz be —</option>';
+      return;
     }
-    initGameSelector();
-    loadCourse(currentGame);
-  })();
+
+    UQAPI.isAdmin().then(function (admin) {
+      if (!admin) { hiba('Nincs jogosultság', 'Ez a fiók nem admin.'); return; }
+      return UQAPI.rest('/v_admin_courses?select=id,name&order=sort_order.asc,name.asc')
+        .then(function (rows) {
+          COURSES_INDEX = rows || [];
+          if (!COURSES_INDEX.length) {
+            hiba('Nincs pálya', 'Hozz létre egyet a Játékok oldalon, vagy az átköltöztetéssel.');
+            var s = $('#admGameSelect');
+            if (s) s.innerHTML = '<option>— nincs pálya —</option>';
+            return;
+          }
+          currentCourseId = COURSES_INDEX[0].id;
+          initGameSelector();
+          return loadCourse(currentCourseId);
+        });
+    }).catch(function (e) {
+      hiba('Betöltési hiba', (e && e.message) || 'ismeretlen');
+    });
+  }
+  initCourses();
+  // belépés/kilépés után újratöltjük a pályákat
+  if (window.UQAPI && UQAPI.onAuth) UQAPI.onAuth(function () { initCourses(); });
+
+  /* Kiírjuk a függőben lévő szerkesztést lapelhagyás előtt (best-effort). */
+  window.addEventListener('beforeunload', function () {
+    if (syncTimer) { clearTimeout(syncTimer); syncToDb(); }
+  });
 
   /* mély-link: #play → Játékos nézet + azonnali végigjátszás (teszt/megosztás) */
   if (location.hash === '#play') { setTab('jatekos'); playStart(); }
