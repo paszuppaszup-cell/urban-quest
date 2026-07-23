@@ -218,3 +218,8 @@
   .adm-side.is-collapsed .adm-nav-item { justify-content: center; padding: 9px 11px; gap: 11px; }
   .adm-side.is-collapsed .adm-nav-item .adm-nav-txt { display: inline; }
 }
+
+/* számított mező: a játékmenetből jön, nem írható */
+.is-computed { opacity: .72; }
+.is-computed input,
+.is-computed select { cursor: not-allowed; }

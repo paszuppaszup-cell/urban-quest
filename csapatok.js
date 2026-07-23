@@ -193,24 +193,57 @@
   }
 
   /* egyedi azonosítók + szín-index */
-  let uid = 0;
-  TEAMS.forEach((t, i) => { t.id = ++uid; t.color = i % 6; });
+  /* ---------- adatréteg: Supabase (korábban localStorage) ----------
+     A pont, a haladás és az állapot mostantól SZÁMÍTOTT: a csapat valódi
+     játékmenetéből jön, nem kézi beírásból. Korábban a kézi érték és a
+     tényleges menet két külön igazság volt, és az irányítópult a kéziből
+     számolt KPI-t. */
 
-  /* ---------- tartós tárolás (localStorage) ---------- */
-  const STORE = 'uq_teams_v1';
-  function saveStore() { try { localStorage.setItem(STORE, JSON.stringify(TEAMS)); } catch (e) {} }
-  (function loadStore() {
-    try {
-      const raw = localStorage.getItem(STORE);
-      if (raw) { const arr = JSON.parse(raw); if (Array.isArray(arr) && arr.length) { TEAMS.splice(0, TEAMS.length, ...arr); uid = TEAMS.reduce((m, t) => Math.max(m, t.id || 0), 0); } }
-    } catch (e) {}
-  })();
+  let COURSES = [];   // a pálya-választóhoz
+
+  function dbSor(r, i) {
+    return {
+      id: r.id,
+      name: r.name || '',
+      captain: r.captain || '',
+      members: r.member_count || 1,
+      city: r.city || '',
+      courseId: r.course_id || '',
+      route: r.course_name || '',
+      start: r.planned_start ? String(r.planned_start).slice(0, 5) : '',
+      note: r.note || '',
+      // számított mezők — csak megjelenítésre
+      score: r.points || 0,
+      progress: r.progress || 0,
+      status: r.play_status || 'waiting',
+      color: i % 6
+    };
+  }
+
+  function saveStore() { /* szándékosan üres — az adatbázis a forrás */ }
+
+  function betolt() {
+    if (!window.UQAPI) return Promise.reject(new Error('Hiányzik az adatréteg.'));
+    return Promise.all([
+      UQAPI.rest('/v_admin_teams?select=*&order=name.asc'),
+      UQAPI.rest('/v_admin_courses?select=id,name&order=sort_order.asc,name.asc')
+    ]).then(([sorok, palyak]) => {
+      COURSES = palyak || [];
+      TEAMS.splice(0, TEAMS.length, ...(sorok || []).map(dbSor));
+      if (!TEAMS.some(t => t.id === state.selectedId)) {
+        state.selectedId = TEAMS.length ? TEAMS[0].id : null;
+      }
+      return TEAMS;
+    });
+  }
 
   const byId = id => TEAMS.find(t => t.id === id);
   const colorClass = t => 'tm-c' + ((t.color != null ? t.color : 0) % 6);
 
+  TEAMS.splice(0, TEAMS.length);   // a beépített minta-adat kiürül
+
   /* ---------- állapot ---------- */
-  const state = { search: '', status: 'all', perPage: 10, page: 1, selectedId: (TEAMS[0] && TEAMS[0].id) || null, sort: { key: null, dir: 1 }, selected: new Set() };
+  const state = { search: '', status: 'all', perPage: 10, page: 1, selectedId: null, sort: { key: null, dir: 1 }, selected: new Set() };
 
   /* ---------- fő DOM ---------- */
   const tbody = document.getElementById('teamRows');
@@ -396,7 +429,7 @@
 
   function markActive() {
     tbody.querySelectorAll('.jtk-row').forEach(r =>
-      r.classList.toggle('is-active', Number(r.dataset.id) === state.selectedId));
+      r.classList.toggle('is-active', r.dataset.id === String(state.selectedId)));
   }
 
   function selectTeam(id, focus) {
@@ -409,84 +442,85 @@
     if (focus) fName.focus();
   }
 
+  function ujratolt(uzenet, alcim) {
+    return betolt().then(() => {
+      render();
+      if (uzenet) toast(uzenet, { type: 'ok', sub: alcim });
+    });
+  }
+  function hibaToast(err) {
+    toast('Nem sikerült', { type: 'warn', sub: String((err && err.message) || 'Ismeretlen hiba') });
+  }
+  function palyaIdNevbol(nev) {
+    const c = COURSES.find(x => x.name === nev);
+    return c ? c.id : '';
+  }
+
   function saveDrawer() {
     const t = byId(state.selectedId);
     if (!t) { toast('Nincs kiválasztott csapat', { type: 'error' }); return; }
-    t.name = fName.value.trim() || 'Névtelen csapat';
-    t.captain = fCaptain.value.trim();
-    t.members = parseInt(fMembers.value, 10) || 1;
-    t.score = parseInt(String(fScore.value).replace(/\s/g, ''), 10) || 0;
-    t.route = fRoute.value;
-    t.progress = parseInt(fProgress.value, 10) || 0;
-    t.start = fStart.value.trim();
-    t.status = STATUS_BY_LABEL[fStatus.value] || 'playing';
-    render();
-    toast('Csapat elmentve', { sub: t.name });
+    UQAPI.rest('/rpc/save_team', { method: 'POST', body: { p: {
+      id: t.id,
+      name: fName.value.trim() || 'Névtelen csapat',
+      captain: fCaptain.value.trim(),
+      member_count: String(parseInt(fMembers.value, 10) || 1),
+      course_id: palyaIdNevbol(fRoute.value),
+      planned_start: fStart.value.trim()
+    } } })
+      .then(() => ujratolt('Csapat elmentve', fName.value.trim()))
+      .catch(hibaToast);
   }
 
   function duplicateTeam(id) {
-    const idx = TEAMS.findIndex(x => x.id === id);
-    if (idx < 0) return;
-    const src = TEAMS[idx];
-    const copy = Object.assign({}, src, {
-      id: ++uid,
+    const src = byId(id);
+    if (!src) return;
+    UQAPI.rest('/rpc/save_team', { method: 'POST', body: { p: {
       name: src.name + ' (másolat)',
-      status: 'waiting',
-      score: 0,
-      progress: 0,
-      color: TEAMS.length % 6
-    });
-    TEAMS.splice(idx + 1, 0, copy);
-    render();
-    toast('Csapat duplikálva', { sub: copy.name });
+      captain: src.captain,
+      member_count: String(src.members || 1),
+      city: src.city,
+      course_id: src.courseId || '',
+      planned_start: src.start || ''
+    } } })
+      .then(() => ujratolt('Csapat duplikálva', src.name + ' (másolat)'))
+      .catch(hibaToast);
   }
 
   function deleteTeam(id) {
-    const idx = TEAMS.findIndex(x => x.id === id);
-    if (idx < 0) return;
-    const removed = TEAMS[idx];
-    TEAMS.splice(idx, 1);
-    state.selected.delete(id);
-    if (state.selectedId === id) {
-      if (TEAMS.length) {
-        state.selectedId = TEAMS[Math.min(idx, TEAMS.length - 1)].id;
-        fillDrawer(byId(state.selectedId));
-      } else {
-        drawer.classList.add('is-hidden');
-      }
-    }
-    render();
-    undoToast('Csapat törölve', removed.name, () => {
-      TEAMS.splice(Math.min(idx, TEAMS.length), 0, removed);
-      state.selectedId = removed.id;
-      fillDrawer(removed);
-      drawer.classList.remove('is-hidden');
-      render();
-      toast('Törlés visszavonva', { sub: removed.name });
-    });
+    const t = byId(id);
+    if (!t) return;
+    if (!window.confirm(
+      'Csapat törlése — nincs visszavonás.\n\n' + t.name +
+      (t.captain ? '\n(' + t.captain + ')' : '') +
+      '\n\nA már lejátszott menetek és a ranglista-eredmények megmaradnak,' +
+      '\ncsak a csapat-hozzárendelés szűnik meg.\n\nBiztosan törlöd?')) return;
+
+    UQAPI.rest('/rpc/delete_team', { method: 'POST', body: { p_team: id } })
+      .then(() => {
+        state.selected.delete(id);
+        if (state.selectedId === id) { state.selectedId = null; drawer.classList.add('is-hidden'); }
+        return ujratolt('Csapat törölve', t.name);
+      })
+      .catch(hibaToast);
   }
 
   function newTeam() {
-    const t = {
-      id: ++uid,
-      name: 'Új csapat',
-      captain: '',
-      members: 4,
-      route: 'Városliget Felfedező',
-      score: 0,
-      progress: 0,
-      status: 'waiting',
-      start: '',
-      color: TEAMS.length % 6
-    };
-    TEAMS.unshift(t);
-    state.search = ''; topSearch.value = '';
-    state.status = 'all'; statusFilter.value = 'all';
-    state.page = 1;
-    state.selectedId = t.id;
-    render();
-    selectTeam(t.id, true);
-    toast('Új csapat létrehozva', { sub: 'Töltsd ki az adatokat, majd Mentés' });
+    UQAPI.rest('/rpc/save_team', { method: 'POST', body: { p: {
+      name: 'Új csapat', member_count: '4'
+    } } })
+      .then(r => {
+        const uj = Array.isArray(r) ? r[0] : r;
+        state.search = ''; topSearch.value = '';
+        state.status = 'all'; statusFilter.value = 'all';
+        state.page = 1;
+        state.selectedId = uj && uj.id;
+        return betolt().then(() => {
+          render();
+          if (state.selectedId) selectTeam(state.selectedId, true);
+          toast('Új csapat létrehozva', { sub: 'Töltsd ki az adatokat, majd Mentés' });
+        });
+      })
+      .catch(hibaToast);
   }
 
   /* =========================================================
@@ -496,7 +530,7 @@
     if (e.target.closest('.jtk-check')) return; // jelölőnégyzet: ne nyissa a fiókot
     const row = e.target.closest('.jtk-row');
     if (!row) return;
-    const id = Number(row.dataset.id);
+    const id = row.dataset.id;   // UUID, nem szám
     const actBtn = e.target.closest('.jtk-act');
     if (actBtn) {
       const act = actBtn.dataset.act;
@@ -512,7 +546,7 @@
   tbody.addEventListener('change', e => {
     const input = e.target.closest('input[data-check]');
     if (!input) return;
-    const id = Number(input.dataset.check);
+    const id = input.dataset.check;   // UUID, nem szám
     if (input.checked) state.selected.add(id); else state.selected.delete(id);
     const row = input.closest('.jtk-row');
     if (row) row.classList.toggle('is-selected', input.checked);
@@ -625,8 +659,49 @@
   document.querySelector('.jtk-drawer-x').addEventListener('click', () => drawer.classList.add('is-hidden'));
 
   /* =========================================================
-     INDÍTÁS
+     INDÍTÁS — az adatbázisból töltünk, ezért aszinkron
      ========================================================= */
-  render();
-  selectTeam(TEAMS[0].id);
+  function ures(html) { if (emptyEl) { emptyEl.hidden = false; emptyEl.innerHTML = html; } }
+
+  /* A pont, a haladás és az állapot SZÁMÍTOTT — a menetekből jön.
+     Ezért a szerkesztőben nem írható, és ezt meg is mondjuk. */
+  function zarolSzamitottMezoket() {
+    [[fScore, 'A pontot a játékmenet adja'],
+     [fProgress, 'A haladást a bejárt állomások adják'],
+     [fStatus, 'Az állapotot a játékmenet adja']].forEach(([el, cim]) => {
+      if (!el) return;
+      el.disabled = true;
+      el.title = cim + ' — itt nem írható át.';
+      const mezo = el.closest('.ed-row, .ed-field, label');
+      if (mezo) mezo.classList.add('is-computed');
+    });
+  }
+
+  function indul() {
+    if (!window.UQAPI || !UQAPI.user()) {
+      ures('<p><b>Nem vagy bejelentkezve.</b></p>' +
+           '<p>A csapatok kezeléséhez admin fiók kell.</p>' +
+           '<p><a class="adm-btn adm-btn-lime" href="bejelentkezes.html?next=csapatok.html">Bejelentkezés</a></p>');
+      return;
+    }
+    betolt()
+      .then(() => {
+        if (fRoute && fRoute.tagName === 'SELECT') {
+          fRoute.innerHTML = '<option value="">— nincs pálya —</option>' +
+            COURSES.map(c => `<option value="${esc(c.name)}">${esc(c.name)}</option>`).join('');
+        }
+        zarolSzamitottMezoket();
+        render();
+        if (state.selectedId) selectTeam(state.selectedId);
+        if (!TEAMS.length) {
+          ures('<p><b>Még nincs egyetlen csapat sem.</b></p>' +
+               '<p>Hozz létre újat a fenti gombbal.</p>');
+        }
+      })
+      .catch(err => ures('<p><b>A csapatok nem tölthetők be.</b></p><p>' +
+                         esc(String(err && err.message || '')) + '</p>'));
+  }
+
+  indul();
+  if (window.UQAPI) UQAPI.onAuth(() => indul());
 })();
