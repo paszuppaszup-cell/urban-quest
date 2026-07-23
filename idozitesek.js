@@ -181,21 +181,69 @@
     setTimeout(dismiss, 5000);
   }
 
-  /* egyedi azonosítók */
-  let uid = 0;
-  SCHEDULES.forEach(s => { s.id = ++uid; });
+  /* ---------- adatréteg: Supabase (korábban localStorage) ----------
+     A napok tárolása megváltozott: a régi 7 elemű 0/1 maszk index 0 =
+     HÉTFŐ volt, ami a Postgres DOW-jában (0 = vasárnap) elcsúszna.
+     Az adatbázisban EXPLICIT ISO napszámok vannak (1=hétfő … 7=vasárnap),
+     itt csak a felület kedvéért fordítjuk oda-vissza a maszkra.
+     Az ismétlődés is gépi kulcs lett, nem magyar címke. */
 
-  /* ---------- tartós tárolás (localStorage) ---------- */
-  const STORE = 'uq_schedules_v1';
-  function saveStore() { try { localStorage.setItem(STORE, JSON.stringify(SCHEDULES)); } catch (e) {} }
-  (function loadStore() {
-    try {
-      const raw = localStorage.getItem(STORE);
-      if (raw) { const arr = JSON.parse(raw); if (Array.isArray(arr) && arr.length) { SCHEDULES.splice(0, SCHEDULES.length, ...arr); uid = SCHEDULES.reduce((m, s) => Math.max(m, s.id || 0), 0); } }
-    } catch (e) {}
-  })();
+  let COURSES = [];
+
+  const REPEAT_DB  = { 'Heti': 'weekly', 'Egyszeri': 'once', 'Havi': 'monthly' };
+  const REPEAT_LBL = { weekly: 'Heti', once: 'Egyszeri', monthly: 'Havi' };
+
+  // ISO napszámok -> 7 elemű maszk (index 0 = hétfő)
+  const isoToMask = arr => {
+    const m = [0, 0, 0, 0, 0, 0, 0];
+    (arr || []).forEach(d => { const i = Number(d) - 1; if (i >= 0 && i < 7) m[i] = 1; });
+    return m;
+  };
+  // maszk -> ISO napszámok
+  const maskToIso = mask => {
+    const out = [];
+    (mask || []).forEach((v, i) => { if (v) out.push(i + 1); });
+    return out;
+  };
+
+  const hhmm = t => String(t || '').slice(0, 5);
+
+  function dbSor(r) {
+    return {
+      id: r.id,
+      courseId: r.course_id,
+      route: r.course_name || '',
+      days: isoToMask(r.weekdays),
+      start: hhmm(r.start_time),
+      end: hhmm(r.end_time),
+      cap: r.capacity || 1,
+      repeat: REPEAT_LBL[r.repeat_kind] || 'Heti',
+      status: r.status || 'paused',
+      note: r.note || '',
+      atnyulik: !!r.atnyulik_ejfelen
+    };
+  }
+
+  function saveStore() { /* szándékosan üres — az adatbázis a forrás */ }
+
+  function betolt() {
+    if (!window.UQAPI) return Promise.reject(new Error('Hiányzik az adatréteg.'));
+    return Promise.all([
+      UQAPI.rest('/v_admin_schedules?select=*&order=course_name.asc,start_time.asc'),
+      UQAPI.rest('/v_admin_courses?select=id,name&order=sort_order.asc,name.asc')
+    ]).then(([sorok, palyak]) => {
+      COURSES = palyak || [];
+      SCHEDULES.splice(0, SCHEDULES.length, ...(sorok || []).map(dbSor));
+      if (!SCHEDULES.some(s => s.id === state.selectedId)) {
+        state.selectedId = SCHEDULES.length ? SCHEDULES[0].id : null;
+      }
+      return SCHEDULES;
+    });
+  }
 
   const byId = id => SCHEDULES.find(s => s.id === id);
+
+  SCHEDULES.splice(0, SCHEDULES.length);   // a beépített minta-adat kiürül
 
   const activeDayNames = days => DAY_NAME.filter((_, i) => days[i]);
   const daysSummary = days => {
@@ -206,7 +254,7 @@
   };
 
   /* ---------- állapot ---------- */
-  const state = { search: '', route: 'all', status: 'all', perPage: 10, page: 1, selectedId: SCHEDULES[0].id, sort: { key: null, dir: 1 }, selected: new Set() };
+  const state = { search: '', route: 'all', status: 'all', perPage: 10, page: 1, selectedId: null, sort: { key: null, dir: 1 }, selected: new Set() };
 
   /* ---------- fő DOM ---------- */
   const tbody = document.getElementById('scheduleRows');
@@ -381,7 +429,7 @@
 
   function markActive() {
     tbody.querySelectorAll('.jtk-row').forEach(r =>
-      r.classList.toggle('is-active', Number(r.dataset.id) === state.selectedId));
+      r.classList.toggle('is-active', r.dataset.id === String(state.selectedId)));
   }
 
   function selectSchedule(id, focus) {
@@ -394,90 +442,123 @@
     if (focus) fRoute.focus();
   }
 
+  function ujratolt(uzenet, alcim) {
+    return betolt().then(() => {
+      render();
+      if (uzenet) toast(uzenet, { type: 'ok', sub: alcim });
+    });
+  }
+  function hibaToast(err) {
+    toast('Nem sikerült', { type: 'warn', sub: String((err && err.message) || 'Ismeretlen hiba') });
+  }
+  function palyaIdNevbol(nev) {
+    const c = COURSES.find(x => x.name === nev);
+    return c ? c.id : '';
+  }
+
   function saveDrawer() {
     const sc = byId(state.selectedId);
     if (!sc) { toast('Nincs kiválasztott időzítés', { type: 'error' }); return; }
+
     const days = currentDrawerDays();
-    if (days.reduce((a, b) => a + b, 0) === 0) {
-      toast('Válassz legalább egy napot', { type: 'error', sub: 'A napok mező kötelező' });
+    const repeatKind = REPEAT_DB[fRepeat.value] || 'weekly';
+
+    // Egyszeri alkalomnál nincs értelme heti napoknak
+    if (repeatKind !== 'once' && days.reduce((a, b) => a + b, 0) === 0) {
+      toast('Válassz legalább egy napot', { type: 'error', sub: 'Heti és havi ismétlődéshez kötelező' });
       return;
     }
-    if (fStart.value && fEnd.value && fEnd.value <= fStart.value) {
-      toast('A vég idő legyen a kezdés után', { type: 'error', sub: 'Érvénytelen időablak' });
+    // Az éjfélen átnyúló ablak (pl. 22:00–02:00) MOST MÁR megengedett —
+    // korábban a string-összehasonlítás tiltotta. Csak az azonos időpont hibás.
+    if (fStart.value && fEnd.value && fEnd.value === fStart.value) {
+      toast('A kezdés és a vég nem lehet azonos', { type: 'error', sub: 'Érvénytelen időablak' });
       return;
     }
-    sc.route = fRoute.value;
-    sc.days = days;
-    sc.start = fStart.value || '09:00';
-    sc.end = fEnd.value || '18:00';
-    sc.cap = Math.max(1, parseInt(fCap.value, 10) || 1);
-    sc.repeat = fRepeat.value;
-    sc.status = STATUS_BY_LABEL[fStatus.value] || 'active';
-    sc.note = fNote.value.trim();
-    render();
-    toast('Időzítés elmentve', { sub: sc.route + ' · ' + sc.start + '–' + sc.end });
+
+    const palyaId = palyaIdNevbol(fRoute.value);
+    if (!palyaId) {
+      toast('Válassz pályát', { type: 'error', sub: 'Az időzítés pályához kötődik.' });
+      return;
+    }
+
+    UQAPI.rest('/rpc/save_schedule', { method: 'POST', body: { p: {
+      id: sc.id,
+      course_id: palyaId,
+      weekdays: maskToIso(days),
+      start_time: fStart.value || '09:00',
+      end_time: fEnd.value || '18:00',
+      capacity: String(Math.max(1, parseInt(fCap.value, 10) || 1)),
+      repeat_kind: repeatKind,
+      status: STATUS_BY_LABEL[fStatus.value] || 'active',
+      note: fNote.value.trim()
+    } } })
+      .then(() => {
+        const atnyul = fEnd.value && fStart.value && fEnd.value < fStart.value;
+        return ujratolt('Időzítés elmentve',
+          fRoute.value + ' · ' + fStart.value + '–' + fEnd.value + (atnyul ? ' (másnapig)' : ''));
+      })
+      .catch(hibaToast);
   }
 
   function duplicateSchedule(id) {
-    const idx = SCHEDULES.findIndex(x => x.id === id);
-    if (idx < 0) return;
-    const src = SCHEDULES[idx];
-    const copy = Object.assign({}, src, {
-      id: ++uid,
+    const src = byId(id);
+    if (!src) return;
+    UQAPI.rest('/rpc/save_schedule', { method: 'POST', body: { p: {
+      course_id: src.courseId,
+      weekdays: maskToIso(src.days),
+      start_time: src.start, end_time: src.end,
+      capacity: String(src.cap || 1),
+      repeat_kind: REPEAT_DB[src.repeat] || 'weekly',
       status: 'paused',
-      days: src.days.slice()
-    });
-    SCHEDULES.splice(idx + 1, 0, copy);
-    render();
-    toast('Időzítés duplikálva', { sub: copy.route + ' (másolat)' });
+      note: src.note
+    } } })
+      .then(() => ujratolt('Időzítés duplikálva', src.route + ' — szüneteltetve jött létre'))
+      .catch(hibaToast);
   }
 
   function deleteSchedule(id) {
-    const idx = SCHEDULES.findIndex(x => x.id === id);
-    if (idx < 0) return;
-    const removed = SCHEDULES[idx];
-    SCHEDULES.splice(idx, 1);
-    state.selected.delete(id);
-    if (state.selectedId === id) {
-      if (SCHEDULES.length) {
-        state.selectedId = SCHEDULES[Math.min(idx, SCHEDULES.length - 1)].id;
-        fillDrawer(byId(state.selectedId));
-      } else {
-        drawer.classList.add('is-hidden');
-      }
-    }
-    render();
-    undoToast('Időzítés törölve', removed.route, () => {
-      SCHEDULES.splice(Math.min(idx, SCHEDULES.length), 0, removed);
-      state.selectedId = removed.id;
-      fillDrawer(removed);
-      drawer.classList.remove('is-hidden');
-      render();
-      toast('Törlés visszavonva', { sub: removed.route });
-    });
+    const sc = byId(id);
+    if (!sc) return;
+    if (!window.confirm(
+      'Időzítés törlése — nincs visszavonás.\n\n' + sc.route + '\n' +
+      sc.start + '–' + sc.end + ' · ' + daysSummary(sc.days) +
+      '\n\nBiztosan törlöd?')) return;
+
+    UQAPI.rest('/rpc/delete_schedule', { method: 'POST', body: { p_schedule: id } })
+      .then(() => {
+        state.selected.delete(id);
+        if (state.selectedId === id) { state.selectedId = null; drawer.classList.add('is-hidden'); }
+        return ujratolt('Időzítés törölve', sc.route);
+      })
+      .catch(hibaToast);
   }
 
   function newSchedule() {
-    const sc = {
-      id: ++uid,
-      route: 'Városliget Felfedező',
-      days: [1, 1, 1, 1, 1, 0, 0],
-      start: '09:00',
-      end: '18:00',
-      cap: 20,
-      repeat: 'Heti',
-      status: 'paused',
+    if (!COURSES.length) {
+      toast('Előbb pálya kell', { type: 'warn', sub: 'Hozz létre egyet a Játékok oldalon.' });
+      return;
+    }
+    const cel = COURSES.find(c => c.name === state.route) || COURSES[0];
+    UQAPI.rest('/rpc/save_schedule', { method: 'POST', body: { p: {
+      course_id: cel.id,
+      weekdays: [1, 2, 3, 4, 5],
+      start_time: '09:00', end_time: '18:00',
+      capacity: '20', repeat_kind: 'weekly', status: 'paused',
       note: 'Új időablak – töltsd ki az adatokat.'
-    };
-    SCHEDULES.unshift(sc);
-    state.search = ''; topSearch.value = '';
-    state.route = 'all'; routeFilter.value = 'all';
-    state.status = 'all'; statusFilter.value = 'all';
-    state.page = 1;
-    state.selectedId = sc.id;
-    render();
-    selectSchedule(sc.id, true);
-    toast('Új időzítés létrehozva', { sub: 'Állítsd be a napokat és időablakot, majd Mentés' });
+    } } })
+      .then(r => {
+        const uj = Array.isArray(r) ? r[0] : r;
+        state.search = ''; topSearch.value = '';
+        state.status = 'all'; statusFilter.value = 'all';
+        state.page = 1;
+        state.selectedId = uj && uj.id;
+        return betolt().then(() => {
+          render();
+          if (state.selectedId) selectSchedule(state.selectedId, true);
+          toast('Új időzítés létrehozva', { sub: cel.name + ' — állítsd be, majd Mentés' });
+        });
+      })
+      .catch(hibaToast);
   }
 
   /* =========================================================
@@ -487,7 +568,7 @@
     if (e.target.closest('.jtk-check')) return; // jelölőnégyzet: ne nyissa a fiókot
     const row = e.target.closest('.jtk-row');
     if (!row) return;
-    const id = Number(row.dataset.id);
+    const id = row.dataset.id;   // UUID, nem szám
     const actBtn = e.target.closest('.jtk-act');
     if (actBtn) {
       const act = actBtn.dataset.act;
@@ -503,7 +584,7 @@
   tbody.addEventListener('change', e => {
     const input = e.target.closest('input[data-check]');
     if (!input) return;
-    const id = Number(input.dataset.check);
+    const id = input.dataset.check;   // UUID, nem szám
     if (input.checked) state.selected.add(id); else state.selected.delete(id);
     const row = input.closest('.jtk-row');
     if (row) row.classList.toggle('is-selected', input.checked);
@@ -614,8 +695,42 @@
   document.querySelector('.jtk-drawer-x').addEventListener('click', () => drawer.classList.add('is-hidden'));
 
   /* =========================================================
-     INDÍTÁS
+     INDÍTÁS — az adatbázisból töltünk, ezért aszinkron
      ========================================================= */
-  render();
-  selectSchedule(SCHEDULES[0].id);
+  function ures(html) { if (emptyEl) { emptyEl.hidden = false; emptyEl.innerHTML = html; } }
+
+  function indul() {
+    if (!window.UQAPI || !UQAPI.user()) {
+      ures('<p><b>Nem vagy bejelentkezve.</b></p>' +
+           '<p>Az időzítések kezeléséhez admin fiók kell.</p>' +
+           '<p><a class="adm-btn adm-btn-lime" href="bejelentkezes.html?next=idozitesek.html">Bejelentkezés</a></p>');
+      return;
+    }
+    betolt()
+      .then(() => {
+        // a pálya-szűrő és a fiók pálya-választója a VALÓS pályákból;
+        // eddig 7 beégetett név volt bedrótozva, kétszer, külön a HTML-be
+        const opciok = COURSES.map(c => `<option value="${esc(c.name)}">${esc(c.name)}</option>`).join('');
+        if (routeFilter) {
+          const most = routeFilter.value;
+          routeFilter.innerHTML = '<option value="all">Minden pálya</option>' + opciok;
+          if ([...routeFilter.options].some(o => o.value === most)) routeFilter.value = most;
+        }
+        if (fRoute && fRoute.tagName === 'SELECT') fRoute.innerHTML = opciok;
+
+        render();
+        if (state.selectedId) selectSchedule(state.selectedId);
+        if (!SCHEDULES.length) {
+          ures('<p><b>Még nincs egyetlen időzítés sem.</b></p>' +
+               (COURSES.length
+                 ? '<p>Hozz létre újat a fenti gombbal.</p>'
+                 : '<p>Előbb pálya kell — hozz létre egyet a <a href="jatekok.html">Játékok</a> oldalon.</p>'));
+        }
+      })
+      .catch(err => ures('<p><b>Az időzítések nem tölthetők be.</b></p><p>' +
+                         esc(String(err && err.message || '')) + '</p>'));
+  }
+
+  indul();
+  if (window.UQAPI) UQAPI.onAuth(() => indul());
 })();
