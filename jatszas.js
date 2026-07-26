@@ -284,7 +284,13 @@
   function stationPlayTasks(i) {
     const s = COURSE[i];
     const linked = readTasks().filter(t => t.station === s.name);
-    if (linked.length) return linked.map(t => ({ id: t.id, question: t.question, type: t.type, cfg: t.cfg || {}, points: t.points || 0, reveal: revealFor(t.type, t.cfg), image: t.image || '', video: t.video || '' }));
+    if (linked.length) return linked.map(t => ({
+      id: t.id, question: t.question, type: t.type, cfg: t.cfg || {},
+      points: t.points || 0, reveal: revealFor(t.type, t.cfg),
+      image: t.image || '', video: t.video || '',
+      /* az adatbázisból jövő csomag megoldása CSAK hash-ként utazik */
+      answer_hashes: t.answer_hashes || null, salt: t.salt || '', auto_ok: !!t.auto_ok
+    }));
     // fallback #1: pálya-szerkesztő állomás saját feladat-mezőiből (taskType/question/answer)
     if (s.taskType || s.question || s.answer) {
       const tmap = { 'Fotó feladat': 'foto', 'QR-kód': 'qr', 'GPS pont': 'gps', 'Kvíz kérdés': 'szoveg' };
@@ -521,20 +527,54 @@
     m.innerHTML = '<svg class="ico ico-xs" aria-hidden="true"><use href="#a-x"/></svg>Nem talált — próbáld újra, vagy ugord át.';
     const inp = box.querySelector('input'); if (inp) { inp.classList.remove('shake'); void inp.offsetWidth; inp.classList.add('shake'); inp.focus(); }
   }
+  /* Az adatbázisból letöltött csomag megoldása CSAK sózott hash — ezért a
+     kiértékelés aszinkron. A beégetett (régi) adatnál marad a korábbi,
+     szinkron logika, amit a hívó `regiOk` néven ad át. */
+  function ertekel(task, valasz, regiOk) {
+    if (window.UQCheck && UQCheck.tudEllenorizni(task)) return UQCheck.helyes(task, valasz);
+    if (task && task.auto_ok) return Promise.resolve(true);
+    return Promise.resolve(!!regiOk);
+  }
+
+  /* Hibás válasz után a helyes opciót kiemeljük. Régi adatnál a `correct`
+     jelölő mondja meg; a csomagban az nincs benne, ott hash-egyezéssel
+     keressük meg — így a játékos akkor is látja a jó választ. */
+  function jeloldHelyesOpciot(box, c, task) {
+    const ci = (c.options || []).findIndex(o => o && o.correct);
+    if (ci >= 0) {
+      const cb = box.querySelector('.uq-pl-opt[data-i="' + ci + '"]');
+      if (cb) cb.classList.add('ok');
+      return;
+    }
+    if (!window.UQCheck || !UQCheck.tudEllenorizni(task)) return;
+    (c.options || []).forEach((o, i) => {
+      UQCheck.helyes(task, o && o.text).then(jo => {
+        if (!jo) return;
+        const cb = box.querySelector('.uq-pl-opt[data-i="' + i + '"]');
+        if (cb) cb.classList.add('ok');
+      });
+    });
+  }
+
   function playCheckText(val, c) {
     c = c || {};
     if (c.numeric) { const a = parseFloat(String(val).replace(',', '.')); return (c.accepted || []).some(x => parseFloat(String(x).replace(',', '.')) === a); }
     const v = c.tolerant ? playNorm(val) : String(val).trim();
     return (c.accepted || []).some(x => { const xx = c.tolerant ? playNorm(x) : String(x).trim(); return c.keyword ? (xx && v.includes(xx)) : v === xx; });
   }
-  function drawCodePad(box, c, done) {
-    const len = (c.code || '').length || 4;
+  function drawCodePad(box, c, done, task) {
+    /* A csomagban nincs nyers kód, csak a hossza (codeLen) — enélkül nem
+       tudnánk hány mezőt rajzolni. */
+    const len = (c.code || '').length || Number(c.codeLen) || 4;
     const disp = () => '<div class="uq-pl-code">' + Array.from({ length: len }).map((_, i) => '<span>' + (play.pv.code[i] || '') + '</span>').join('') + '</div>';
     box.innerHTML = disp() + '<div class="uq-pl-pad">' + [1, 2, 3, 4, 5, 6, 7, 8, 9].map(n => '<button type="button" data-k="' + n + '">' + n + '</button>').join('') + '<button type="button" data-k="del">⌫</button><button type="button" data-k="0">0</button><button type="button" data-k="ok" class="ok">OK</button></div>';
     box.querySelectorAll('.uq-pl-pad button').forEach(b => b.addEventListener('click', () => {
       const k = b.dataset.k;
       if (k === 'del') play.pv.code = play.pv.code.slice(0, -1);
-      else if (k === 'ok') { if (String(play.pv.code) === String(c.code)) return done(true); return playWrong(); }
+      else if (k === 'ok') {
+        return ertekel(task, play.pv.code, String(play.pv.code) === String(c.code))
+          .then(ok => ok ? done(true) : playWrong());
+      }
       else if (play.pv.code.length < len) play.pv.code += k;
       const d = box.querySelector('.uq-pl-code'); if (d) d.outerHTML = disp();
     }));
@@ -568,22 +608,30 @@
       if (c.shuffle) opts = opts.sort(() => Math.random() - 0.5);
       box.innerHTML = '<div class="uq-pl-opts">' + opts.map(x => '<button class="uq-pl-opt" type="button" data-i="' + x.i + '">' + esc(x.o.text || '—') + '</button>').join('') + '</div>';
       box.querySelectorAll('.uq-pl-opt').forEach(b => b.addEventListener('click', () => {
-        const ok = c.options[+b.dataset.i] && c.options[+b.dataset.i].correct;
+        const opt = c.options[+b.dataset.i] || {};
         box.querySelectorAll('.uq-pl-opt').forEach(x => { x.disabled = true; });
-        b.classList.add(ok ? 'ok' : 'bad');
-        if (!ok) { const ci = c.options.findIndex(o => o.correct); const cb = box.querySelector('.uq-pl-opt[data-i="' + ci + '"]'); if (cb) cb.classList.add('ok'); }
-        setTimeout(() => done(!!ok), 420);
+        ertekel(task, opt.text, !!opt.correct).then(ok => {
+          b.classList.add(ok ? 'ok' : 'bad');
+          if (!ok) jeloldHelyesOpciot(box, c, task);
+          setTimeout(() => done(!!ok), 420);
+        });
       }));
     } else if (task.type === 'szoveg') {
       box.innerHTML = '<div class="uq-pl-input"><input type="text" id="uqPlayIn" placeholder="Írd be a választ…" autocomplete="off"><button class="uq-pl-go" type="button" id="uqPlayGo">Ellenőrzés</button></div>';
-      const go = () => { if (playCheckText($('#uqPlayIn').value, c)) done(true); else playWrong(); };
+      const go = () => {
+        const v = $('#uqPlayIn').value;
+        ertekel(task, v, playCheckText(v, c)).then(ok => ok ? done(true) : playWrong());
+      };
       $('#uqPlayGo').addEventListener('click', go);
       $('#uqPlayIn').addEventListener('keydown', e => { if (e.key === 'Enter') go(); });
     } else if (task.type === 'kod') {
       if (c.codeType === 'word') {
         box.innerHTML = '<div class="uq-pl-input"><input type="text" id="uqPlayIn" placeholder="Írd be a kódot…" autocomplete="off"><button class="uq-pl-go" type="button" id="uqPlayGo">Feltör</button></div>';
-        $('#uqPlayGo').addEventListener('click', () => { if (playNorm($('#uqPlayIn').value) === playNorm(c.code)) done(true); else playWrong(); });
-      } else { drawCodePad(box, c, done); }
+        $('#uqPlayGo').addEventListener('click', () => {
+          const v = $('#uqPlayIn').value;
+          ertekel(task, v, playNorm(v) === playNorm(c.code)).then(ok => ok ? done(true) : playWrong());
+        });
+      } else { drawCodePad(box, c, done, task); }
     } else if (task.type === 'puzzle' && c.subtype !== 'match') {
       drawPuzzle(box, c, done);
     } else if (task.type === 'puzzle') {
