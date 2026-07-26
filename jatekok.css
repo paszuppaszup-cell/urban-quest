@@ -316,3 +316,25 @@
   color: #ffc98a;
   cursor: help;
 }
+
+/* ---- borítókép-prompt generátor a szerkesztőben ---- */
+.jtk-imgprompt label { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.ip-hint {
+  font-size: 11px; font-weight: 500; letter-spacing: .02em;
+  color: var(--muted, #8a9a86); text-transform: none;
+}
+#fImgPrompt {
+  width: 100%; resize: vertical; min-height: 120px;
+  background: rgba(255,255,255,.03);
+  border: 1px solid rgba(255,255,255,.10);
+  border-radius: 10px; padding: 12px 14px;
+  color: var(--muted, #a8b5a4);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 12px; line-height: 1.55;
+}
+#fImgPrompt:focus { outline: 2px solid rgba(158,213,43,.5); outline-offset: 1px; }
+.ip-actions { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+.ip-note {
+  margin: 10px 0 0; font-size: 12px; line-height: 1.5;
+  color: var(--muted, #8a9a86);
+}

@@ -15,6 +15,11 @@
 
   var CACHE = 'uq_catalog_v1';
 
+  var DIFF_LABEL = { konnyu: 'Könnyű', kozepes: 'Közepes', nehez: 'Nehéz', extrem: 'Extrém' };
+  var DIFF_SCORE = { konnyu: '2/5 könnyű', kozepes: '3/5 közepes', nehez: '4/5 nehéz', extrem: '5/5 extrém' };
+  var CAT_LABEL  = { varosi: 'Városi', tortenelmi: 'Történelmi', kaland: 'Kaland',
+                     csaladi: 'Családi', ceges: 'Céges', horror: 'Horror' };
+
   function cacheOlvas() {
     try { var r = localStorage.getItem(CACHE); return r ? JSON.parse(r) : null; }
     catch (e) { return null; }
@@ -55,6 +60,20 @@
     q.image = q.image || '';
     q.fromDb = true;
     q.version = row.version;
+
+    /* A kártya-renderelő ezeket is használja — enélkül „UNDEFINED" jelent
+       meg a nehézség-jelvényen és „(undefined)" az értékeléseknél. */
+    q.diffLabel = DIFF_LABEL[q.diff] || 'Közepes';
+    q.diffScore = DIFF_SCORE[q.diff] || '';
+    q.catCls = q.catCls || q.cat;
+    q.catLabel = CAT_LABEL[q.cat] || 'Városi';
+    q.subtitle = q.subtitle || q.desc || '';
+
+    /* Értékelés: NINCS ilyen adat a rendszerben. A régi kártyák kitalált
+       számokat mutattak (4.8 / 64 vélemény) — inkább nullát adunk, és a
+       renderelő elrejti a csillagokat, amíg nincs valódi értékelés. */
+    q.rating = Number(q.rating) || 0;
+    q.reviews = Number(q.reviews) || 0;
 
     // a szűrők a régi alakot várják
     q.filters = q.filters || {

@@ -196,7 +196,11 @@
       `<div class="uq-toast-body"><b>${esc(msg)}</b>${sub ? `<small>${esc(sub)}</small>` : ''}</div>` +
       `<button class="uq-toast-x" type="button" aria-label="Bezárás">${ico('a-close', 'ico-sm')}</button>`;
     toastWrap.appendChild(t);
-    requestAnimationFrame(() => t.classList.add('is-show'));
+    /* rAF-et a böngésző elfojtja, ha a lap nem látszik (másik fül) —
+       időzítő is biztosítja, hogy az értesítés megjelenjen. */
+    const megjelenit = () => t.classList.add('is-show');
+    requestAnimationFrame(megjelenit);
+    setTimeout(megjelenit, 60);
     const dismiss = () => { t.classList.remove('is-show'); setTimeout(() => t.remove(), 260); };
     t.querySelector('.uq-toast-x').addEventListener('click', dismiss);
     setTimeout(dismiss, 3200);
@@ -350,6 +354,25 @@
     renderList(fDoList, (Array.isArray(g.doList) && g.doList.length) ? g.doList : DEFAULT_DO.slice());
     renderList(fKnowList, (Array.isArray(g.knowList) && g.knowList.length) ? g.knowList : DEFAULT_KNOW.slice());
     rebuildLangs(g.allLangs);
+    frissitPrompt();
+  }
+
+  /* ---- borítókép-prompt: mindig az ÉPPEN a szerkesztőben lévő
+     adatokból, nem a mentett rekordból — így mentés előtt is látod,
+     mit ad a módosított cím vagy leírás. ---- */
+  function frissitPrompt() {
+    const ta = document.getElementById('fImgPrompt');
+    if (!ta || !window.UQImgPrompt) return;
+    const loc = String(fLoc.value || '').split(',');
+    ta.value = UQImgPrompt.build({
+      name: fName.value,
+      subtitle: fSubtitle.value,
+      desc: fDesc.value,
+      category: fCategory.value,
+      difficulty: DIFF_DB[fDiff.value] || 'kozepes',
+      city: (loc[0] || '').trim(),
+      area: loc.length > 1 ? loc.slice(1).join(',').trim() : ''
+    });
   }
 
   function markActive() {
@@ -630,6 +653,44 @@
   /* A pálya „közzétett”, de nincs élő verziója → nem látszik sehol.
      Ezt ki kell mondani, mert semmi máson nem látszik. */
   function nincsElo(g) { return g.status === 'pub' && g._elo === false; }
+
+  /* ---- borítókép-prompt: élő frissítés + másolás ---- */
+  [fName, fSubtitle, fDesc, fLoc].forEach(el => {
+    if (el) el.addEventListener('input', frissitPrompt);
+  });
+  [fCategory, fDiff].forEach(el => {
+    if (el) el.addEventListener('change', frissitPrompt);
+  });
+
+  const btnCopyPrompt = document.getElementById('btnCopyPrompt');
+  if (btnCopyPrompt) btnCopyPrompt.addEventListener('click', () => {
+    const ta = document.getElementById('fImgPrompt');
+    if (!ta || !ta.value) return;
+    const kesz = () => toast('Prompt a vágólapon', { type: 'ok', sub: 'Illeszd be a képgenerátorba' });
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(ta.value).then(kesz, jeloles);
+    } else jeloles();
+
+    /* Tartalék: ha a vágólap-írás nem engedélyezett (megtagadott jog,
+       nem felhasználói gesztus), legalább kijelöljük, hogy Ctrl+C mehessen.
+       A readonly MINDEN ágon visszaáll — különben a mező szerkeszthető
+       maradna, és a felhasználó véletlenül átírhatná a promptot. */
+    function jeloles() {
+      ta.removeAttribute('readonly');
+      ta.select();
+      var sikerult = false;
+      try { sikerult = document.execCommand('copy'); } catch (e) {}
+      ta.setAttribute('readonly', 'readonly');
+      if (sikerult) kesz();
+      else toast('Nyomj Ctrl+C-t', { type: 'info', sub: 'A prompt ki van jelölve' });
+    }
+  });
+
+  const btnRefreshPrompt = document.getElementById('btnRefreshPrompt');
+  if (btnRefreshPrompt) btnRefreshPrompt.addEventListener('click', () => {
+    frissitPrompt();
+    toast('Prompt frissítve', { type: 'info', sub: 'A mostani adatokból' });
+  });
 
   /* felső sáv: Mentés / Közzététel */
   document.getElementById('btnSave').addEventListener('click', () => { saveStore(); toast('Módosítások mentve', { sub: 'Minden változás elmentve' }); });

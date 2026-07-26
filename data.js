@@ -137,9 +137,15 @@ window.questCardHTML = function (id) {
   const badgeLabel = q.catCls === 'romantikus' ? 'Romantikus' : q.diffLabel;
   const tagIcon    = q.catCls === 'romantikus' ? 'i-heart' : (q.catCls === 'termeszet' ? 'i-leaf' : 'i-compass');
 
-  const filled = Math.max(0, Math.min(5, Math.round(q.rating)));
+  /* Értékelés csak akkor, ha VAN. Üres csillagsor „(0)"-val rosszabb,
+     mint semmi — és a korábbi kitalált 4.8/64 értékek félrevezetők voltak. */
+  const reviews = Number(q.reviews) || 0;
+  const filled = Math.max(0, Math.min(5, Math.round(Number(q.rating) || 0)));
   let stars = '';
   for (let i = 0; i < 5; i++) stars += `<svg class="star${i < filled ? '' : ' is-empty'}" aria-hidden="true"><use href="#i-star"/></svg>`;
+  const ratingHTML = reviews > 0
+    ? `<div class="quest-rating"><span class="stars">${stars}</span><span class="quest-reviews">(${reviews})</span></div>`
+    : '';
 
   const langStr = q.langs.map(l => l.toUpperCase()).join('/');
   const f = q.filters || {};
@@ -159,10 +165,7 @@ window.questCardHTML = function (id) {
       <h3 class="quest-title">${esc(q.title)}</h3>
       <p class="quest-tagline">${ico(tagIcon, 'ico ico-xs')}<span>${esc(q.subtitle)}</span></p>
       <p class="quest-desc">${esc(q.desc)}</p>
-      <div class="quest-rating">
-        <span class="stars">${stars}</span>
-        <span class="quest-reviews">(${q.reviews})</span>
-      </div>
+      ${ratingHTML}
       <div class="quest-stats">
         <span class="quest-stat">${ico('i-clock', 'ico ico-xs')}<span>${esc(q.duration)}</span></span>
         <span class="quest-stat">${ico('i-pin', 'ico ico-xs')}<span>${esc(q.distance)}</span></span>

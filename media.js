@@ -37,7 +37,11 @@
       '<div class="uq-toast-body"><b>' + esc(msg) + '</b>' + (sub ? '<small>' + esc(sub) + '</small>' : '') + '</div>' +
       '<button class="uq-toast-x" type="button" aria-label="Bezárás">' + ico('a-close', 'ico-sm') + '</button>';
     wrap.appendChild(t);
-    requestAnimationFrame(function () { t.classList.add('is-show'); });
+    /* rAF-et a böngésző elfojtja, ha a lap nem látszik (másik fül) —
+       időzítő is biztosítja, hogy az értesítés megjelenjen. */
+    var megjelenit = function () { t.classList.add('is-show'); };
+    requestAnimationFrame(megjelenit);
+    setTimeout(megjelenit, 60);
     var dismiss = function () { t.classList.remove('is-show'); setTimeout(function () { t.remove(); }, 260); };
     var x = t.querySelector('.uq-toast-x');
     if (x) x.addEventListener('click', dismiss);
@@ -140,7 +144,11 @@
       '<button class="uq-toast-undo" type="button">Visszavonás</button>' +
       '<button class="uq-toast-x" type="button" aria-label="Bezárás">' + ico('a-close', 'ico-sm') + '</button>';
     wrap.appendChild(t);
-    requestAnimationFrame(function () { t.classList.add('is-show'); });
+    /* rAF-et a böngésző elfojtja, ha a lap nem látszik (másik fül) —
+       időzítő is biztosítja, hogy az értesítés megjelenjen. */
+    var megjelenit = function () { t.classList.add('is-show'); };
+    requestAnimationFrame(megjelenit);
+    setTimeout(megjelenit, 60);
     var removed = false, undone = false;
     var dismiss = function () { if (removed) return; removed = true; t.classList.remove('is-show'); setTimeout(function () { t.remove(); }, 260); };
     t.querySelector('.uq-toast-undo').addEventListener('click', function () { if (!undone) { undone = true; onUndo(); } dismiss(); });

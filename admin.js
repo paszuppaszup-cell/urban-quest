@@ -303,7 +303,11 @@
       '<div class="uq-toast-body"><b>' + esc(msg) + '</b>' + (opt.sub ? '<small>' + esc(opt.sub) + '</small>' : '') + '</div>' +
       '<button class="uq-toast-x" type="button" aria-label="Bezárás"><svg class="ico ico-sm" aria-hidden="true"><use href="#a-x"/></svg></button>';
     toastWrap.appendChild(t);
-    requestAnimationFrame(() => t.classList.add('is-show'));
+    /* rAF-et a böngésző elfojtja, ha a lap nem látszik (másik fül) —
+       időzítő is biztosítja, hogy az értesítés megjelenjen. */
+    const megjelenit = () => t.classList.add('is-show');
+    requestAnimationFrame(megjelenit);
+    setTimeout(megjelenit, 60);
     const close = () => { t.classList.remove('is-show'); setTimeout(() => t.remove(), 260); };
     t.querySelector('.uq-toast-x').addEventListener('click', close);
     setTimeout(close, 3200);

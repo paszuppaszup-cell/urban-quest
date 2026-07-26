@@ -171,7 +171,11 @@
       '<button class="uq-toast-undo" type="button">Visszavonás</button>' +
       '<button class="uq-toast-x" type="button" aria-label="Bezárás">' + ico('a-close', 'ico-sm') + '</button>';
     wrap.appendChild(t);
-    requestAnimationFrame(() => t.classList.add('is-show'));
+    /* rAF-et a böngésző elfojtja, ha a lap nem látszik (másik fül) —
+       időzítő is biztosítja, hogy az értesítés megjelenjen. */
+    const megjelenit = () => t.classList.add('is-show');
+    requestAnimationFrame(megjelenit);
+    setTimeout(megjelenit, 60);
     let removed = false, undone = false;
     const dismiss = () => { if (removed) return; removed = true; t.classList.remove('is-show'); setTimeout(() => t.remove(), 260); };
     t.querySelector('.uq-toast-undo').addEventListener('click', () => { if (!undone) { undone = true; onUndo(); } dismiss(); });

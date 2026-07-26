@@ -207,7 +207,7 @@
 
       <div class="jtk-fg">
         <label>Kategória</label>
-        <div class="ed-field ed-select"><select id="fCategory"><option value="varosi">Városi</option><option value="romantikus">Romantikus</option><option value="termeszet">Természet</option></select><svg class="ico ico-xs" aria-hidden="true"><use href="#a-down"/></svg></div>
+        <div class="ed-field ed-select"><select id="fCategory"><option value="varosi">Városi</option><option value="tortenelmi">Történelmi</option><option value="kaland">Kaland</option><option value="csaladi">Családi</option><option value="ceges">Céges</option><option value="horror">Horror</option></select><svg class="ico ico-xs" aria-hidden="true"><use href="#a-down"/></svg></div>
       </div>
 
       <div class="jtk-fg-row">
@@ -283,6 +283,23 @@
         <button class="jtk-media-pick" id="fImagePick" type="button"><svg class="ico ico-xs" aria-hidden="true"><use href="#a-image"/></svg>Média-tárból</button>
       </div>
 
+      <!-- Borítókép-prompt: a pálya adataiból, a meglévő képek stílusában -->
+      <div class="jtk-fg jtk-imgprompt">
+        <label>Borítókép-prompt
+          <span class="ip-hint">a fenti adatokból, képgenerátorhoz</span>
+        </label>
+        <textarea id="fImgPrompt" rows="7" readonly spellcheck="false"
+                  aria-label="Borítókép-prompt képgenerátorhoz"></textarea>
+        <div class="ip-actions">
+          <button class="adm-btn adm-btn-lime" id="btnCopyPrompt" type="button">
+            <svg class="ico ico-xs" aria-hidden="true"><use href="#a-copy"/></svg>Prompt másolása
+          </button>
+          <button class="adm-btn" id="btnRefreshPrompt" type="button">Frissítés</button>
+        </div>
+        <p class="ip-note">Illeszd be a képgenerátorba (ChatGPT, Midjourney, Gemini…),
+          majd a kész kép URL-jét vagy feltöltött fájlját add meg fent.</p>
+      </div>
+
       <div class="jtk-fg">
         <label>Mit csináltok</label>
         <div class="jtk-list" id="fDoList"><!-- JS tölti fel --></div>
@@ -321,6 +338,7 @@
 <div class="uq-toast-wrap" id="uqToasts"></div>
 
 <script src="uq-api.js?v=1"></script>
-<script src="jatekok.js?v=9"></script>
+<script src="uq-imgprompt.js?v=1"></script>
+<script src="jatekok.js?v=10"></script>
 </body>
 </html>
