@@ -75,6 +75,18 @@
     q.rating = Number(q.rating) || 0;
     q.reviews = Number(q.reviews) || 0;
 
+    /* A RÉSZLETOLDAL ezeket külön mezőnéven kéri — hiányukban „undefined"
+       jelent meg a Helyszín, az Indulási pont és az Ajánlott csapatméret
+       blokkban. Az újabb public_card már tartalmazza őket; a régebbi
+       verziókhoz itt van tartalék. */
+    q.locCity = q.locCity || [q.city, q.area].filter(Boolean).join(', ') || 'Budapest';
+    q.startPoint = q.startPoint || q.locCity;
+    q.startAddr = q.startAddr || q.locCity;
+    q.teamText = q.teamText || q.team || '';
+    q.teamPill = q.teamPill || (q.teamText ? q.teamText + ' (ideális)' : '');
+    q.teamNote = q.teamNote || 'Ajánlott létszám a legjobb élményhez.';
+    q.audience = q.audience || [q.teamText, q.age].filter(Boolean).join(' · ');
+
     // a szűrők a régi alakot várják
     q.filters = q.filters || {
       helyszin: String(q.city || 'budapest').toLowerCase(),

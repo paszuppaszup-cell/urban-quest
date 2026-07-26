@@ -4,8 +4,12 @@
 (function () {
   'use strict';
 
-  const QUESTS = window.QUESTS || {};
-  const ORDER = window.QUEST_ORDER || Object.keys(QUESTS);
+  /* Nem `const`-tal fagyasztjuk be: a katalógus az adatbázisból tölt,
+     és a friss adat a lap betöltése UTÁN érkezik. Korábban a részletoldal
+     örökre a beégetett data.js tartalmát mutatta — az adminban átírt cím
+     így sosem jelent meg itt. */
+  let QUESTS = window.QUESTS || {};
+  let ORDER = window.QUEST_ORDER || Object.keys(QUESTS);
 
   const CTA_LABEL = 'Játék indítása';
 
@@ -16,26 +20,39 @@
   /* ---------- melyik küldetés ---------- */
   const params = new URLSearchParams(location.search);
   let id = params.get('id');
-  if (!QUESTS[id]) id = 'szerelem';
-  const q = QUESTS[id];
+  if (!QUESTS[id]) id = Object.keys(QUESTS)[0] || 'szerelem';
+  let q = QUESTS[id] || {};
 
   // ugyanaz az akcentus, mint a küldetés kártyáján (nehézség színe / romantikus)
-  const accKey = q.catCls === 'romantikus' ? 'romantikus' : q.diff;
-
-  document.title = `${q.heroTitle} – Urban Quest`;
-
-  // a kártyáéval azonos akcentus az egész részletoldalra
+  let accKey = q.catCls === 'romantikus' ? 'romantikus' : q.diff;
   const page = document.querySelector('.detail-page');
-  if (page) page.classList.add('acc-' + accKey);
 
-  /* ---------- HERO ---------- */
-  renderHero();
-  /* ---------- INFÓ ---------- */
-  renderInfo();
-  /* ---------- HASONLÓ ---------- */
-  renderSimilar();
-  // a katalógus az adatbázisból tölt, és a beérkezéskor változhat a lista
-  document.addEventListener('uq:catalog', renderSimilar);
+  function ujraOlvas() {
+    QUESTS = window.QUESTS || QUESTS;
+    ORDER = window.QUEST_ORDER || ORDER;
+    if (!QUESTS[id]) return false;          // a pálya eltűnt (archiválva) — marad a régi nézet
+    q = QUESTS[id];
+    const ujAcc = q.catCls === 'romantikus' ? 'romantikus' : q.diff;
+    if (page && ujAcc !== accKey) { page.classList.remove('acc-' + accKey); page.classList.add('acc-' + ujAcc); }
+    accKey = ujAcc;
+    document.title = `${q.heroTitle || q.title} – Urban Quest`;
+    return true;
+  }
+
+  function renderAll() {
+    renderHero();
+    renderInfo();
+    renderSimilar();
+  }
+
+  ujraOlvas();
+  if (page) page.classList.add('acc-' + accKey);
+  renderAll();
+
+  /* A katalógus az adatbázisból tölt: amikor megérkezik, az EGÉSZ oldalt
+     újrarendereljük — nem csak a „hasonló küldetések" sávot. */
+  document.addEventListener('uq:catalog', () => { if (ujraOlvas()) renderAll(); });
+
   /* ---------- fejléc interakciók ---------- */
   initHeader();
 
@@ -59,7 +76,7 @@
     document.getElementById('detailHero').innerHTML = `
       <div class="detail-hero-media">
         <img class="detail-hero-img" src="${q.image}" alt="${esc(q.heroTitle)}">
-        <span class="badge badge-${accKey} hero-badge-m">${esc(q.cat)}</span>
+        <span class="badge badge-${accKey} hero-badge-m">${esc(q.catLabel || q.cat)}</span>
         <button class="hero-fav-m" type="button" aria-label="Kedvencekhez adás">${ico('i-heart', 'ico ico-sm')}</button>
         <span class="hero-dots" aria-hidden="true"><i class="dot is-on"></i><i class="dot"></i><i class="dot"></i><i class="dot"></i><i class="dot"></i></span>
       </div>
@@ -67,7 +84,7 @@
       <div class="detail-hero-inner container">
         <div class="detail-main">
           <a class="back-link" href="index.html#kuldetesek">${ico('i-back', 'ico ico-sm')}<span>Vissza a küldetésekhez</span></a>
-          <span class="badge badge-${accKey} detail-cat">${esc(q.cat)}</span>
+          <span class="badge badge-${accKey} detail-cat">${esc(q.catLabel || q.cat)}</span>
           <h1 class="detail-title">${esc(q.heroTitle)}</h1>
           <p class="detail-subtitle">${esc(q.subtitle)}</p>
           <p class="detail-desc">${esc(q.desc)}</p>
@@ -107,7 +124,19 @@
         if (window.UQAccount) { window.UQAccount.toggleFav(id); syncFavM(); }
         else favM.classList.toggle('is-on');
       });
-      document.addEventListener('uq:favs', syncFavM);
+      /* A document-re kötött figyelő túléli az újrarenderelést, ezért
+         csak egyszer köthetjük be — különben minden frissítésnél
+         halmozódna. A szinkron mindig a FRISS gombot keresi meg. */
+      if (!renderHero._favsKotve) {
+        renderHero._favsKotve = true;
+        document.addEventListener('uq:favs', () => {
+          const g = document.querySelector('.hero-fav-m');
+          if (!g || !window.UQAccount) return;
+          const on = window.UQAccount.isFav(id);
+          g.classList.toggle('is-on', on);
+          g.setAttribute('aria-pressed', String(on));
+        });
+      }
     }
 
     // lenti foglaló-sáv (mobilon jelenik meg)
