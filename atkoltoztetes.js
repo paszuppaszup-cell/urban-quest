@@ -301,13 +301,41 @@
       if (arvaIdo) eredmeny.gondok.push(arvaIdo + ' időzítés nem létező pályára mutat — az időzítések átköltöztetése egyelőre nem része ennek a lépésnek.');
     }
 
+    /* ---- 4) média: a base64-ként tárolt fájlok a Storage-ba ---- */
     var media = tomb(ls('uq_media_v1'));
-    var base64 = media.filter(function (m) { return m && typeof m.src === 'string' && m.src.indexOf('data:') === 0; }).length;
-    if (base64) {
-      eredmeny.gondok.push(base64 + ' médiaelem base64-ként van tárolva — a képek átköltöztetése külön lépés lesz (Storage), most nem jön át.');
+    eredmeny.media = media.filter(function (m) {
+      return m && typeof m.src === 'string' && m.src.indexOf('data:') === 0;
+    });
+    var linkek = media.filter(function (m) {
+      return m && typeof m.src === 'string' && /^https?:\/\//i.test(m.src);
+    });
+    eredmeny.medialinkek = linkek;
+
+    var halott = media.filter(function (m) {
+      return m && (!m.src || m.src.indexOf('blob:') === 0);
+    }).length;
+    if (halott) {
+      eredmeny.gondok.push(halott + ' médiaelem tartalma már most sincs meg (a böngésző eldobta újratöltéskor) — csak a neve maradt, azt nem tudom visszahozni.');
     }
 
     return eredmeny;
+  }
+
+  /* data URI -> Blob, hogy fájlként fel tudjuk tölteni */
+  function dataUriToBlob(uri) {
+    var v = String(uri).split(',');
+    var mime = (v[0].match(/data:([^;]+)/) || [])[1] || 'application/octet-stream';
+    if (!/;base64/i.test(v[0])) return new Blob([decodeURIComponent(v[1])], { type: mime });
+    var bin = atob(v[1]);
+    var buf = new Uint8Array(bin.length);
+    for (var i = 0; i < bin.length; i++) buf[i] = bin.charCodeAt(i);
+    return new Blob([buf], { type: mime });
+  }
+
+  function mediaTipus(m) {
+    var t = String(m.type || '').toLowerCase();
+    if (t === 'image' || t === 'video' || t === 'audio') return t;
+    return 'image';
   }
 
   /* =========================================================
@@ -357,6 +385,23 @@
       }
     }
 
+    var mediaDb = (terv.media || []).length + (terv.medialinkek || []).length;
+    if (mediaDb) {
+      h.push('<h3>Médiatár (' + mediaDb + ')</h3>');
+      h.push('<ul class="mig-forras">');
+      if ((terv.media || []).length) {
+        var ossz = terv.media.reduce(function (a, m) { return a + Math.round((m.src.length * 3) / 4); }, 0);
+        h.push('<li><b>' + terv.media.length + '</b> <span>feltöltendő fájl (' +
+               (ossz / 1048576).toFixed(1).replace('.', ',') + ' MB)</span></li>');
+      }
+      if ((terv.medialinkek || []).length) {
+        h.push('<li><b>' + terv.medialinkek.length + '</b> <span>videó-hivatkozás</span></li>');
+      }
+      h.push('</ul>');
+      h.push('<p class="mig-demo-info">A képek és hangok a Storage-ba kerülnek, a videó-linkek hivatkozásként. ' +
+             'A 10 MB-nál nagyobb fájlok kimaradnak.</p>');
+    }
+
     h.push('<h3>Ami NEM jön át (' + terv.gondok.length + ')</h3>');
     if (!terv.gondok.length) {
       h.push('<p class="mig-ok">Nem találtam lógó hivatkozást — minden adat átköltöztethető.</p>');
@@ -403,11 +448,12 @@
 
     function lepes() {
       if (i >= lista.length) {
-        ir('<p class="' + (hiba ? 'mig-gond-sor' : 'mig-ok') + '"><b>Kész.</b> ' + ok + ' pálya átköltöztetve' +
+        ir('<p class="' + (hiba ? 'mig-gond-sor' : 'mig-ok') + '"><b>Pályák kész.</b> ' + ok + ' átköltöztetve' +
            (hiba ? ', ' + hiba + ' hibára futott' : '') + '.</p>');
-        ir('<p>Az import idempotens — ha valami hibázott, nyugodtan futtathatod újra.</p>');
-        frissitGomb();
-        return;
+        return mediaKoltoztetes().then(function () {
+          ir('<p>Az import idempotens — ha valami hibázott, nyugodtan futtathatod újra.</p>');
+          frissitGomb();
+        });
       }
       var p = lista[i++];
       ir('<p>' + esc(p.name) + ' … ');
@@ -434,6 +480,86 @@
         .then(lepes);
     }
     lepes();
+  }
+
+  /* =========================================================
+     MÉDIA ÁTKÖLTÖZTETÉS — base64 → Storage
+     ========================================================= */
+
+  function mediaKoltoztetes() {
+    var fajlok = terv.media || [];
+    var linkek = terv.medialinkek || [];
+    if (!fajlok.length && !linkek.length) return Promise.resolve();
+
+    ir('<p><b>Médiatár…</b></p>');
+    var ok = 0, kihagyva = 0, hiba = 0, mar = 0;
+
+    /* Ami már bent van, azt NEM töltjük fel újra. A save_media a
+       legacy_key alapján dedupál, de a Storage-feltöltés nem — újrafuttatáskor
+       minden fájlból árva másolat maradna a tárhelyen. */
+    var meglevo = {};
+
+    function egy(i) {
+      if (i >= fajlok.length) return linkEgy(0);
+      var m = fajlok[i];
+      var nev = m.name || ('fajl-' + (i + 1));
+
+      if (meglevo['media:' + nev]) {
+        mar++;
+        return egy(i + 1);
+      }
+
+      var blob;
+      try { blob = dataUriToBlob(m.src); }
+      catch (e) { hiba++; ir('<p class="mig-gond-sor">' + esc(nev) + ' — hibás tartalom</p>'); return egy(i + 1); }
+
+      if (blob.size > 10 * 1024 * 1024) {
+        kihagyva++;
+        ir('<p class="mig-warn">' + esc(nev) + ' — túl nagy (' + (blob.size / 1048576).toFixed(1) + ' MB), kimarad</p>');
+        return egy(i + 1);
+      }
+
+      var file = new File([blob], nev, { type: blob.type });
+      return UQAPI.upload(file)
+        .then(function (fel) {
+          return UQAPI.rest('/rpc/save_media', { method: 'POST', body: { p: {
+            kind: mediaTipus(m), title: nev, storage_path: fel.path,
+            mime: blob.type, bytes: String(blob.size),
+            legacy_key: 'media:' + nev
+          } } });
+        })
+        .then(function () { ok++; ir('<p class="mig-ok-sor">' + esc(nev) + ' — feltöltve</p>'); })
+        .catch(function (e) { hiba++; ir('<p class="mig-gond-sor">' + esc(nev) + ' — ' + esc(e.message) + '</p>'); })
+        .then(function () { return egy(i + 1); });
+    }
+
+    function linkEgy(j) {
+      if (j >= linkek.length) {
+        ir('<p class="' + (hiba ? 'mig-gond-sor' : 'mig-ok') + '"><b>Médiatár kész.</b> ' +
+           ok + ' átköltöztetve' +
+           (mar ? ', ' + mar + ' már bent volt' : '') +
+           (kihagyva ? ', ' + kihagyva + ' kihagyva (túl nagy)' : '') +
+           (hiba ? ', ' + hiba + ' hibára futott' : '') + '.</p>');
+        return Promise.resolve();
+      }
+      var m = linkek[j];
+      var nev = m.name || m.src;
+      if (meglevo['media:' + nev]) { mar++; return linkEgy(j + 1); }
+      return UQAPI.rest('/rpc/save_media', { method: 'POST', body: { p: {
+        kind: mediaTipus(m), title: nev, external_url: m.src, legacy_key: 'media:' + nev
+      } } })
+        .then(function () { ok++; ir('<p class="mig-ok-sor">' + esc(nev) + ' — hivatkozás</p>'); })
+        .catch(function (e) { hiba++; ir('<p class="mig-gond-sor">' + esc(nev) + ' — ' + esc(e.message) + '</p>'); })
+        .then(function () { return linkEgy(j + 1); });
+    }
+
+    // előbb megnézzük, mi van már bent — így nem töltünk fel fölöslegesen
+    return UQAPI.rest('/v_admin_media?select=legacy_key')
+      .then(function (rows) {
+        (rows || []).forEach(function (r) { if (r.legacy_key) meglevo[r.legacy_key] = 1; });
+      })
+      .catch(function () { /* ha nem sikerül, a feltöltés akkor is menjen */ })
+      .then(function () { return egy(0); });
   }
 
   /* =========================================================

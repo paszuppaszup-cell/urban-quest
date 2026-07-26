@@ -168,47 +168,66 @@
     audio: { label: 'Hang', icon: 'a-audio', badge: 'med-badge-audio' }
   };
 
-  var uid = 0;
-  MEDIA.forEach(function (m) { m.id = ++uid; });
   var byId = function (id) { return MEDIA.find(function (m) { return m.id === id; }); };
 
-  /* ---------- tartós tárolás (localStorage) — csapatok.js konvenció ---------- */
-  var STORE = 'uq_media_v1';
-  /* csak a maradandó (data URL) forrásokat mentjük; az objectURL-eket eldobjuk,
-     mert újratöltés után úgyis érvénytelenek lennének */
-  function pruned(dropAllSrc) {
-    return MEDIA.map(function (m) {
-      var o = {};
-      for (var k in m) { if (Object.prototype.hasOwnProperty.call(m, k)) o[k] = m[k]; }
-      if (dropAllSrc || !o.persist) { o.src = ''; }
-      if (dropAllSrc) o.persist = false;
-      return o;
+  /* ---------- adatréteg: Supabase Storage (korábban base64 localStorage)
+     A fájl tartalma eddig data URI-ként ült a böngésző tárolójában, és a
+     fogyasztó oldalak a teljes sztringet MÁSOLTÁK a saját rekordjukba —
+     annyiszor duplikálva, ahányszor kiválasztották. Mostantól a fájl a
+     Storage-ban van, a rekord csak hivatkozik rá.
+     A méret / felbontás / hossz SZÁM az adatbázisban; a formázás itt történik. */
+
+  function mmss(sec) {
+    sec = Number(sec) || 0;
+    var m = Math.floor(sec / 60), s = sec % 60;
+    return m + ':' + (s < 10 ? '0' : '') + s;
+  }
+
+  function dbSor(r) {
+    return {
+      id: r.id,
+      name: r.title || '(névtelen)',
+      type: r.kind || 'image',
+      src: r.url || '',
+      persist: true,
+      storagePath: r.storage_path || '',
+      externalUrl: r.external_url || '',
+      size: r.bytes ? formatBytes(r.bytes) : '—',
+      bytes: r.bytes || 0,
+      uses: r.hasznalat || 0,
+      dim: (r.width && r.height) ? (r.width + ' × ' + r.height) : '',
+      len: r.duration_s ? mmss(r.duration_s) : '',
+      fmt: r.mime ? String(r.mime).split('/').pop().toUpperCase()
+                  : (r.external_url ? 'Videó-link' : (r.kind || '').toUpperCase()),
+      thumb: (Math.abs(String(r.id).charCodeAt(0) + String(r.id).charCodeAt(2)) % 10) + 1
+    };
+  }
+
+  function betolt() {
+    if (!window.UQAPI) return Promise.reject(new Error('Hiányzik az adatréteg.'));
+    return UQAPI.rest('/v_admin_media?select=*&order=created_at.desc')
+      .then(function (sorok) {
+        MEDIA.splice(0, MEDIA.length);
+        (sorok || []).forEach(function (r) { MEDIA.push(dbSor(r)); });
+        return MEDIA;
+      });
+  }
+
+  function ujratolt(uzenet, alcim) {
+    return betolt().then(function () {
+      render();
+      if (uzenet) toast(uzenet, { type: 'ok', sub: alcim });
     });
   }
-  function saveStore() {
-    try {
-      localStorage.setItem(STORE, JSON.stringify(pruned(false)));
-    } catch (e) {
-      /* QuotaExceededError — próbáljuk forrás nélkül, hogy a metaadat megmaradjon */
-      try {
-        localStorage.setItem(STORE, JSON.stringify(pruned(true)));
-        if (!saveStore._warned) { saveStore._warned = true; toast('A tár megtelt — a nagy fájlok nem maradnak meg', { type: 'error' }); }
-      } catch (e2) {}
-    }
+  function hibaToast(err) {
+    toast('Nem sikerült', { type: 'error', sub: String((err && err.message) || 'Ismeretlen hiba') });
   }
-  (function loadStore() {
-    try {
-      var raw = localStorage.getItem(STORE);
-      if (raw) {
-        var arr = JSON.parse(raw);
-        if (Array.isArray(arr) && arr.length) {
-          MEDIA.splice(0, MEDIA.length);
-          arr.forEach(function (m) { MEDIA.push(m); });
-          uid = MEDIA.reduce(function (mx, m) { return Math.max(mx, m.id || 0); }, 0);
-        }
-      }
-    } catch (e) {}
-  })();
+
+  /* A mentés soronként az adatbázisba megy; nincs többé „az egész tömböt
+     kiírom" minta, és nincs kvótahiba sem. */
+  function saveStore() { /* szándékosan üres — az adatbázis a forrás */ }
+
+  MEDIA.splice(0, MEDIA.length);   // a beépített minta-adat kiürül
 
   /* ---------- állapot ---------- */
   var state = { type: 'all', search: '', modalId: null, replaceId: null, selected: new Set() };
@@ -461,107 +480,139 @@
   /* =========================================================
      VALÓS FELTÖLTÉS
      ========================================================= */
-  function attachSource(m, file, type, onDone) {
-    /* videót data URL-ként tároljuk (max. 5 MB-ra korlátozva), hogy újratöltés után is megmaradjon */
-    var useDataUrl = (type === 'image') || (type === 'video') || (file.size < SMALL_LIMIT);
-    var measureImage = function () {
-      if (type !== 'image' || !m.src) return;
+  /* A kép méretét feltöltés ELŐTT mérjük meg, hogy számként menthessük
+     (a régi kód formázott szöveget tárolt: '2560 × 1440'). */
+  function meriKep(file) {
+    return new Promise(function (resolve) {
+      if (!/^image\//i.test(file.type) || /svg/i.test(file.type)) return resolve({});
+      var url = URL.createObjectURL(file);
       var img = new Image();
       img.onload = function () {
-        m.dim = img.naturalWidth + ' × ' + img.naturalHeight;
-        render();
-        if (state.modalId === m.id) openModal(m.id);
+        resolve({ width: img.naturalWidth, height: img.naturalHeight });
+        URL.revokeObjectURL(url);
       };
-      img.src = m.src;
-    };
-    if (useDataUrl) {
-      var reader = new FileReader();
-      reader.onload = function (ev) {
-        m.src = ev.target.result;
-        m.persist = true;
-        measureImage();
-        if (onDone) onDone();
-      };
-      reader.onerror = function () {
-        m.src = URL.createObjectURL(file);
-        m.persist = false;
-        measureImage();
-        if (onDone) onDone();
-      };
-      reader.readAsDataURL(file);
-    } else {
-      m.src = URL.createObjectURL(file);
-      m.persist = false;
-      measureImage();
-      if (onDone) onDone();
-    }
+      img.onerror = function () { resolve({}); URL.revokeObjectURL(url); };
+      img.src = url;
+    });
   }
 
+  function meriHang(file) {
+    return new Promise(function (resolve) {
+      if (!/^audio\//i.test(file.type)) return resolve({});
+      var url = URL.createObjectURL(file);
+      var a = document.createElement('audio');
+      a.preload = 'metadata';
+      a.onloadedmetadata = function () {
+        resolve({ duration_s: isFinite(a.duration) ? Math.round(a.duration) : null });
+        URL.revokeObjectURL(url);
+      };
+      a.onerror = function () { resolve({}); URL.revokeObjectURL(url); };
+      a.src = url;
+    });
+  }
+
+  var FILE_MAX = 10 * 1024 * 1024;   // a Storage-bucket korlátja
+
+  /* Feltöltés a Storage-ba, majd rekord az adatbázisba. A videó nem
+     tölthető fel: külső hivatkozással jön, hogy a közös 1 GB-os keret
+     ne fogyjon el, és terepen ne kelljen tízmegás fájlt letölteni. */
   function addFiles(fileList) {
     var files = Array.prototype.slice.call(fileList || []);
     if (!files.length) return;
-    var names = [];
-    files.forEach(function (file) {
+    if (!window.UQAPI || !UQAPI.user()) {
+      toast('Bejelentkezés szükséges', { type: 'error', sub: 'A feltöltéshez admin fiók kell.' });
+      return;
+    }
+
+    var kesz = [], hibak = 0;
+
+    function egy(i) {
+      if (i >= files.length) {
+        state.type = 'all'; state.search = '';
+        if (topSearch) topSearch.value = '';
+        setActiveTab('all');
+        return ujratolt(
+          kesz.length ? (kesz.length === 1 ? 'Fájl feltöltve' : kesz.length + ' fájl feltöltve') : null,
+          kesz.slice(0, 3).join(', ') + (kesz.length > 3 ? '…' : ''));
+      }
+      var file = files[i];
       var type = detectType(file);
-      /* videó méret-korlát: 5 MB felett nem mentjük (data URI-ként túl nagy a localStorage-nak) */
-      if (type === 'video' && file.size > VIDEO_MAX) {
-        toast('A videó túl nagy — használj inkább linket', { type: 'error', sub: file.name + ' · ' + formatBytes(file.size) });
-        return;
+
+      if (type === 'video') {
+        toast('A videót hivatkozással add hozzá', {
+          type: 'error', sub: file.name + ' — használd a „Videó hozzáadása linkkel" gombot.' });
+        hibak++; return egy(i + 1);
       }
-      var m = {
-        id: ++uid,
-        name: file.name,
-        type: type,
-        thumb: ((uid - 1) % 10) + 1, /* tartalék gradiens, ha nincs forrás */
-        size: formatBytes(file.size),
-        uses: 0,
-        fmt: extOf(file.name) || type.toUpperCase(),
-        src: '',
-        persist: false
-      };
-      if (type === 'video') m.kind = 'file'; /* feltöltött videófájl */
-      MEDIA.unshift(m);
-      names.push(file.name);
-      attachSource(m, file, type, function () { render(); });
-      /* 3 MB feletti videónál figyelmeztetés (még mentjük, de nagy a data URI) */
-      if (type === 'video' && file.size > VIDEO_WARN) {
-        toast('Nagy videófájl — hosszú távon inkább használj linket', { type: 'info', sub: file.name + ' · ' + formatBytes(file.size) });
+      if (file.size > FILE_MAX) {
+        toast('A fájl túl nagy', { type: 'error', sub: file.name + ' · ' + formatBytes(file.size) + ' — a korlát 10 MB.' });
+        hibak++; return egy(i + 1);
       }
-    });
-    state.type = 'all'; state.search = '';
-    if (topSearch) topSearch.value = '';
-    setActiveTab('all');
-    render();
-    if (!names.length) return; /* csak elutasított (túl nagy) videók voltak */
-    if (names.length === 1) toast('Fájl feltöltve', { sub: names[0] });
-    else toast(names.length + ' fájl feltöltve', { sub: names.slice(0, 3).join(', ') + (names.length > 3 ? '…' : '') });
+
+      return Promise.all([meriKep(file), meriHang(file)])
+        .then(function (mert) {
+          var meta = Object.assign({}, mert[0], mert[1]);
+          return UQAPI.upload(file).then(function (fel) {
+            return UQAPI.rest('/rpc/save_media', { method: 'POST', body: { p: {
+              kind: type,
+              title: file.name,
+              storage_path: fel.path,
+              mime: file.type || '',
+              bytes: String(file.size),
+              width: meta.width == null ? '' : String(meta.width),
+              height: meta.height == null ? '' : String(meta.height),
+              duration_s: meta.duration_s == null ? '' : String(meta.duration_s)
+            } } });
+          });
+        })
+        .then(function () { kesz.push(file.name); })
+        .catch(function (e) { hibak++; hibaToast(e); })
+        .then(function () { return egy(i + 1); });
+    }
+    egy(0);
   }
 
+  /* Csere: új fájl a Storage-ba, a régi utána törlődik. A rekord
+     azonosítója megmarad, tehát a hivatkozások nem törnek el. */
   function replaceFile(id, file) {
     var m = byId(id);
     if (!m) return;
     var type = detectType(file);
-    /* videó méret-korlát csere esetén is */
-    if (type === 'video' && file.size > VIDEO_MAX) {
-      toast('A videó túl nagy — használj inkább linket', { type: 'error', sub: file.name + ' · ' + formatBytes(file.size) });
+    if (type === 'video') {
+      toast('A videót hivatkozással add hozzá', { type: 'error', sub: 'Videófájl feltöltése nem támogatott.' });
       return;
     }
-    m.type = type;
-    m.size = formatBytes(file.size);
-    m.fmt = extOf(file.name) || type.toUpperCase();
-    m.dim = '';
-    m.len = '';
-    m.src = '';
-    m.persist = false;
-    if (type === 'video') m.kind = 'file'; else delete m.kind;
-    attachSource(m, file, type, function () {
-      render();
-      if (state.modalId === id) openModal(id);
-      toast('Fájl lecserélve', { sub: m.name });
-      if (type === 'video' && file.size > VIDEO_WARN) {
-        toast('Nagy videófájl — hosszú távon inkább használj linket', { type: 'info', sub: m.name });
-      }
-    });
+    if (file.size > FILE_MAX) {
+      toast('A fájl túl nagy', { type: 'error', sub: file.name + ' · ' + formatBytes(file.size) + ' — a korlát 10 MB.' });
+      return;
+    }
+    var regiPath = m.storagePath;
+
+    Promise.all([meriKep(file), meriHang(file)])
+      .then(function (mert) {
+        var meta = Object.assign({}, mert[0], mert[1]);
+        return UQAPI.upload(file).then(function (fel) {
+          return UQAPI.rest('/media?id=eq.' + id, {
+            method: 'PATCH',
+            body: {
+              kind: type,
+              storage_path: fel.path,
+              external_url: null,
+              mime: file.type || '',
+              bytes: file.size,
+              width: meta.width == null ? null : meta.width,
+              height: meta.height == null ? null : meta.height,
+              duration_s: meta.duration_s == null ? null : meta.duration_s
+            },
+            prefer: 'return=minimal'
+          });
+        });
+      })
+      .then(function () {
+        if (regiPath) UQAPI.removeFile(regiPath);
+        return ujratolt('Fájl lecserélve', m.name);
+      })
+      .then(function () { if (state.modalId === id) openModal(id); })
+      .catch(hibaToast);
   }
 
   /* =========================================================
@@ -581,14 +632,14 @@
     var chk = e.target.closest('.med-check');
     if (chk) {
       e.stopPropagation();
-      var cid = Number(chk.dataset.check);
+      var cid = chk.dataset.check;   // UUID, nem szám
       if (state.selected.has(cid)) state.selected.delete(cid); else state.selected.add(cid);
       render();
       return;
     }
     var card = e.target.closest('.med-card');
     if (!card) return;
-    openModal(Number(card.dataset.id));
+    openModal(card.dataset.id);
   });
 
   /* felső sáv: kereső → élő szűrés */
@@ -630,25 +681,22 @@
     if (!url) { toast('Illessz be egy videó-linket', { type: 'info' }); if (videoUrlInput) videoUrlInput.focus(); return; }
     var pv = parseVideo(url);
     if (!pv) { toast('Nem ismerhető fel videó-link', { type: 'error' }); return; }
-    var m = {
-      id: ++uid,
-      name: deriveVideoName(url, pv),
-      type: 'video',
-      kind: pv.kind,               /* youtube | vimeo | file | url */
-      src: url,                    /* az EREDETI link marad — a lejátszást a fogyasztó végzi */
-      thumb: ((uid - 1) % 10) + 1, /* tartalék gradiens a rácshoz */
-      size: '—',
-      uses: 0,
-      fmt: videoKindLabel(pv.kind),
-      persist: true                /* a link szöveg kicsi, mindig elmentjük */
-    };
-    MEDIA.unshift(m);
-    if (videoUrlInput) videoUrlInput.value = '';
-    state.type = 'all'; state.search = '';
-    if (topSearch) topSearch.value = '';
-    setActiveTab('all');
-    render();
-    toast('Videó hozzáadva', { sub: m.name });
+    var nev = deriveVideoName(url, pv);
+
+    UQAPI.rest('/rpc/save_media', { method: 'POST', body: { p: {
+      kind: 'video',
+      title: nev,
+      external_url: url,     // az EREDETI link marad — a lejátszást a fogyasztó végzi
+      mime: ''
+    } } })
+      .then(function () {
+        if (videoUrlInput) videoUrlInput.value = '';
+        state.type = 'all'; state.search = '';
+        if (topSearch) topSearch.value = '';
+        setActiveTab('all');
+        return ujratolt('Videó hozzáadva', nev);
+      })
+      .catch(hibaToast);
   }
   if (btnAddVideoUrl) btnAddVideoUrl.addEventListener('click', addVideoUrl);
   if (videoUrlInput) videoUrlInput.addEventListener('keydown', function (e) {
@@ -667,9 +715,9 @@
     if (!m) return;
     var v = titleInput.value.trim();
     if (!v || v === m.name) { titleInput.value = m.name; return; }
-    m.name = v;
-    render();
-    toast('Átnevezve', { sub: m.name });
+    UQAPI.rest('/rpc/save_media', { method: 'POST', body: { p: { id: m.id, title: v } } })
+      .then(function () { return ujratolt('Átnevezve', v); })
+      .catch(function (e) { titleInput.value = m.name; hibaToast(e); });
   }
   titleInput.addEventListener('change', commitRename);
   titleInput.addEventListener('keydown', function (e) {
@@ -707,21 +755,32 @@
     fileInput.click();
   });
 
-  /* modal: törlés + visszavonás */
+  /* Törlés. Visszavonás NINCS: a Storage-fájl is megszűnik, tehát a
+     visszaszúrás csak a metaadatot hozná vissza, tartalom nélkül —
+     ezért inkább előre kérdezünk. A használatban lévő elemet a szerver
+     nem engedi törölni. */
+  function torol(m) {
+    return UQAPI.rest('/rpc/delete_media', { method: 'POST', body: { p_media: m.id } })
+      .then(function (r) {
+        var d = Array.isArray(r) ? r[0] : r;
+        if (d && d.storage_path) UQAPI.removeFile(d.storage_path);
+      });
+  }
+
   document.getElementById('mmDelete').addEventListener('click', function () {
-    var id = state.modalId;
-    var idx = MEDIA.findIndex(function (x) { return x.id === id; });
-    if (idx < 0) return;
-    var removed = MEDIA[idx];
-    MEDIA.splice(idx, 1);
-    state.selected.delete(id);
-    closeModal();
-    render();
-    undoToast('Fájl törölve', removed.name, function () {
-      MEDIA.splice(Math.min(idx, MEDIA.length), 0, removed);
-      render();
-      toast('Törlés visszavonva', { sub: removed.name });
-    });
+    var m = byId(state.modalId);
+    if (!m) return;
+    if (!window.confirm(
+      'Fájl törlése — nincs visszavonás.\n\n' + m.name +
+      (m.uses ? '\n\nFIGYELEM: ' + m.uses + ' helyen használatban van.' : '') +
+      '\n\nBiztosan törlöd?')) return;
+    torol(m)
+      .then(function () {
+        state.selected.delete(m.id);
+        closeModal();
+        return ujratolt('Fájl törölve', m.name);
+      })
+      .catch(hibaToast);
   });
 
   /* tömeges műveletek */
@@ -731,18 +790,22 @@
   if (bulkDelete) bulkDelete.addEventListener('click', function () {
     var ids = Array.from(state.selected);
     if (!ids.length) return;
-    var removed = ids.map(function (id) {
-      var idx = MEDIA.findIndex(function (m) { return m.id === id; });
-      return idx >= 0 ? { idx: idx, item: MEDIA[idx] } : null;
-    }).filter(Boolean).sort(function (a, b) { return a.idx - b.idx; });
-    ids.forEach(function (id) { var i = MEDIA.findIndex(function (m) { return m.id === id; }); if (i >= 0) MEDIA.splice(i, 1); });
-    state.selected.clear();
-    if (modal.classList.contains('is-open') && !byId(state.modalId)) closeModal();
-    render();
-    undoToast(removed.length + ' fájl törölve', '', function () {
-      removed.forEach(function (r) { MEDIA.splice(Math.min(r.idx, MEDIA.length), 0, r.item); });
-      render();
-      toast('Törlés visszavonva', { sub: removed.length + ' fájl' });
+    var elemek = ids.map(byId).filter(Boolean);
+    var hasznalt = elemek.filter(function (m) { return m.uses > 0; }).length;
+    if (!window.confirm(
+      elemek.length + ' fájl törlése — nincs visszavonás.\n' +
+      (hasznalt ? '\nEbből ' + hasznalt + ' használatban van; azokat a rendszer nem fogja törölni.\n' : '') +
+      '\nBiztosan folytatod?')) return;
+
+    var ok = 0, hiba = 0;
+    elemek.reduce(function (chain, m) {
+      return chain.then(function () {
+        return torol(m).then(function () { ok++; }, function () { hiba++; });
+      });
+    }, Promise.resolve()).then(function () {
+      state.selected.clear();
+      if (modal.classList.contains('is-open')) closeModal();
+      return ujratolt(ok + ' fájl törölve', hiba ? (hiba + ' nem volt törölhető (használatban van)') : '');
     });
   });
 
@@ -770,7 +833,31 @@
   });
 
   /* =========================================================
-     INDÍTÁS
+     INDÍTÁS — az adatbázisból töltünk, ezért aszinkron
      ========================================================= */
-  render();
+  function ures(html) { if (emptyEl) { emptyEl.hidden = false; emptyEl.innerHTML = html; } }
+
+  function indul() {
+    if (!window.UQAPI || !UQAPI.user()) {
+      ures('<p><b>Nem vagy bejelentkezve.</b></p>' +
+           '<p>A médiatár kezeléséhez admin fiók kell.</p>' +
+           '<p><a class="adm-btn adm-btn-lime" href="bejelentkezes.html?next=media.html">Bejelentkezés</a></p>');
+      return;
+    }
+    betolt()
+      .then(function () {
+        render();
+        if (!MEDIA.length) {
+          ures('<p><b>A médiatár üres.</b></p>' +
+               '<p>Tölts fel képet vagy hangot (max. 10 MB), videót pedig hivatkozással adj hozzá.</p>');
+        }
+      })
+      .catch(function (err) {
+        ures('<p><b>A médiatár nem tölthető be.</b></p><p>' +
+             String(err && err.message || '') + '</p>');
+      });
+  }
+
+  indul();
+  if (window.UQAPI) UQAPI.onAuth(function () { indul(); });
 })();

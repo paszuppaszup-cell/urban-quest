@@ -379,6 +379,75 @@
   });
 
   /* ---------------------------------------------------------
+     Storage — médiafeltöltés
+
+     A képek eddig base64-ként ültek a böngésző tárolójában, és a
+     fogyasztó oldalak a teljes sztringet MÁSOLTÁK a saját rekordjukba.
+     Innentől a fájl a Storage-ba megy, a rekord csak hivatkozik rá.
+     --------------------------------------------------------- */
+
+  var BUCKET = 'uq-media';
+
+  function storagePublicUrl(path) {
+    if (!path) return '';
+    return URL_BASE + '/storage/v1/object/public/' + BUCKET + '/' + path;
+  }
+
+  /* Ékezet- és szóköz-mentes, ütközésbiztos útvonal. A böngészőben
+     ugyanaz a fájlnév többször is előfordulhat, ezért uuid-előtag. */
+  function storageKey(fileName) {
+    var tiszta = String(fileName || 'fajl')
+      .normalize('NFD').replace(/[̀-ͯ]/g, '')
+      .replace(/[^a-zA-Z0-9._-]+/g, '-')
+      .replace(/^-+|-+$/g, '')
+      .slice(-60) || 'fajl';
+    return uuid().slice(0, 8) + '-' + tiszta;
+  }
+
+  function upload(file, opts) {
+    opts = opts || {};
+    if (!session || !session.access_token) {
+      return Promise.reject(new Error('A feltöltéshez be kell jelentkezni.'));
+    }
+    var path = opts.path || storageKey(file.name);
+    return ready().then(function () {
+      return fetch(URL_BASE + '/storage/v1/object/' + BUCKET + '/' + encodeURI(path), {
+        method: 'POST',
+        headers: {
+          'apikey': ANON_KEY,
+          'Authorization': 'Bearer ' + session.access_token,
+          'Content-Type': file.type || 'application/octet-stream',
+          'x-upsert': opts.upsert ? 'true' : 'false'
+        },
+        body: file
+      });
+    }).then(function (res) {
+      return res.text().then(function (t) {
+        if (!res.ok) {
+          var m = t;
+          try { m = (JSON.parse(t).message || JSON.parse(t).error || t); } catch (e) {}
+          if (res.status === 413 || /exceeded|too large/i.test(m)) {
+            m = 'A fájl túl nagy — a korlát 10 MB.';
+          } else if (/mime|content type/i.test(m)) {
+            m = 'Ez a fájltípus nem tölthető fel. Képet vagy hangot válassz; videóhoz használj hivatkozást.';
+          }
+          throw new Error(m);
+        }
+        markNetOk();
+        return { path: path, url: storagePublicUrl(path) };
+      });
+    });
+  }
+
+  function removeFile(path) {
+    if (!path || !session) return Promise.resolve();
+    return fetch(URL_BASE + '/storage/v1/object/' + BUCKET + '/' + encodeURI(path), {
+      method: 'DELETE',
+      headers: { 'apikey': ANON_KEY, 'Authorization': 'Bearer ' + session.access_token }
+    }).catch(function () { /* a rekord már törölve; az árva fájl nem blokkoló */ });
+  }
+
+  /* ---------------------------------------------------------
      admin
      --------------------------------------------------------- */
 
@@ -421,6 +490,10 @@
     queue: queue,
     flush: flush,
     pending: pending,
-    uuid: uuid
+    uuid: uuid,
+    upload: upload,
+    removeFile: removeFile,
+    publicUrl: storagePublicUrl,
+    BUCKET: BUCKET
   };
 })();
