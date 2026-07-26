@@ -71,6 +71,8 @@
 
     return {
       title: (bundle.course && (bundle.course.hero_title || bundle.course.name)) || '',
+      /* a pálya borítóképe — az összegző képernyő ezt mutatja */
+      image: (bundle.course && bundle.course.image) || '',
       stations: allomasok,
       tasks: feladatok,
       _fromDb: true,

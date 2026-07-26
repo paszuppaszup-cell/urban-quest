@@ -179,6 +179,7 @@
   let route = '', TITLE = '';
   let PUBLIC = false, QUEST_ID = '';
   let RAW_COURSE = null;
+  let COVER = '';               // a pálya borítóképe — az összegzőn jelenik meg
 
   // 1) PUBLIKUS küldetés-mód: a quest-courses.js játszható pályája
   if (questParam && window.QUEST_COURSES && window.QUEST_COURSES[questParam]) {
@@ -189,6 +190,7 @@
     TITLE = (qq && (qq.heroTitle || qq.title)) || qc.title || questParam;
     route = qc.title || questParam;
     RAW_COURSE = Array.isArray(qc.stations) ? qc.stations : [];
+    COVER = qc.image || (qq && qq.image) || '';
   }
 
   // 2) ADMIN játék / útvonal (teszt-mód)
@@ -682,19 +684,52 @@
         '<button class="adm-btn adm-btn-lime" type="button" id="uqPlayRestart"><svg class="ico ico-sm" aria-hidden="true"><use href="#a-refresh"/></svg>Újra</button>'
       : '<button class="adm-btn" type="button" id="uqPlayExitSum"><svg class="ico ico-sm" aria-hidden="true"><use href="#a-x"/></svg>Bezárás</button>' +
         '<button class="adm-btn adm-btn-lime" type="button" id="uqPlayRestart"><svg class="ico ico-sm" aria-hidden="true"><use href="#a-play"/></svg>Újra</button>';
-    return '<div class="uq-pl-summary">' +
-      '<span class="uq-pl-sum-ic"><svg class="ico" aria-hidden="true"><use href="#a-flag"/></svg></span>' +
-      '<h2>' + (PUBLIC ? 'Kaland teljesítve! 🎉' : 'Pálya teljesítve!') + '</h2>' +
-      '<p>Végigjátszottad a(z) <b>' + esc(TITLE) + '</b> ' + (PUBLIC ? 'kalandot' : 'tesztjét') + '.</p>' +
-      '<div class="uq-pl-sum-grid">' +
-      '<div class="uq-pl-sum-stat"><span>Összpont</span><b class="lime">' + play.points + '</b></div>' +
-      '<div class="uq-pl-sum-stat"><span>Idő</span><b>' + playFmt(play.finalMs) + '</b></div>' +
-      '<div class="uq-pl-sum-stat"><span>Bejárt állomás</span><b>' + play.path.length + '</b></div>' +
-      '<div class="uq-pl-sum-stat"><span>Megoldott feladat</span><b>' + play.done + '<small>/' + total + '</small></b></div>' +
+    /* A pálya borítóképe fejlécként — ez az egyetlen hely a játékban, ahol
+       a kártya-kép megjelenik, hogy az élmény ugyanoda érkezzen vissza,
+       ahonnan a játékos elindult. Kép nélkül a fejléc egyszerűen kimarad. */
+    const hero = COVER
+      ? '<div class="uq-pl-sum-hero">' +
+          /* nincs lazy: az összegző megjelenésekor a kép AZONNAL látszik,
+             a késleltetés csak beugrást okozna */
+          '<img src="' + esc(COVER) + '" alt="">' +
+          '<span class="uq-pl-sum-fade" aria-hidden="true"></span>' +
+          '<span class="uq-pl-sum-fej">' +
+            '<span class="uq-pl-sum-pill">' +
+              '<svg class="ico ico-xs" aria-hidden="true"><use href="#a-flag"/></svg>' +
+              (PUBLIC ? 'Teljesítve' : 'Teszt kész') +
+            '</span>' +
+            '<span class="uq-pl-sum-cim">' + esc(TITLE) + '</span>' +
+          '</span>' +
+        '</div>'
+      : '';
+
+    const stat = (ikon, cimke, ertek, lime) =>
+      '<div class="uq-pl-sum-stat">' +
+        '<span class="uq-pl-sum-sic"><svg class="ico" aria-hidden="true"><use href="#' + ikon + '"/></svg></span>' +
+        '<span class="uq-pl-sum-txt">' +
+          '<b' + (lime ? ' class="lime"' : '') + '>' + ertek + '</b>' +
+          '<span>' + cimke + '</span>' +
+        '</span>' +
+      '</div>';
+
+    return '<div class="uq-pl-summary' + (COVER ? ' has-cover' : '') + '">' +
+      hero +
+      '<div class="uq-pl-sum-body">' +
+        /* borítókép mellett a fejléc-jelvény tölti be a szerepét, az
+           átfedő kör-ikon csak ütközne a címmel */
+        (COVER ? '' : '<span class="uq-pl-sum-ic"><svg class="ico" aria-hidden="true"><use href="#a-flag"/></svg></span>') +
+        '<h2>' + (PUBLIC ? 'Kaland teljesítve! 🎉' : 'Pálya teljesítve!') + '</h2>' +
+        '<p>Végigjátszottad a(z) <b>' + esc(TITLE) + '</b> ' + (PUBLIC ? 'kalandot' : 'tesztjét') + '.</p>' +
+        '<div class="uq-pl-sum-grid">' +
+          stat('a-star', 'Összpont', play.points, true) +
+          stat('a-clock', 'Idő', playFmt(play.finalMs)) +
+          stat('a-pin', 'Bejárt állomás', play.path.length) +
+          stat('a-check-c', 'Megoldott feladat', play.done + '<small>/' + total + '</small>') +
+        '</div>' +
+        '<div class="uq-pl-sum-bar"><span>Teljesítési arány</span><div class="uq-pl-sum-track"><div style="width:' + rate + '%"></div></div><b>' + rate + '%</b></div>' +
+        (PUBLIC ? '<p class="uq-play-note">Az eredményed elmentve a fiókodba. 🏅</p>' : '') +
+        '<div class="uq-pl-sum-actions">' + actions + '</div>' +
       '</div>' +
-      '<div class="uq-pl-sum-bar"><span>Teljesítési arány</span><div class="uq-pl-sum-track"><div style="width:' + rate + '%"></div></div><b>' + rate + '%</b></div>' +
-      (PUBLIC ? '<p class="uq-play-note">Az eredményed elmentve a fiókodba. 🏅</p>' : '') +
-      '<div class="uq-pl-sum-actions">' + actions + '</div>' +
       '</div>';
   }
   function wirePlaySummary() {

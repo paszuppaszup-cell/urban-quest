@@ -726,3 +726,39 @@
 /* térkép-tipp a Leaflet fölött, ütközésmentesen (bal-alul) */
 .ed-map-canvas .ed-map-hint{left:12px;right:auto;bottom:12px;text-align:left;z-index:500;
   background:rgb(10 13 10 / .82);border:1px solid var(--line);border-radius:7px;padding:5px 9px;color:var(--text-2);}
+
+/* ===== Végigjátszás — összegző képernyő (borítóképes, kártyás) ===== */
+.uq-pl-summary.has-cover{padding:0;overflow:hidden;max-width:560px;}
+.uq-pl-sum-hero{position:relative;width:100%;aspect-ratio:16/7;overflow:hidden;background:#0a0d0a;}
+.uq-pl-sum-hero img{width:100%;height:100%;object-fit:cover;display:block;}
+/* a cím olvashatósága nem múlhat a kép világosságán */
+.uq-pl-sum-fade{position:absolute;inset:0;background:linear-gradient(180deg,rgb(10 13 10 / .15) 0%,rgb(10 13 10 / .55) 55%,#0f130d 100%);}
+.uq-pl-sum-fej{position:absolute;left:0;right:0;bottom:16px;padding:0 22px;display:flex;flex-direction:column;align-items:flex-start;gap:8px;}
+.uq-pl-sum-pill{display:inline-flex;align-items:center;gap:6px;padding:5px 11px;border-radius:99px;
+  background:rgb(158 213 43 / .16);border:1px solid rgb(158 213 43 / .5);color:var(--lime);
+  font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;
+  backdrop-filter:blur(4px);}
+.uq-pl-sum-pill .ico{width:12px;height:12px;}
+.uq-pl-sum-cim{text-align:left;
+  font-family:var(--font-display);font-size:23px;font-weight:800;line-height:1.15;
+  color:#fff;text-shadow:0 2px 14px rgb(0 0 0 / .6);text-wrap:balance;}
+.uq-pl-summary.has-cover .uq-pl-sum-body{display:flex;flex-direction:column;align-items:center;
+  gap:6px;padding:20px 24px 26px;text-align:center;}
+
+/* statisztika-kártya: ikon + érték + címke — az adminban használt
+   „jutalom" blokk nyelvezete */
+.uq-pl-sum-stat{flex-direction:row!important;align-items:center;gap:11px;text-align:left;}
+.uq-pl-sum-sic{width:34px;height:34px;flex:0 0 34px;border-radius:10px;display:grid;place-items:center;
+  background:rgb(158 213 43 / .12);border:1px solid rgb(158 213 43 / .28);color:var(--lime);}
+.uq-pl-sum-sic .ico{width:17px;height:17px;}
+.uq-pl-sum-txt{display:flex;flex-direction:column;gap:1px;min-width:0;}
+.uq-pl-sum-txt b{font-family:var(--font-display);font-size:22px;line-height:1.1;color:#fff;font-variant-numeric:tabular-nums;}
+.uq-pl-sum-txt b.lime{color:var(--lime);}
+.uq-pl-sum-txt b small{font-size:12px;color:var(--muted);font-family:var(--font-body);}
+.uq-pl-sum-txt>span{font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+
+@media (max-width:520px){
+  .uq-pl-sum-grid{grid-template-columns:1fr!important;}
+  .uq-pl-sum-cim{font-size:19px;}
+}
