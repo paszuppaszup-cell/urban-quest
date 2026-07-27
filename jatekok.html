@@ -9,9 +9,9 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&family=Inter:wght@400..700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css?v=5">
-<link rel="stylesheet" href="admin.css?v=7">
-<link rel="stylesheet" href="jatekok.css?v=5">
+<link rel="stylesheet" href="styles.css?v=6">
+<link rel="stylesheet" href="admin.css?v=8">
+<link rel="stylesheet" href="jatekok.css?v=6">
 </head>
 <body class="admin-body">
 
@@ -283,6 +283,48 @@
         <button class="jtk-media-pick" id="fImagePick" type="button"><svg class="ico ico-xs" aria-hidden="true"><use href="#a-image"/></svg>Média-tárból</button>
       </div>
 
+      <!-- Színtéma: a borítóképből számolva, kézzel felülbírálhatóan -->
+      <div class="jtk-fg jtk-tema" id="temaBlokk">
+        <label>A játék színe
+          <span class="ip-hint">a borítóképből, automatikusan</span>
+        </label>
+
+        <div class="tema-sor">
+          <span class="tema-minta" id="temaMinta" aria-hidden="true"></span>
+          <div class="tema-adat">
+            <b id="temaHex">—</b>
+            <span id="temaMeta">Adj meg borítóképet, és kiszámolom.</span>
+          </div>
+          <button class="adm-btn" id="btnTemaUjra" type="button">
+            <svg class="ico ico-xs" aria-hidden="true"><use href="#a-refresh"/></svg>Újraszámolás
+          </button>
+        </div>
+
+        <div class="tema-mod">
+          <label class="tema-radio">
+            <input type="radio" name="temaMode" value="auto" checked>
+            <span>Automatikus — a borítókép színe</span>
+          </label>
+          <label class="tema-radio">
+            <input type="radio" name="temaMode" value="kezi">
+            <span>Kézi</span>
+          </label>
+          <input type="color" id="fTemaSzin" value="#9ed52b" aria-label="Egyedi kiemelő szín" disabled>
+        </div>
+
+        <p class="tema-fig" id="temaFig" hidden></p>
+
+        <div class="tema-elonezet" id="temaElonezet" aria-hidden="true">
+          <span class="te-cimke">Előnézet</span>
+          <span class="te-jelveny">1. állomás</span>
+          <button class="te-gomb" type="button" tabindex="-1">Ellenőrzés</button>
+          <span class="te-pont">+25 pont</span>
+        </div>
+
+        <p class="ip-note">A jelzés-színek nem változnak: a helyes válasz zöld, a hiba
+          narancs, a tipp arany, a logó pedig mindig az Urban Quest zöldje marad.</p>
+      </div>
+
       <!-- Borítókép-prompt: a pálya adataiból, a meglévő képek stílusában -->
       <div class="jtk-fg jtk-imgprompt">
         <label>Borítókép-prompt
@@ -337,8 +379,9 @@
 <!-- ===================== TOAST KONTÉNER ===================== -->
 <div class="uq-toast-wrap" id="uqToasts"></div>
 
-<script src="uq-api.js?v=1"></script>
-<script src="uq-imgprompt.js?v=1"></script>
-<script src="jatekok.js?v=10"></script>
+<script src="uq-api.js?v=2"></script>
+<script src="uq-tema.js?v=2"></script>
+<script src="uq-imgprompt.js?v=2"></script>
+<script src="jatekok.js?v=11"></script>
 </body>
 </html>

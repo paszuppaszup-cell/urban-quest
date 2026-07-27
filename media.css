@@ -39,10 +39,10 @@
   background: rgb(255 255 255 / .012);
   transition: border-color .16s, background-color .16s;
 }
-.med-dropzone:hover, .med-dropzone.is-drag { border-color: rgb(158 213 43 / .55); background: rgb(158 213 43 / .05); }
-.med-dropzone-ic { flex: none; width: 46px; height: 46px; border-radius: 11px; display: grid; place-items: center; background: rgb(158 213 43 / .1); border: 1px solid rgb(158 213 43 / .25); color: var(--lime); }
+.med-dropzone:hover, .med-dropzone.is-drag { border-color: rgb(var(--lime-rgb) / .55); background: rgb(var(--lime-rgb) / .05); }
+.med-dropzone-ic { flex: none; width: 46px; height: 46px; border-radius: 11px; display: grid; place-items: center; background: rgb(var(--lime-rgb) / .1); border: 1px solid rgb(var(--lime-rgb) / .25); color: var(--lime); }
 .med-dropzone-ic .ico { width: 22px; height: 22px; }
-.med-dropzone:hover .med-dropzone-ic, .med-dropzone.is-drag .med-dropzone-ic { background: rgb(158 213 43 / .16); }
+.med-dropzone:hover .med-dropzone-ic, .med-dropzone.is-drag .med-dropzone-ic { background: rgb(var(--lime-rgb) / .16); }
 .med-dropzone-txt { display: flex; flex-direction: column; gap: 3px; min-width: 0; flex: 1; }
 .med-dropzone-txt b { font-size: 14px; font-weight: 700; color: #fff; }
 .med-dropzone-txt small { font-size: 12px; color: var(--muted); }
@@ -66,7 +66,7 @@
   transition: border-color .14s, background-color .14s;
 }
 .med-linkadd-input::placeholder { color: var(--dim); }
-.med-linkadd-input:focus { outline: none; border-color: rgb(158 213 43 / .5); background: rgb(158 213 43 / .05); }
+.med-linkadd-input:focus { outline: none; border-color: rgb(var(--lime-rgb) / .5); background: rgb(var(--lime-rgb) / .05); }
 .med-linkadd-btn { flex: none; }
 
 /* ---------- média rács ---------- */
@@ -77,7 +77,7 @@
   border: 1px solid var(--line); border-radius: 12px; background: #0f130d;
   transition: border-color .14s, transform .14s, box-shadow .14s;
 }
-.med-card:hover { border-color: rgb(158 213 43 / .4); transform: translateY(-2px); box-shadow: 0 14px 30px -18px rgb(0 0 0 / .8); }
+.med-card:hover { border-color: rgb(var(--lime-rgb) / .4); transform: translateY(-2px); box-shadow: 0 14px 30px -18px rgb(0 0 0 / .8); }
 
 /* bélyegkép — CSS gradiens, mint a .jtk-thumb */
 .med-thumb { position: relative; aspect-ratio: 16 / 10; border-bottom: 1px solid var(--line-soft); background-size: cover; background-position: center; }
@@ -109,7 +109,7 @@
 .med-check.is-checked .ico { color: #0a0d0a; opacity: 1; transform: scale(1); }
 
 /* kijelölt kártya kiemelése */
-.med-card.is-selected { border-color: var(--lime); box-shadow: 0 0 0 1px rgb(158 213 43 / .55); }
+.med-card.is-selected { border-color: var(--lime); box-shadow: 0 0 0 1px rgb(var(--lime-rgb) / .55); }
 
 /* típus-badge a bélyegkép jobb felső sarkában (a jelölő a bal oldalon van) */
 .med-badge { position: absolute; top: 9px; right: 9px; display: inline-flex; align-items: center; gap: 5px; padding: 4px 8px; border-radius: 6px; font-size: 10px; font-weight: 700; letter-spacing: .02em; backdrop-filter: blur(3px); }
@@ -139,7 +139,7 @@
 .med-title-wrap { min-width: 0; }
 .med-title-input { width: 100%; max-width: 320px; font-family: var(--font-body); font-size: 15px; font-weight: 700; color: #fff; background: transparent; border: 1px solid transparent; border-radius: 6px; padding: 2px 6px; margin: -2px -6px; transition: border-color .14s, background-color .14s; }
 .med-title-input:hover { border-color: var(--line); }
-.med-title-input:focus { outline: none; border-color: rgb(158 213 43 / .55); background: rgb(158 213 43 / .06); }
+.med-title-input:focus { outline: none; border-color: rgb(var(--lime-rgb) / .55); background: rgb(var(--lime-rgb) / .06); }
 
 .med-preview { position: relative; aspect-ratio: 16 / 9; border-radius: 10px; border: 1px solid var(--line); overflow: hidden; display: grid; place-items: center; }
 .med-preview-ic { color: rgb(255 255 255 / .5); }

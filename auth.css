@@ -103,7 +103,7 @@
 }
 .field:focus-within {
   border-color: var(--lime);
-  background: rgb(158 213 43 / .04);
+  background: rgb(var(--lime-rgb) / .04);
 }
 .field.is-error { border-color: var(--extrem); background: rgb(224 58 47 / .05); }
 .field > .ico { color: var(--muted); flex: none; }
@@ -242,7 +242,7 @@
   position: absolute;
   inset: 0;
   z-index: -1;
-  background: radial-gradient(60% 55% at 78% 42%, rgb(158 213 43 / .22) 0%, rgb(158 213 43 / 0) 60%);
+  background: radial-gradient(60% 55% at 78% 42%, rgb(var(--lime-rgb) / .22) 0%, rgb(var(--lime-rgb) / 0) 60%);
   pointer-events: none;
 }
 
@@ -261,7 +261,7 @@
   width: 54px; height: 54px;
   flex: none;
   border-radius: 50%;
-  border: 1px solid rgb(158 213 43 / .55);
+  border: 1px solid rgb(var(--lime-rgb) / .55);
   background: rgb(10 13 10 / .4);
   backdrop-filter: blur(3px);
   display: grid;
@@ -303,7 +303,7 @@
   gap: 9px;
 }
 .mini-feature > div { min-width: 0; }
-.mini-feature .feat-ico { width: 36px; height: 36px; border-color: rgb(158 213 43 / .45); }
+.mini-feature .feat-ico { width: 36px; height: 36px; border-color: rgb(var(--lime-rgb) / .45); }
 .mini-feature .feat-ico .ico { width: 16px; height: 16px; }
 .mini-feature strong {
   display: block;

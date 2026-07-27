@@ -99,6 +99,11 @@
       isDecision: isDecision,
       lat: ll.lat, lng: ll.lng,
       diff: s.difficulty || s.diff || 'Könnyű',
+      /* A cím eddig kimaradt ebből a leképezésből, ezért az arany
+         „Helyszín:" sor sosem jelent meg — pedig az adat végig ott volt a
+         csomagban. NEM az s.location: az a térképszerkesztő
+         koordináta-mezője, amit fentebb parseLoc olvas. */
+      loc: s.loc || s.address || '',
       taskShort: s.taskShort || '',
       // pálya-szerkesztő saját feladat-mezői a fallback feladathoz:
       taskType: s.taskType || '', question: s.question || '', answer: s.answer || '',
@@ -241,6 +246,20 @@
     'linear-gradient(135deg,#22401f,#3a6a4a)',
     'linear-gradient(135deg,#173040,#2f5d6a)'
   ];
+
+  /* Kép nélküli állomás háttere. A hero nagy, SZÖVEGMENTES felület — ide
+     mehet a pálya színe teljes erővel, mert itt nincs kontraszt-követelmény.
+     Ez viszi át a borítókép hangulatát, amit a kiemelő szín normalizálása
+     szükségszerűen elvesz. Szín nélkül marad az eredeti gradiens-készlet. */
+  function heroHatter(i) {
+    if (!window.UQTema) return HERO_GRADS[i % HERO_GRADS.length];
+    const szin = getComputedStyle(document.documentElement).getPropertyValue('--lime').trim();
+    const rgb = UQTema.hexRgb(szin);
+    if (!rgb) return HERO_GRADS[i % HERO_GRADS.length];
+    /* Váltakozó dőlés, hogy az egymás utáni állomások ne legyenek azonosak. */
+    const szog = (i % 2) ? 135 : 115;
+    return 'linear-gradient(' + szog + 'deg, rgb(' + rgb.join(' ') + ' / .10), rgb(' + rgb.join(' ') + ' / .30))';
+  }
   const DIFF_PTS = { 'Könnyű': 20, 'Közepes': 35, 'Nehéz': 50, 'Extrém': 70 };
 
   /* ---------- mini-térkép koordináták (lat/lng → mx/my %) ---------- */
@@ -658,13 +677,24 @@
     return { szoveg: playFmt(hatra), cimke: 'Hátralévő', lejart: false };
   }
 
+  /* Az akció-kártya felirata. A saját játékpszichológiai keretünk 4. elve
+     szerint minden gépileg pontozott „kérdés" vizsga-üzemmódba kapcsol —
+     a fotó, a GPS és a nyugtázós feladat viszont épp azért került oda, mert
+     NINCS elrontható válasza. Ott felszólítás jár, nem kérdés. */
+  const AKCIO_FELIRAT = {
+    kviz: 'Kérdés', szoveg: 'Kérdés', kod: 'Kérdés', puzzle: 'Kérdés',
+    foto: 'Mit csináljatok', gps: 'Mit csináljatok', qr: 'Mit csináljatok',
+    gyors: 'Mit csináljatok', info: 'Mit csináljatok'
+  };
+  function akcioFelirat(tipus) { return AKCIO_FELIRAT[tipus] || 'Feladat'; }
+
   function playStationHTML() {
     const i = playCurIdx(); const s = COURSE[i];
     const total = play.stationTasks.length;
     const tno = Math.min(play.taskIdx + 1, total);
     /* Hero: az állomás képe (vagy gradiens), rajta a sorszám-jelvény és az
        állomás neve — ez mondja meg a csapatnak, hova kell menniük. */
-    let h = '<div class="uq-pl-hero" style="background:' + (s.img || HERO_GRADS[i % HERO_GRADS.length]) + '">' +
+    let h = '<div class="uq-pl-hero" style="background:' + (s.img || heroHatter(i)) + '">' +
       '<span class="uq-pl-hero-fade" aria-hidden="true"></span>' +
       '<span class="uq-pl-hero-in">' +
         '<span class="uq-pl-badge">' +
@@ -675,25 +705,30 @@
       '</span>' +
     '</div>';
 
-    h += '<div class="uq-pl-card">';
     if (total) {
       const task = play.stationTasks[play.taskIdx];
       const ty = PLAY_TYPE[task.type] || { l: task.type, c: '#8b957f', ic: 'a-task' };
 
-      h += '<div class="uq-pl-taskhead">' +
-        '<span class="uq-pl-tico" style="color:' + ty.c + ';background:' + ty.c + '1f;border-color:' + ty.c + '55">' +
-          '<svg class="ico ico-sm" aria-hidden="true"><use href="#' + ty.ic + '"/></svg></span>' +
-        '<span class="uq-pl-tmeta">' +
-          '<span class="uq-pl-tlabel">Feladat' + (total > 1 ? ' · ' + tno + '/' + total : '') + '</span>' +
-          '<b>' + esc(ty.l) + '</b>' +
-        '</span>' +
-      '</div>';
-
+      /* 1. KONTEXTUS-KÁRTYA — amit elolvasnak, mielőtt cselekednének. */
+      h += '<div class="uq-pl-card uq-pl-ctx">' +
+        '<div class="uq-pl-taskhead">' +
+          '<span class="uq-pl-tico" style="color:' + ty.c + ';background:' + ty.c + '1f;border-color:' + ty.c + '55">' +
+            '<svg class="ico ico-sm" aria-hidden="true"><use href="#' + ty.ic + '"/></svg></span>' +
+          '<span class="uq-pl-tmeta">' +
+            '<span class="uq-pl-tlabel">Feladat' + (total > 1 ? ' · ' + tno + '/' + total : '') + '</span>' +
+            '<b>' + esc(ty.l) + '</b>' +
+          '</span>' +
+        '</div>';
       if (s.desc) h += '<p class="uq-pl-desc">' + esc(s.desc) + '</p>';
       if (s.loc) h += '<p class="uq-pl-loc"><svg class="ico ico-xs" aria-hidden="true"><use href="#a-pin"/></svg>Helyszín: ' + esc(s.loc) + '</p>';
+      h += '</div>';
 
-      h += '<div class="uq-pl-q"><span class="uq-pl-qlabel">Kérdés</span><b>' + esc(task.question) + '</b></div>';
-
+      /* 2. AKCIÓ-KÁRTYA — a saját kerete azt jelenti: „itt kell cselekedni".
+         A felirat típusfüggő: a fotó/gps/nyugtázós feladatnak nincs helyes
+         válasza, ezért ott a „Kérdés" hamis vizsga-hangnemet adna. */
+      h += '<div class="uq-pl-card uq-pl-akcio">' +
+        '<h2 class="uq-pl-qlabel">' + akcioFelirat(task.type) + '</h2>' +
+        '<p class="uq-pl-qtext">' + esc(task.question) + '</p>';
       if (task.image) h += '<div class="uq-pl-taskimg"><img src="' + esc(task.image) + '" alt=""></div>';
       if (task.video) h += videoEmbedHTML(task.video, 'uq-pl-taskvid');
       h += '<div class="uq-pl-answer" id="uqPlayAnswer"></div>';
@@ -718,6 +753,7 @@
       '</div>';
       h += '<p class="uq-pl-onsite"><svg class="ico ico-xs" aria-hidden="true"><use href="#a-lock"/></svg>A válasz beküldéséhez a helyszínen kell lennetek.</p>';
     } else {
+      h += '<div class="uq-pl-card uq-pl-akcio">';
       if (s.desc) h += '<p class="uq-pl-desc">' + esc(s.desc) + '</p>';
       h += '<div class="uq-pl-notask">Ehhez az állomáshoz nincs feladat — csak áthaladtok rajta.</div>';
       h += '<div class="uq-pl-actions"><button class="uq-pl-do" type="button" id="uqPlayCont"><svg class="ico ico-sm" aria-hidden="true"><use href="#a-check"/></svg>Állomás kész — tovább</button></div>';

@@ -96,6 +96,11 @@
       age: r.age_min == null ? '' : (r.age_min + '+'),
       team: r.team_min == null ? '' : (r.team_min + '–' + (r.team_max || r.team_min) + ' fő'),
       image: r.cover_image || '',
+      /* színtéma — a szerkesztő ebből tölti fel a szín-panelt */
+      temaSzin: r.theme_accent || '',
+      temaKep: r.theme_src_image || '',
+      temaMod: r.theme_mode || 'auto',
+      temaElavult: !!r.tema_elavult,
       category: r.category || 'varosi',
       doList: Array.isArray(r.do_list) ? r.do_list : [],
       knowList: Array.isArray(r.know_list) ? r.know_list : [],
@@ -180,6 +185,137 @@
   const fKnowAdd = document.getElementById('fKnowAdd');
   const mediaPicker = document.getElementById('mediaPicker');
   const mediaPickerGrid = document.getElementById('mediaPickerGrid');
+
+  /* =========================================================
+     SZÍNTÉMA — a játék színe a borítóképéből
+
+     Az alapeset a nem-hozzányúlás: a szín a képből jön, mentéskor egyszer.
+     A kézi mód menekülőút, mert van olyan kép, amin minden automatikus
+     szabály téved. A kinyerés SZÁNDÉKOSAN itt fut és nem a játékban:
+     terepen a csomag megjön a gyorstárból, a kép viszont nem.
+     ========================================================= */
+  const temaMinta   = document.getElementById('temaMinta');
+  const temaHexEl   = document.getElementById('temaHex');
+  const temaMetaEl  = document.getElementById('temaMeta');
+  const temaFigEl   = document.getElementById('temaFig');
+  const temaElonez  = document.getElementById('temaElonezet');
+  const fTemaSzin   = document.getElementById('fTemaSzin');
+  const btnTemaUjra = document.getElementById('btnTemaUjra');
+
+  /* A panel aktuális állapota — ez megy a mentésbe. */
+  const tema = { mod: 'auto', szin: '', kep: '', elavult: false };
+
+  function temaMod() {
+    const r = document.querySelector('input[name="temaMode"]:checked');
+    return r ? r.value : 'auto';
+  }
+
+  /* A megjelenítés MINDIG a véglegesített színt mutatja: ha a normalizálás
+     változtat a beírt értéken, azt lássa a szerző, különben addig
+     próbálkozna, amíg valami átcsúszik a kontraszt-résen. */
+  function temaKiir(hex, forras) {
+    const t = (hex && window.UQTema) ? UQTema.normalizal(hex) : null;
+    if (!t) {
+      tema.szin = '';
+      temaMinta.style.background = 'var(--line)';
+      temaMinta.style.borderColor = 'var(--line)';
+      temaHexEl.textContent = 'Márkazöld';
+      temaMetaEl.textContent = forras || 'Nincs szín — az alapértelmezett zöld marad.';
+      temaFigEl.hidden = true;
+      temaElonez.removeAttribute('style');
+      return;
+    }
+    tema.szin = t.hex;
+    temaMinta.style.background = t.hex;
+    temaMinta.style.borderColor = t.hex;
+    temaHexEl.textContent = t.hex.toUpperCase();
+
+    const igazitva = hex.toLowerCase() !== t.hex.toLowerCase();
+    temaMetaEl.textContent =
+      (forras ? forras + ' · ' : '') +
+      t.h + '° · kontraszt ' + t.kontrasztKartyan + ':1' +
+      (igazitva ? ' · világosítva az olvashatóságért' : '');
+
+    const u = UQTema.utkozes(t.h);
+    if (u.length) {
+      temaFigEl.hidden = false;
+      temaFigEl.textContent = 'Figyelem: ez a szín közel van ehhez — ' +
+        u.map(z => z.nev + ' (' + z.tavolsag + '°)').join(', ') +
+        '. A jelzés nem tűnik el, de ezen a pályán kevésbé lesz feltűnő.';
+    } else {
+      temaFigEl.hidden = true;
+    }
+
+    /* Az előnézet ugyanazt a tokent írja felül, mint élesben a játék. */
+    temaElonez.style.setProperty('--lime', t.hex);
+    temaElonez.style.setProperty('--lime-rgb', t.rgb.join(' '));
+    temaElonez.style.setProperty('--tema-gomb-szoveg', t.gombSzoveg);
+  }
+
+  function temaSzamol(csendes) {
+    const url = fImage.value.trim();
+    if (!window.UQTema) return;
+    if (!url) {
+      tema.kep = '';
+      temaKiir('', 'Adj meg borítóképet, és kiszámolom.');
+      return;
+    }
+    temaMetaEl.textContent = 'Számolás…';
+    UQTema.kinyer(url).then(r => {
+      if (!r.ok) { temaKiir('', r.uzenet); return; }
+      tema.kep = url;
+      tema.elavult = false;
+      temaKiir(r.tema.hex, 'a borítóképből');
+      if (!csendes) toast('Szín kiszámolva', { type: 'ok', sub: r.tema.hex.toUpperCase() });
+    }).catch(e => {
+      /* Kereszt-origós kép CORS nélkül, törölt fájl, betölthetetlen SVG… */
+      temaKiir(tema.szin || '', 'A képből nem sikerült színt kinyerni (' + e.message + ') — adj meg kézzel.');
+      if (!csendes) toast('A kép színe nem olvasható ki', { type: 'error', sub: 'Válts kézi módra' });
+    });
+  }
+
+  function temaModValt() {
+    const m = temaMod();
+    tema.mod = m;
+    fTemaSzin.disabled = (m !== 'kezi');
+    btnTemaUjra.disabled = (m === 'kezi');
+    if (m === 'kezi') {
+      if (tema.szin) fTemaSzin.value = tema.szin;
+      temaKiir(fTemaSzin.value, 'kézi választás');
+    } else {
+      temaSzamol(true);
+    }
+  }
+
+  document.querySelectorAll('input[name="temaMode"]').forEach(r =>
+    r.addEventListener('change', temaModValt));
+  fTemaSzin.addEventListener('input', () => {
+    if (temaMod() === 'kezi') temaKiir(fTemaSzin.value, 'kézi választás');
+  });
+  btnTemaUjra.addEventListener('click', () => temaSzamol(false));
+  /* Új borítókép → automatikus módban azonnal új szín. */
+  fImage.addEventListener('change', () => { if (temaMod() === 'auto') temaSzamol(true); });
+
+  function temaBetolt(g) {
+    tema.mod = g.temaMod || 'auto';
+    tema.szin = g.temaSzin || '';
+    tema.kep = g.temaKep || '';
+    tema.elavult = !!g.temaElavult;
+    const r = document.querySelector('input[name="temaMode"][value="' + tema.mod + '"]');
+    if (r) r.checked = true;
+    fTemaSzin.disabled = (tema.mod !== 'kezi');
+    btnTemaUjra.disabled = (tema.mod === 'kezi');
+    if (tema.szin) fTemaSzin.value = tema.szin;
+
+    if (!tema.szin) { temaSzamol(true); return; }
+    temaKiir(tema.szin, tema.mod === 'kezi' ? 'kézi választás' : 'a borítóképből');
+    /* A borítókép cseréje óta nem számoltunk újra — ezt látnia kell,
+       különben némán megmaradna egy elavult szín. */
+    if (tema.elavult) {
+      temaFigEl.hidden = false;
+      temaFigEl.textContent = 'A borítókép megváltozott a szín kiszámítása óta. Nyomd meg az Újraszámolást, vagy válts kézi módra.';
+    }
+  }
 
   /* =========================================================
      TOAST
@@ -346,6 +482,7 @@
     fAge.value = g.age;
     fSubtitle.value = g.subtitle || '';
     fImage.value = g.image || '';
+    temaBetolt(g);
     fRating.value = (g.rating != null ? g.rating : '');
     fReviews.value = (g.reviews != null ? g.reviews : '');
     fDistance.value = g.distance || '';
@@ -426,6 +563,11 @@
       city: (loc[0] || '').trim() || null,
       area: loc.length > 1 ? loc.slice(1).join(',').trim() : null,
       cover_image: fImage.value.trim() || null,
+      /* A theme_src_image rögzíti, MELYIK képből készült a szín — enélkül
+         egy kicserélt borítókép mellett némán megmaradna a régi. */
+      theme_accent: tema.szin || null,
+      theme_src_image: tema.szin ? (fImage.value.trim() || null) : null,
+      theme_mode: temaMod(),
       price_huf: arFt(fPrice.value),
       duration_min: dmin, duration_max: dmax,
       team_min: tmin, team_max: tmax,

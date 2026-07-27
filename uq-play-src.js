@@ -15,7 +15,7 @@
 (function () {
   'use strict';
 
-  var LEJATSZO = 'jatszas.js?v=5';
+  var LEJATSZO = 'jatszas.js?v=6';
   var CACHE_ELO = 'uq_bundle_';           // offline tartalék pályánként
 
   var DIFF_LABEL = { konnyu: 'Könnyű', kozepes: 'Közepes', nehez: 'Nehéz', extrem: 'Extrém' };
@@ -80,6 +80,14 @@
     };
   }
 
+  /* A pálya színe. A csomagból jön, tehát offline is megvan, és MÉG a
+     lejátszó betöltése előtt érvénybe lép — így nincs színvillanás. */
+  function temaAlkalmaz(bundle) {
+    if (!window.UQTema) return;
+    var szin = bundle && bundle.course && bundle.course.theme_accent;
+    UQTema.alkalmaz(szin || null);
+  }
+
   function cacheOlvas(slug) {
     try {
       var raw = localStorage.getItem(CACHE_ELO + slug);
@@ -103,6 +111,7 @@
   if (gyors) {
     window.QUEST_COURSES = window.QUEST_COURSES || {};
     window.QUEST_COURSES[slug] = atalakit(gyors);
+    temaAlkalmaz(gyors);
   }
 
   var kesz = false;
@@ -119,6 +128,7 @@
       cacheIr(slug, b);
       window.QUEST_COURSES = window.QUEST_COURSES || {};
       window.QUEST_COURSES[slug] = atalakit(b);
+      temaAlkalmaz(b);
     })
     .catch(function () {
       /* Marad a gyorstár, illetve a beégetett quest-courses.js — a játék

@@ -174,8 +174,8 @@
 .uq-already {
   margin-bottom: 18px;
   padding: 14px 16px;
-  background: rgb(158 213 43 / .07);
-  border: 1px solid rgb(158 213 43 / .3);
+  background: rgb(var(--lime-rgb) / .07);
+  border: 1px solid rgb(var(--lime-rgb) / .3);
   border-radius: 12px;
 }
 .uq-already p { margin: 0 0 10px; font-size: 14px; color: var(--text); }

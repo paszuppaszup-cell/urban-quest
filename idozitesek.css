@@ -58,11 +58,11 @@
 }
 .jtk-row:last-child { border-bottom: 0; }
 .jtk-row:hover { background: rgb(255 255 255 / .025); }
-.jtk-row.is-active { background: rgb(158 213 43 / .05); border-left-color: var(--lime); }
+.jtk-row.is-active { background: rgb(var(--lime-rgb) / .05); border-left-color: var(--lime); }
 
 /* pálya név cella */
 .jtk-name { display: flex; align-items: center; gap: 12px; min-width: 0; }
-.idz-ico { width: 42px; height: 42px; border-radius: 10px; flex: none; display: grid; place-items: center; border: 1px solid rgb(158 213 43 / .25); background: rgb(158 213 43 / .08); color: var(--lime); }
+.idz-ico { width: 42px; height: 42px; border-radius: 10px; flex: none; display: grid; place-items: center; border: 1px solid rgb(var(--lime-rgb) / .25); background: rgb(var(--lime-rgb) / .08); color: var(--lime); }
 .idz-ico .ico { width: 20px; height: 20px; }
 .jtk-name-txt { min-width: 0; }
 .jtk-name-txt b { display: block; font-size: 13.5px; font-weight: 700; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -77,7 +77,7 @@
   background: rgb(255 255 255 / .035); color: var(--dim);
   border: 1px solid var(--line-soft);
 }
-.idz-day.is-on { background: rgb(158 213 43 / .14); color: var(--lime); border-color: rgb(158 213 43 / .4); }
+.idz-day.is-on { background: rgb(var(--lime-rgb) / .14); color: var(--lime); border-color: rgb(var(--lime-rgb) / .4); }
 
 /* időablak cella */
 .idz-cell-time { display: inline-flex; align-items: center; gap: 7px; font-size: 12.5px; color: var(--text-2); font-weight: 600; white-space: nowrap; }
@@ -107,7 +107,7 @@
 .jtk-act { width: 32px; height: 32px; display: grid; place-items: center; border-radius: 7px; border: 1px solid var(--line); background: rgb(255 255 255 / .02); color: var(--muted); transition: background-color .14s, color .14s, border-color .14s; }
 .jtk-act:hover { color: #fff; background: rgb(255 255 255 / .07); }
 .jtk-act .ico { width: 15px; height: 15px; }
-.jtk-act-edit:hover { color: var(--lime); border-color: rgb(158 213 43 / .4); }
+.jtk-act-edit:hover { color: var(--lime); border-color: rgb(var(--lime-rgb) / .4); }
 .jtk-act-del:hover { color: var(--extrem); border-color: rgb(224 58 47 / .4); }
 
 /* ---------- lábléc / lapozás ---------- */
@@ -171,7 +171,7 @@
   cursor: pointer; transition: background-color .14s, color .14s, border-color .14s;
 }
 .idz-daypill:hover { background: rgb(255 255 255 / .06); color: #fff; }
-.idz-daypill.is-on { border-color: var(--lime); background: rgb(158 213 43 / .1); color: var(--lime); }
+.idz-daypill.is-on { border-color: var(--lime); background: rgb(var(--lime-rgb) / .1); color: var(--lime); }
 
 .jtk-drawer-foot { flex: none; display: flex; gap: 10px; padding: 14px 18px; border-top: 1px solid var(--line-soft); }
 .jtk-drawer-foot .adm-btn { flex: 1; height: 40px; justify-content: center; }

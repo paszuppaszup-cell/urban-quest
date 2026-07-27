@@ -21,7 +21,7 @@ window.PVMAP = (function () {
   /* Kategóriaszínek. Sötét alapon kell elkülönülniük egymástól ÉS a
      kiválasztás lime keretétől, ezért egyik sem lime-közeli. */
   var SZIN = {
-    muvesz:     '#9ed52b',
+    muvesz:     'var(--lime)',
     tortenelmi: '#e0a458',
     templom:    '#c98bdb',
     muzeum:     '#5bc8f5',
@@ -74,8 +74,8 @@ window.PVMAP = (function () {
 
     kor = L.circle([o.lat, o.lng], {
       radius: o.radius || 800,
-      color: '#9ed52b', weight: 1.5, opacity: .8,
-      fillColor: '#9ed52b', fillOpacity: .07, interactive: false
+      color: 'var(--lime)', weight: 1.5, opacity: .8,
+      fillColor: 'var(--lime)', fillOpacity: .07, interactive: false
     }).addTo(map);
 
     poiReteg = L.layerGroup().addTo(map);

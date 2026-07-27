@@ -58,11 +58,11 @@
 }
 .jtk-row:last-child { border-bottom: 0; }
 .jtk-row:hover { background: rgb(255 255 255 / .025); }
-.jtk-row.is-active { background: rgb(158 213 43 / .05); border-left-color: var(--lime); }
+.jtk-row.is-active { background: rgb(var(--lime-rgb) / .05); border-left-color: var(--lime); }
 
 /* állomás név cella */
 .jtk-name { display: flex; align-items: center; gap: 12px; min-width: 0; }
-.all-ico { width: 42px; height: 42px; border-radius: 10px; flex: none; display: grid; place-items: center; border: 1px solid var(--line); background: rgb(158 213 43 / .08); color: var(--lime); }
+.all-ico { width: 42px; height: 42px; border-radius: 10px; flex: none; display: grid; place-items: center; border: 1px solid var(--line); background: rgb(var(--kat-zold-rgb) / .08); color: var(--kat-zold); }
 .all-ico .ico { width: 20px; height: 20px; }
 .all-ico.is-info { background: rgb(91 157 224 / .1); color: #7fb6ec; border-color: rgb(91 157 224 / .25); }
 .all-ico.is-feladat { background: rgb(224 185 58 / .1); color: #e6c85a; border-color: rgb(224 185 58 / .25); }
@@ -116,7 +116,7 @@
 .jtk-act { width: 32px; height: 32px; display: grid; place-items: center; border-radius: 7px; border: 1px solid var(--line); background: rgb(255 255 255 / .02); color: var(--muted); transition: background-color .14s, color .14s, border-color .14s; }
 .jtk-act:hover { color: #fff; background: rgb(255 255 255 / .07); }
 .jtk-act .ico { width: 15px; height: 15px; }
-.jtk-act-edit:hover { color: var(--lime); border-color: rgb(158 213 43 / .4); }
+.jtk-act-edit:hover { color: var(--lime); border-color: rgb(var(--lime-rgb) / .4); }
 .jtk-act-del:hover { color: var(--extrem); border-color: rgb(224 58 47 / .4); }
 
 /* ---------- lábléc / lapozás ---------- */
@@ -181,7 +181,7 @@
 .jtk-lang-x { display: grid; place-items: center; width: 16px; height: 16px; border-radius: 4px; color: var(--muted); }
 .jtk-lang-x:hover { color: #fff; background: rgb(255 255 255 / .1); }
 .jtk-lang-add { display: inline-flex; align-items: center; gap: 5px; padding: 6px 10px; border-radius: 7px; border: 1px dashed var(--line); color: var(--muted); font-size: 11px; font-weight: 600; }
-.jtk-lang-add:hover { color: var(--lime); border-color: rgb(158 213 43 / .4); }
+.jtk-lang-add:hover { color: var(--lime); border-color: rgb(var(--lime-rgb) / .4); }
 .jtk-lang-add .ico { width: 13px; height: 13px; }
 
 .jtk-status-dot { width: 9px; height: 9px; border-radius: 50%; background: #4fb84f; box-shadow: 0 0 6px #4fb84f; flex: none; }

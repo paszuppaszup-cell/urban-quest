@@ -34,9 +34,9 @@
 .fe-typegrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:9px;}
 .fe-typecard{display:flex;align-items:center;gap:9px;padding:11px 12px;border-radius:10px;border:1px solid var(--line);background:rgb(255 255 255 / .02);cursor:pointer;transition:.14s;text-align:left;}
 .fe-typecard:hover{background:rgb(255 255 255 / .05);border-color:#3a4630;}
-.fe-typecard.is-on{border-color:var(--lime);background:rgb(158 213 43 / .08);box-shadow:0 0 0 1px var(--lime);}
+.fe-typecard.is-on{border-color:var(--lime);background:rgb(var(--lime-rgb) / .08);box-shadow:0 0 0 1px var(--lime);}
 .fe-typecard .ti{width:30px;height:30px;flex:none;border-radius:8px;display:grid;place-items:center;background:rgb(255 255 255 / .04);color:var(--muted);}
-.fe-typecard.is-on .ti{background:rgb(158 213 43 / .16);color:var(--lime);}
+.fe-typecard.is-on .ti{background:rgb(var(--lime-rgb) / .16);color:var(--lime);}
 .fe-typecard .ti .ico{width:17px;height:17px;}
 .fe-typecard b{font-size:12.5px;font-weight:700;color:var(--text);}
 .fe-typecard.is-on b{color:#fff;}
@@ -45,8 +45,8 @@
 /* pont-javaslat */
 .fe-xp{display:flex;align-items:center;gap:8px;}
 .fe-xp .ed-field{flex:1;}
-.fe-suggest{white-space:nowrap;height:36px;padding:0 11px;border-radius:8px;border:1px dashed rgb(158 213 43 / .4);background:rgb(158 213 43 / .06);color:var(--lime);font-size:11.5px;font-weight:600;cursor:pointer;}
-.fe-suggest:hover{background:rgb(158 213 43 / .14);}
+.fe-suggest{white-space:nowrap;height:36px;padding:0 11px;border-radius:8px;border:1px dashed rgb(var(--lime-rgb) / .4);background:rgb(var(--lime-rgb) / .06);color:var(--lime);font-size:11.5px;font-weight:600;cursor:pointer;}
+.fe-suggest:hover{background:rgb(var(--lime-rgb) / .14);}
 
 /* opció-lista (kvíz / szöveges / puzzle / nyomok) */
 .fe-list{display:flex;flex-direction:column;gap:8px;}
@@ -63,7 +63,7 @@
 .fe-item .fe-rm:hover{background:rgb(224 58 47 / .12);color:var(--extrem);}
 .fe-item .fe-pair-mid{color:var(--dim);flex:none;}
 .fe-add{display:inline-flex;align-items:center;gap:6px;margin-top:9px;height:34px;padding:0 12px;border-radius:8px;border:1px dashed var(--line);background:none;color:var(--muted);font-size:12px;font-weight:600;cursor:pointer;}
-.fe-add:hover{color:var(--lime);border-color:rgb(158 213 43 / .4);}
+.fe-add:hover{color:var(--lime);border-color:rgb(var(--lime-rgb) / .4);}
 
 /* kapcsolók sora */
 .fe-toggles{display:flex;flex-direction:column;gap:9px;}
@@ -74,8 +74,8 @@
 /* ===================== ÉLŐ ELŐNÉZET (telefon) ===================== */
 .fe-preview-head{flex:none;display:flex;align-items:center;justify-content:space-between;padding:13px 18px;border-bottom:1px solid var(--line-soft);}
 .fe-preview-head b{font-family:var(--font-display);font-weight:800;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--text-2);}
-.fe-preview-head span{font-size:10.5px;color:var(--lime);display:inline-flex;align-items:center;gap:6px;}
-.fe-preview-head span::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--lime);box-shadow:0 0 6px var(--lime);}
+.fe-preview-head span{font-size:10.5px;color:var(--ok);display:inline-flex;align-items:center;gap:6px;}
+.fe-preview-head span::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--ok);box-shadow:0 0 6px var(--ok);}
 .fe-preview-wrap{flex:1;min-height:0;overflow-y:auto;display:grid;place-items:start center;padding:22px 18px 40px;}
 .fe-phone{width:300px;min-height:560px;border-radius:30px;border:1px solid #2a3320;background:linear-gradient(180deg,#0e140d,#0a0d0a);padding:14px 12px;box-shadow:0 30px 60px -24px rgb(0 0 0 / .9), inset 0 0 0 6px #05070500;position:relative;}
 .fe-phone.wide{width:100%;max-width:560px;min-height:0;border-radius:16px;}
@@ -84,7 +84,7 @@
 .pv-topbar{display:flex;align-items:center;justify-content:space-between;font-size:10px;color:var(--muted);padding:2px 4px;}
 .pv-badges{display:flex;align-items:center;gap:6px;}
 .pv-badge{font-size:9.5px;font-weight:700;border-radius:5px;padding:2px 6px;}
-.pv-badge.type{background:rgb(158 213 43 / .14);color:var(--lime);}
+.pv-badge.type{background:rgb(var(--lime-rgb) / .14);color:var(--lime);}
 .pv-badge.xp{background:rgb(224 185 58 / .14);color:var(--kozepes);}
 .pv-station{display:inline-flex;align-items:center;gap:6px;font-size:11px;color:var(--muted);}
 .pv-station .ico{width:13px;height:13px;color:var(--lime);}
@@ -105,7 +105,7 @@
 .pv-input input{flex:1;min-width:0;height:44px;padding:0 13px;border-radius:11px;border:1px solid var(--line);background:rgb(255 255 255 / .04);color:#fff;font-size:15px;outline:none;}
 .pv-input input:focus{border-color:var(--lime);}
 .pv-check{height:44px;padding:0 16px;border-radius:11px;border:1px solid var(--lime);background:var(--lime);color:#0a0d0a;font-weight:700;font-size:13px;cursor:pointer;flex:none;}
-.pv-check:hover{background:var(--lime2);}
+.pv-check:hover{background:var(--lime-2);}
 
 /* kód-számpad */
 .pv-code-disp{display:flex;justify-content:center;gap:8px;margin-bottom:6px;}
@@ -118,7 +118,7 @@
 /* puzzle sorrend */
 .pv-puzzle{display:flex;flex-direction:column;gap:8px;}
 .pv-pz{display:flex;align-items:center;gap:10px;padding:11px 12px;border-radius:11px;border:1px solid var(--line);background:rgb(255 255 255 / .04);}
-.pv-pz .n{width:22px;height:22px;flex:none;border-radius:6px;display:grid;place-items:center;background:rgb(158 213 43 / .14);color:var(--lime);font-weight:800;font-size:11px;}
+.pv-pz .n{width:22px;height:22px;flex:none;border-radius:6px;display:grid;place-items:center;background:rgb(var(--lime-rgb) / .14);color:var(--lime);font-weight:800;font-size:11px;}
 .pv-pz span.t{flex:1;font-size:13.5px;color:#fff;}
 .pv-pz .mv{display:flex;flex-direction:column;gap:2px;}
 .pv-pz .mv button{width:24px;height:16px;display:grid;place-items:center;border:0;border-radius:4px;background:rgb(255 255 255 / .06);color:var(--muted);cursor:pointer;}
@@ -126,11 +126,11 @@
 
 /* mock akció (fotó/gps/qr/gyors) */
 .pv-action{display:flex;flex-direction:column;align-items:center;gap:12px;padding:18px;border-radius:14px;border:1px solid var(--line);background:rgb(255 255 255 / .02);text-align:center;}
-.pv-action .big{width:56px;height:56px;border-radius:14px;display:grid;place-items:center;background:rgb(158 213 43 / .12);color:var(--lime);}
+.pv-action .big{width:56px;height:56px;border-radius:14px;display:grid;place-items:center;background:rgb(var(--lime-rgb) / .12);color:var(--lime);}
 .pv-action .big .ico{width:28px;height:28px;}
 .pv-action p{margin:0;font-size:12px;color:var(--muted);}
 .pv-do{height:46px;padding:0 22px;border-radius:12px;border:1px solid var(--lime);background:var(--lime);color:#0a0d0a;font-weight:700;font-size:14px;cursor:pointer;}
-.pv-do:hover{background:var(--lime2);}
+.pv-do:hover{background:var(--lime-2);}
 
 /* előnézet lábléc: nyom + eredmény */
 .pv-foot{display:flex;flex-direction:column;gap:10px;margin-top:2px;}
@@ -158,17 +158,17 @@
 .fe-media{display:flex;gap:12px;align-items:center;}
 .fe-media-thumb{width:76px;height:76px;flex:none;border-radius:11px;border:1px solid var(--line);background:#0f130d;display:grid;place-items:center;overflow:hidden;color:var(--muted);}
 .fe-media-thumb .ico{width:26px;height:26px;}
-.fe-media-thumb.has-img{border-color:rgb(158 213 43 / .4);}
+.fe-media-thumb.has-img{border-color:rgb(var(--lime-rgb) / .4);}
 .fe-media-thumb img{width:100%;height:100%;object-fit:cover;display:block;}
 .fe-media-actions{display:flex;flex-direction:column;gap:7px;}
 .fe-media-btn{display:inline-flex;align-items:center;gap:7px;height:34px;padding:0 13px;border-radius:9px;border:1px solid var(--line);background:rgb(255 255 255 / .03);color:var(--text-2);font-family:var(--font-body);font-size:12.5px;font-weight:600;cursor:pointer;transition:.14s;}
-.fe-media-btn:hover{color:#fff;border-color:rgb(158 213 43 / .4);background:rgb(158 213 43 / .06);}
+.fe-media-btn:hover{color:#fff;border-color:rgb(var(--lime-rgb) / .4);background:rgb(var(--lime-rgb) / .06);}
 .fe-media-btn .ico{width:14px;height:14px;}
 .fe-media-rm{color:var(--muted);}
 .fe-media-rm:hover{color:var(--extrem);border-color:rgb(224 58 47 / .4);background:rgb(224 58 47 / .1);}
 
 /* előnézet: valódi kép a "Kép helye" helyén */
-.pv-media.has-img{padding:0;border-style:solid;border-color:rgb(158 213 43 / .3);overflow:hidden;}
+.pv-media.has-img{padding:0;border-style:solid;border-color:rgb(var(--lime-rgb) / .3);overflow:hidden;}
 .pv-media.has-img img{width:100%;height:100%;object-fit:cover;display:block;}
 
 /* Média-tár képválasztó rács a modalban */
@@ -183,7 +183,7 @@
 
 /* ---------- videó-vezérlő ---------- */
 .fe-media-vthumb{width:120px;height:76px;}
-.fe-media-vthumb.has-vid{border-color:rgb(158 213 43 / .4);}
+.fe-media-vthumb.has-vid{border-color:rgb(var(--lime-rgb) / .4);}
 .fe-vthumb-embed{width:100%;height:100%;}
 .fe-vthumb-embed iframe,.fe-vthumb-embed video{width:100%;height:100%;border:0;display:block;object-fit:cover;background:#000;}
 
@@ -191,7 +191,7 @@
 .fe-video-link-ic{display:grid;place-items:center;width:32px;height:36px;flex:none;color:var(--muted);border:1px solid var(--line);border-right:0;border-radius:9px 0 0 9px;background:#0f130d;}
 .fe-video-link-ic .ico{width:14px;height:14px;}
 .fe-video-link input{flex:1;min-width:0;height:36px;padding:0 11px;border:1px solid var(--line);border-left:0;border-right:0;background:#0f130d;color:var(--text);font-family:var(--font-body);font-size:12.5px;outline:none;}
-.fe-video-link input:focus{border-color:rgb(158 213 43 / .4);}
+.fe-video-link input:focus{border-color:rgb(var(--lime-rgb) / .4);}
 .fe-video-add{flex:none;border-radius:0 9px 9px 0 !important;height:36px;}
 .fe-video-hint{margin:8px 0 0;font-size:11px;line-height:1.5;color:var(--muted);}
 
@@ -201,5 +201,5 @@
 .fe-mp-vic .ico{width:34px;height:34px;}
 
 /* videó a játékos-előnézetben (16:9) */
-.pv-video{position:relative;width:100%;aspect-ratio:16/9;margin-bottom:10px;border-radius:12px;overflow:hidden;border:1px solid rgb(158 213 43 / .3);background:#000;}
+.pv-video{position:relative;width:100%;aspect-ratio:16/9;margin-bottom:10px;border-radius:12px;overflow:hidden;border:1px solid rgb(var(--lime-rgb) / .3);background:#000;}
 .pv-video iframe,.pv-video video{position:absolute;inset:0;width:100%;height:100%;border:0;display:block;}

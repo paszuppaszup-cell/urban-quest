@@ -13,7 +13,7 @@
 .uq-personal {
   padding: 26px 0 4px;
   border-bottom: 1px solid var(--line-soft);
-  background: linear-gradient(180deg, rgb(158 213 43 / .04) 0%, transparent 100%);
+  background: linear-gradient(180deg, rgb(var(--lime-rgb) / .04) 0%, transparent 100%);
 }
 .uq-personal[hidden] { display: none; }
 .uq-ps-inner { display: flex; flex-direction: column; gap: 16px; }
@@ -56,8 +56,8 @@
   display: grid; place-items: center;
   width: 44px; height: 44px; flex: none;
   color: var(--lime);
-  background: rgb(158 213 43 / .1);
-  border: 1px solid rgb(158 213 43 / .25);
+  background: rgb(var(--lime-rgb) / .1);
+  border: 1px solid rgb(var(--lime-rgb) / .25);
   border-radius: 11px;
 }
 .uq-ps-next-txt { display: flex; flex-direction: column; min-width: 0; flex: 1; }
@@ -129,8 +129,8 @@
    RANGLISTA — a bejelentkezett felhasználó saját sora
    ========================================================= */
 .rank-row.is-me {
-  background: rgb(158 213 43 / .08);
-  border: 1px solid rgb(158 213 43 / .4);
+  background: rgb(var(--lime-rgb) / .08);
+  border: 1px solid rgb(var(--lime-rgb) / .4);
   box-shadow: inset 3px 0 0 var(--lime);
 }
 .rr-me-tag {
@@ -210,8 +210,8 @@
   letter-spacing: .06em;
   text-transform: uppercase;
   color: var(--lime);
-  background: rgb(158 213 43 / .1);
-  border: 1px solid rgb(158 213 43 / .3);
+  background: rgb(var(--lime-rgb) / .1);
+  border: 1px solid rgb(var(--lime-rgb) / .3);
   border-radius: 99px;
 }
 .uq-bk-title {

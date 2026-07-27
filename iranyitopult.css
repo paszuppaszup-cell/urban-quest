@@ -49,11 +49,11 @@
 .dash-bar {
   width: 100%; max-width: 44px; min-height: 4px;
   border-radius: 7px 7px 3px 3px;
-  background: linear-gradient(180deg, var(--lime), rgb(158 213 43 / .32));
+  background: linear-gradient(180deg, var(--lime), rgb(var(--lime-rgb) / .32));
   transition: height .32s cubic-bezier(.4,0,.2,1), filter .16s;
 }
 .dash-bar-wrap:hover .dash-bar { filter: brightness(1.12); }
-.dash-bar-wrap.is-peak .dash-bar { background: linear-gradient(180deg, var(--lime2, #bdf04a), rgb(158 213 43 / .45)); }
+.dash-bar-wrap.is-peak .dash-bar { background: linear-gradient(180deg, var(--lime-2), rgb(var(--lime-rgb) / .45)); }
 .dash-bar-lbl { font-size: 10px; color: var(--muted); white-space: nowrap; }
 
 /* ---------- idővonal / legutóbbi aktivitás ---------- */
@@ -61,7 +61,7 @@
 .dash-tl-item { display: flex; align-items: flex-start; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--line-soft); }
 .dash-tl-item:first-child { padding-top: 0; }
 .dash-tl-item:last-child { border-bottom: 0; padding-bottom: 0; }
-.dash-tl-ic { flex: none; width: 32px; height: 32px; border-radius: 9px; display: grid; place-items: center; background: rgb(158 213 43 / .1); border: 1px solid rgb(158 213 43 / .25); color: var(--lime); }
+.dash-tl-ic { flex: none; width: 32px; height: 32px; border-radius: 9px; display: grid; place-items: center; background: rgb(var(--lime-rgb) / .1); border: 1px solid rgb(var(--lime-rgb) / .25); color: var(--lime); }
 .dash-tl-ic .ico { width: 16px; height: 16px; }
 .dash-tl-item.is-pub .dash-tl-ic { background: rgb(79 184 79 / .12); border-color: rgb(79 184 79 / .3); color: var(--konnyu); }
 .dash-tl-item.is-edit .dash-tl-ic { background: rgb(224 185 58 / .12); border-color: rgb(224 185 58 / .3); color: var(--kozepes); }
@@ -75,10 +75,10 @@
 .dash-pop-item { min-width: 0; }
 .dash-pop-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 8px; }
 .dash-pop-name { display: flex; align-items: center; gap: 10px; min-width: 0; font-size: 12.5px; font-weight: 600; color: var(--text); }
-.dash-pop-rank { flex: none; width: 20px; height: 20px; border-radius: 6px; display: grid; place-items: center; background: rgb(158 213 43 / .12); border: 1px solid rgb(158 213 43 / .25); color: var(--lime); font-family: var(--font-display); font-weight: 800; font-size: 10.5px; }
+.dash-pop-rank { flex: none; width: 20px; height: 20px; border-radius: 6px; display: grid; place-items: center; background: rgb(var(--lime-rgb) / .12); border: 1px solid rgb(var(--lime-rgb) / .25); color: var(--lime); font-family: var(--font-display); font-weight: 800; font-size: 10.5px; }
 .dash-pop-name span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .dash-pop-val { flex: none; font-size: 12px; font-weight: 700; color: var(--lime); font-variant-numeric: tabular-nums; }
-.dash-pop-item .uq-bar-fill { background: linear-gradient(90deg, rgb(158 213 43 / .55), var(--lime)); }
+.dash-pop-item .uq-bar-fill { background: linear-gradient(90deg, rgb(var(--lime-rgb) / .55), var(--lime)); }
 
 /* ---------- gyors műveletek ---------- */
 .dash-qa { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
@@ -88,8 +88,8 @@
   background: #12160f; text-align: left;
   transition: border-color .16s, background-color .16s, transform .16s;
 }
-.dash-qa-btn:hover { border-color: rgb(158 213 43 / .4); background: rgb(158 213 43 / .06); transform: translateY(-1px); }
-.dash-qa-ic { width: 34px; height: 34px; border-radius: 9px; display: grid; place-items: center; background: rgb(158 213 43 / .1); border: 1px solid rgb(158 213 43 / .25); color: var(--lime); }
+.dash-qa-btn:hover { border-color: rgb(var(--lime-rgb) / .4); background: rgb(var(--lime-rgb) / .06); transform: translateY(-1px); }
+.dash-qa-ic { width: 34px; height: 34px; border-radius: 9px; display: grid; place-items: center; background: rgb(var(--lime-rgb) / .1); border: 1px solid rgb(var(--lime-rgb) / .25); color: var(--lime); }
 .dash-qa-ic .ico { width: 18px; height: 18px; }
 .dash-qa-btn b { font-size: 12.5px; font-weight: 700; color: #fff; }
 .dash-qa-btn small { font-size: 10.5px; color: var(--muted); }

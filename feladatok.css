@@ -60,11 +60,11 @@
 }
 .jtk-row:last-child { border-bottom: 0; }
 .jtk-row:hover { background: rgb(255 255 255 / .025); }
-.jtk-row.is-active { background: rgb(158 213 43 / .05); border-left-color: var(--lime); }
+.jtk-row.is-active { background: rgb(var(--lime-rgb) / .05); border-left-color: var(--lime); }
 
 /* feladat név cella (kérdés + állomás) */
 .jtk-name { display: flex; align-items: center; gap: 12px; min-width: 0; }
-.fld-ico { width: 42px; height: 42px; border-radius: 10px; flex: none; display: grid; place-items: center; border: 1px solid var(--line); background: rgb(158 213 43 / .08); color: var(--lime); }
+.fld-ico { width: 42px; height: 42px; border-radius: 10px; flex: none; display: grid; place-items: center; border: 1px solid var(--line); background: rgb(var(--lime-rgb) / .08); color: var(--lime); }
 .fld-ico .ico { width: 20px; height: 20px; }
 .fld-ico.is-kviz   { background: rgb(91 157 224 / .1);  color: #7fb6ec; border-color: rgb(91 157 224 / .25); }
 .fld-ico.is-foto   { background: rgb(157 124 224 / .1); color: #b39bec; border-color: rgb(157 124 224 / .25); }
@@ -123,7 +123,7 @@
 .jtk-act { width: 32px; height: 32px; display: grid; place-items: center; border-radius: 7px; border: 1px solid var(--line); background: rgb(255 255 255 / .02); color: var(--muted); transition: background-color .14s, color .14s, border-color .14s; }
 .jtk-act:hover { color: #fff; background: rgb(255 255 255 / .07); }
 .jtk-act .ico { width: 15px; height: 15px; }
-.jtk-act-edit:hover { color: var(--lime); border-color: rgb(158 213 43 / .4); }
+.jtk-act-edit:hover { color: var(--lime); border-color: rgb(var(--lime-rgb) / .4); }
 .jtk-act-del:hover { color: var(--extrem); border-color: rgb(224 58 47 / .4); }
 
 /* ---------- lábléc / lapozás ---------- */
@@ -184,7 +184,7 @@
 
 /* média mező */
 .fld-media { display: flex; align-items: center; gap: 11px; padding: 9px 10px; border: 1px solid var(--line); border-radius: 9px; background: rgb(255 255 255 / .02); }
-.fld-media-thumb { width: 42px; height: 42px; border-radius: 8px; flex: none; display: grid; place-items: center; border: 1px solid var(--line); background: rgb(158 213 43 / .07); color: var(--lime); }
+.fld-media-thumb { width: 42px; height: 42px; border-radius: 8px; flex: none; display: grid; place-items: center; border: 1px solid var(--line); background: rgb(var(--lime-rgb) / .07); color: var(--lime); }
 .fld-media-thumb .ico { width: 20px; height: 20px; }
 .fld-media-info { min-width: 0; flex: 1; }
 .fld-media-info b { display: block; font-size: 12px; font-weight: 700; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }

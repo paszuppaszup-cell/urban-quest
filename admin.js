@@ -384,7 +384,7 @@
         L.polyline([
           [parseLoc(s.location).lat, parseLoc(s.location).lng],
           [parseLoc(state[ti].location).lat, parseLoc(state[ti].location).lng]
-        ], { color: branch ? '#e0b93a' : '#9ed52b', weight: 3, opacity: .85, dashArray: '6 7' }).addTo(routeLayer);
+        ], { color: branch ? '#e0b93a' : 'var(--lime)', weight: 3, opacity: .85, dashArray: '6 7' }).addTo(routeLayer);
       });
     });
   }

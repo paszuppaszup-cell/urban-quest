@@ -58,7 +58,7 @@
 }
 .jtk-row:last-child { border-bottom: 0; }
 .jtk-row:hover { background: rgb(255 255 255 / .025); }
-.jtk-row.is-active { background: rgb(158 213 43 / .05); border-left-color: var(--lime); }
+.jtk-row.is-active { background: rgb(var(--lime-rgb) / .05); border-left-color: var(--lime); }
 
 /* csapat név cella + kör-avatar monogram */
 .jtk-name { display: flex; align-items: center; gap: 12px; min-width: 0; }
@@ -68,7 +68,7 @@
   font-family: var(--font-display); font-weight: 800; font-size: 14px; letter-spacing: .02em;
   border: 1px solid rgb(255 255 255 / .12);
 }
-.tm-ava.tm-c0 { background: rgb(158 213 43 / .16); color: #b6e34b; border-color: rgb(158 213 43 / .32); }
+.tm-ava.tm-c0 { background: rgb(var(--lime-rgb) / .16); color: #b6e34b; border-color: rgb(var(--lime-rgb) / .32); }
 .tm-ava.tm-c1 { background: rgb(91 157 224 / .16); color: #8cc0f0; border-color: rgb(91 157 224 / .32); }
 .tm-ava.tm-c2 { background: rgb(232 129 58 / .16); color: #ef9f66; border-color: rgb(232 129 58 / .32); }
 .tm-ava.tm-c3 { background: rgb(157 124 224 / .16); color: #bda6f0; border-color: rgb(157 124 224 / .32); }
@@ -108,9 +108,9 @@
 .tm-prog-top { display: flex; align-items: center; justify-content: space-between; }
 .tm-prog-pct { font-size: 11.5px; font-weight: 700; color: var(--text-2); }
 .tm-bar { height: 6px; border-radius: 99px; background: rgb(255 255 255 / .08); overflow: hidden; }
-.tm-bar i { display: block; height: 100%; border-radius: 99px; background: var(--lime); transition: width .3s ease; }
+.tm-bar i { display: block; height: 100%; border-radius: 99px; background: var(--kat-zold); transition: width .3s ease; }
 .tm-bar.is-done i { background: #5b9de0; }
-.tm-bar.is-wait i { background: var(--kozepes); }
+.tm-bar.is-wait i { background: var(--kat-borostyan); }
 
 /* státusz pill */
 .jtk-status { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 999px; font-size: 11px; font-weight: 700; }
@@ -127,7 +127,7 @@
 .jtk-act { width: 32px; height: 32px; display: grid; place-items: center; border-radius: 7px; border: 1px solid var(--line); background: rgb(255 255 255 / .02); color: var(--muted); transition: background-color .14s, color .14s, border-color .14s; }
 .jtk-act:hover { color: #fff; background: rgb(255 255 255 / .07); }
 .jtk-act .ico { width: 15px; height: 15px; }
-.jtk-act-edit:hover { color: var(--lime); border-color: rgb(158 213 43 / .4); }
+.jtk-act-edit:hover { color: var(--lime); border-color: rgb(var(--lime-rgb) / .4); }
 .jtk-act-del:hover { color: var(--extrem); border-color: rgb(224 58 47 / .4); }
 
 /* ---------- lábléc / lapozás ---------- */

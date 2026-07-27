@@ -27,6 +27,24 @@
   let accKey = q.catCls === 'romantikus' ? 'romantikus' : q.diff;
   const page = document.querySelector('.detail-page');
 
+  /* A küldetés SAJÁT színe. A lap eddig a nehézség színét használta
+     akcentusként (.acc-konnyu, .acc-nehez…) — az a jelzés a nehézségi
+     címkén marad, a lap hangulatát viszont a pálya adja. Inline írjuk,
+     mert így üti az .acc-* osztályszabályt. */
+  function temaAlkalmaz() {
+    if (!page || !window.UQTema) return;
+    const t = q && q.themeAccent ? UQTema.normalizal(q.themeAccent) : null;
+    if (!t) {
+      page.style.removeProperty('--accent');
+      page.style.removeProperty('--lime');
+      page.style.removeProperty('--lime-rgb');
+      return;
+    }
+    page.style.setProperty('--accent', t.hex);
+    page.style.setProperty('--lime', t.hex);
+    page.style.setProperty('--lime-rgb', t.rgb.join(' '));
+  }
+
   function ujraOlvas() {
     QUESTS = window.QUESTS || QUESTS;
     ORDER = window.QUEST_ORDER || ORDER;
@@ -35,6 +53,7 @@
     const ujAcc = q.catCls === 'romantikus' ? 'romantikus' : q.diff;
     if (page && ujAcc !== accKey) { page.classList.remove('acc-' + accKey); page.classList.add('acc-' + ujAcc); }
     accKey = ujAcc;
+    temaAlkalmaz();
     document.title = `${q.heroTitle || q.title} – Urban Quest`;
     return true;
   }

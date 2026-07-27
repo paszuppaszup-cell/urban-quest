@@ -58,7 +58,7 @@
 }
 .jtk-row:last-child { border-bottom: 0; }
 .jtk-row:hover { background: rgb(255 255 255 / .025); }
-.jtk-row.is-active { background: rgb(158 213 43 / .05); border-left-color: var(--lime); }
+.jtk-row.is-active { background: rgb(var(--lime-rgb) / .05); border-left-color: var(--lime); }
 
 /* játék név cella */
 .jtk-name { display: flex; align-items: center; gap: 13px; min-width: 0; }
@@ -109,7 +109,7 @@
 .jtk-act { width: 32px; height: 32px; display: grid; place-items: center; border-radius: 7px; border: 1px solid var(--line); background: rgb(255 255 255 / .02); color: var(--muted); transition: background-color .14s, color .14s, border-color .14s; }
 .jtk-act:hover { color: #fff; background: rgb(255 255 255 / .07); }
 .jtk-act .ico { width: 15px; height: 15px; }
-.jtk-act-edit:hover { color: var(--lime); border-color: rgb(158 213 43 / .4); }
+.jtk-act-edit:hover { color: var(--lime); border-color: rgb(var(--lime-rgb) / .4); }
 
 /* ---------- lábléc / lapozás ---------- */
 .jtk-foot { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-top: 14px; }
@@ -165,7 +165,7 @@
 .jtk-lang-x { display: grid; place-items: center; width: 16px; height: 16px; border-radius: 4px; color: var(--muted); }
 .jtk-lang-x:hover { color: #fff; background: rgb(255 255 255 / .1); }
 .jtk-lang-add { display: inline-flex; align-items: center; gap: 5px; padding: 6px 10px; border-radius: 7px; border: 1px dashed var(--line); color: var(--muted); font-size: 11px; font-weight: 600; }
-.jtk-lang-add:hover { color: var(--lime); border-color: rgb(158 213 43 / .4); }
+.jtk-lang-add:hover { color: var(--lime); border-color: rgb(var(--lime-rgb) / .4); }
 .jtk-lang-add .ico { width: 13px; height: 13px; }
 
 .jtk-status-dot { width: 9px; height: 9px; border-radius: 50%; background: #4fb84f; box-shadow: 0 0 6px #4fb84f; flex: none; }
@@ -183,7 +183,7 @@
   color: var(--muted); font-family: var(--font-body); font-size: 11.5px; font-weight: 600;
   cursor: pointer; transition: color .14s, border-color .14s;
 }
-.jtk-media-pick:hover, .jtk-list-add:hover { color: var(--lime); border-color: rgb(158 213 43 / .4); }
+.jtk-media-pick:hover, .jtk-list-add:hover { color: var(--lime); border-color: rgb(var(--lime-rgb) / .4); }
 .jtk-media-pick .ico, .jtk-list-add .ico { width: 13px; height: 13px; }
 
 .jtk-list { display: flex; flex-direction: column; gap: 7px; }
@@ -194,7 +194,7 @@
   background: rgb(255 255 255 / .03); color: var(--text);
   font-family: var(--font-body); font-size: 12px;
 }
-.jtk-li-row input:focus { outline: none; border-color: rgb(158 213 43 / .5); }
+.jtk-li-row input:focus { outline: none; border-color: rgb(var(--lime-rgb) / .5); }
 .jtk-li-x {
   flex: none; display: grid; place-items: center; width: 32px; height: 32px;
   border-radius: 7px; border: 1px solid var(--line);
@@ -212,7 +212,7 @@
   background: rgb(255 255 255 / .02); text-align: left; cursor: pointer;
   transition: border-color .14s, background-color .14s;
 }
-.jtk-mp-item:hover { border-color: rgb(158 213 43 / .5); background: rgb(158 213 43 / .06); }
+.jtk-mp-item:hover { border-color: rgb(var(--lime-rgb) / .5); background: rgb(var(--lime-rgb) / .06); }
 .jtk-mp-item img { width: 100%; height: 82px; object-fit: cover; border-radius: 6px; display: block; background: #0f130d; }
 .jtk-mp-item span { font-size: 11px; color: var(--text-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .jtk-mp-empty { padding: 22px 12px; text-align: center; font-size: 12.5px; color: var(--muted); line-height: 1.55; }
@@ -229,7 +229,7 @@
 .uq-toast-wrap{position:fixed;right:18px;bottom:18px;z-index:300;display:flex;flex-direction:column;gap:10px;pointer-events:none;}
 .uq-toast{display:flex;align-items:center;gap:11px;min-width:220px;max-width:360px;padding:12px 14px;border-radius:10px;background:var(--bg-elev);border:1px solid var(--line);box-shadow:0 18px 40px -14px rgb(0 0 0 / .8);color:var(--text);font-family:var(--font-body);font-size:12.5px;pointer-events:auto;opacity:0;visibility:hidden;transform:translateY(10px);transition:opacity .18s,transform .18s,visibility .18s;}
 .uq-toast.is-show{opacity:1;visibility:visible;transform:none;}
-.uq-toast-ic{flex:none;width:24px;height:24px;border-radius:50%;display:grid;place-items:center;background:var(--lime);color:#0a0d0a;}
+.uq-toast-ic{flex:none;width:24px;height:24px;border-radius:50%;display:grid;place-items:center;background:var(--ok);color:#0a0d0a;}
 .uq-toast-ic .ico{width:14px;height:14px;stroke-width:3;}
 .uq-toast-body{min-width:0;display:flex;flex-direction:column;gap:1px;}
 .uq-toast-body b{font-size:12.5px;font-weight:700;color:#fff;line-height:1.2;}
@@ -262,7 +262,7 @@
 .uq-chipmenu.is-open .uq-chipmenu-pop{opacity:1;visibility:visible;transform:none;}
 .uq-chip-opt{display:flex;align-items:center;gap:8px;width:100%;padding:7px 9px;border-radius:6px;text-align:left;font-size:12px;font-weight:600;color:var(--text-2);transition:background-color .14s,color .14s;}
 .uq-chip-opt .flag{width:16px;height:11px;border-radius:2px;flex:none;box-shadow:0 0 0 1px rgb(255 255 255 / .16);}
-.uq-chip-opt:hover{background:rgb(158 213 43 / .12);color:var(--lime);}
+.uq-chip-opt:hover{background:rgb(var(--lime-rgb) / .12);color:var(--lime);}
 .uq-chip-opt .uq-chip-check{margin-left:auto;color:var(--lime);opacity:0;}
 .uq-chip-opt.is-selected{color:var(--lime);}
 .uq-chip-opt.is-selected .uq-chip-check{opacity:1;}
@@ -338,3 +338,71 @@
   margin: 10px 0 0; font-size: 12px; line-height: 1.5;
   color: var(--muted, #8a9a86);
 }
+
+/* =====================================================================
+   SZÍNTÉMA-PANEL — a játék színe a borítóképéből
+   A panel MINDIG a véglegesített színt mutatja: ha a kontraszt-korrekció
+   változtat a beírt értéken, azt lássa a szerző, ne egy elfogadott,
+   de máshogy megjelenő hexet.
+   ===================================================================== */
+.jtk-tema { border-top: 1px solid var(--line); padding-top: 16px; }
+
+.tema-sor { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+.tema-minta {
+  width: 44px; height: 44px; flex: 0 0 44px;
+  border-radius: 12px; border: 1px solid var(--line);
+  background: var(--line);
+}
+.tema-adat { flex: 1; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.tema-adat b {
+  font-family: var(--font-display); font-size: 15px; color: #fff;
+  font-variant-numeric: tabular-nums; letter-spacing: .02em;
+}
+.tema-adat span { font-size: 11.5px; color: var(--muted); line-height: 1.4; }
+
+.tema-mod { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; margin-bottom: 10px; }
+.tema-radio { display: inline-flex; align-items: center; gap: 7px; font-size: 12.5px; color: var(--text-2); cursor: pointer; }
+.tema-radio input { accent-color: var(--lime); }
+#fTemaSzin {
+  width: 46px; height: 30px; padding: 0;
+  border: 1px solid var(--line); border-radius: 8px;
+  background: none; cursor: pointer;
+}
+#fTemaSzin:disabled { opacity: .35; cursor: not-allowed; }
+
+.tema-fig {
+  margin: 0 0 10px; padding: 9px 12px;
+  border-radius: 10px;
+  background: rgb(var(--warn-rgb) / .1);
+  border: 1px solid rgb(var(--warn-rgb) / .3);
+  color: var(--warn);
+  font-size: 12px; line-height: 1.5;
+}
+
+/* Az előnézet ugyanazt a --lime tokent kapja, amit élesben a játék —
+   így nem külön „szimuláció", hanem a valódi rendszer kicsiben. */
+.tema-elonezet {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  padding: 12px 14px; border-radius: 12px;
+  background: var(--bg); border: 1px solid var(--line);
+}
+.te-cimke {
+  font-size: 9.5px; text-transform: uppercase; letter-spacing: .08em;
+  color: var(--muted); margin-right: 2px;
+}
+.te-jelveny {
+  display: inline-flex; align-items: center;
+  padding: 4px 10px; border-radius: 99px;
+  background: rgb(var(--lime-rgb) / .12);
+  border: 1px solid rgb(var(--lime-rgb) / .45);
+  color: var(--lime);
+  font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em;
+}
+.te-gomb {
+  padding: 8px 14px; border: 0; border-radius: 9px;
+  background: var(--lime); color: var(--tema-gomb-szoveg, #0a0d0a);
+  font-family: var(--font-display); font-size: 11.5px; font-weight: 800;
+  text-transform: uppercase; letter-spacing: .04em;
+  cursor: default;
+}
+.te-pont { color: var(--lime); font-weight: 700; font-size: 12.5px; }

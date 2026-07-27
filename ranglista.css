@@ -68,9 +68,9 @@
 }
 .pod-1 {
   padding-top: 30px;
-  border-color: rgb(158 213 43 / .5);
-  background: linear-gradient(180deg, rgb(158 213 43 / .08), rgb(20 26 17 / 0) 40%), #12160f;
-  box-shadow: 0 0 34px -12px rgb(158 213 43 / .5);
+  border-color: rgb(var(--lime-rgb) / .5);
+  background: linear-gradient(180deg, rgb(var(--lime-rgb) / .08), rgb(20 26 17 / 0) 40%), #12160f;
+  box-shadow: 0 0 34px -12px rgb(var(--lime-rgb) / .5);
 }
 .pod-medal {
   position: absolute; top: -20px; left: 50%; transform: translateX(-50%);
@@ -91,7 +91,7 @@
   background: #0e120d;
   color: var(--text-2);
 }
-.pod-1 .pod-logo { width: 62px; height: 62px; color: var(--lime); border-color: rgb(158 213 43 / .4); }
+.pod-1 .pod-logo { width: 62px; height: 62px; color: var(--lime); border-color: rgb(var(--lime-rgb) / .4); }
 .pod-logo .ico { width: 30px; height: 30px; }
 .pod-1 .pod-logo .ico { width: 38px; height: 38px; }
 .pod-name { font-size: 14px; font-weight: 700; color: #fff; margin-top: 2px; }
@@ -146,7 +146,7 @@
   background: rgb(255 255 255 / .015);
 }
 .rank-head span { font-size: 9.5px; font-weight: 700; letter-spacing: .09em; text-transform: uppercase; color: var(--dim); display: flex; align-items: center; gap: 5px; }
-.rank-body .rank-row:hover { background: rgb(158 213 43 / .04); }
+.rank-body .rank-row:hover { background: rgb(var(--lime-rgb) / .04); }
 .rank-body .rank-row.is-top { background: rgb(255 255 255 / .02); }
 
 .rr-pos { display: flex; align-items: center; gap: 8px; font-weight: 700; color: var(--text-2); }
@@ -223,13 +223,13 @@
 
 /* heti bajnok */
 .champ {
-  background: linear-gradient(180deg, rgb(158 213 43 / .08), rgb(20 26 17 / 0) 55%), var(--bg-elev);
-  border-color: rgb(158 213 43 / .3);
+  background: linear-gradient(180deg, rgb(var(--lime-rgb) / .08), rgb(20 26 17 / 0) 55%), var(--bg-elev);
+  border-color: rgb(var(--lime-rgb) / .3);
 }
 .champ-date { display: flex; align-items: center; gap: 7px; font-size: 11px; color: var(--muted); margin-bottom: 11px; }
 .champ-date .ico { color: var(--muted); }
 .champ-team { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
-.champ-logo { width: 46px; height: 46px; border-radius: 12px; display: grid; place-items: center; background: #0e120d; border: 1px solid rgb(158 213 43 / .4); color: var(--lime); flex: none; }
+.champ-logo { width: 46px; height: 46px; border-radius: 12px; display: grid; place-items: center; background: #0e120d; border: 1px solid rgb(var(--lime-rgb) / .4); color: var(--lime); flex: none; }
 .champ-logo .ico { width: 24px; height: 24px; }
 .champ-name { font-size: 16px; font-weight: 800; color: #fff; }
 .champ-pts { font-family: var(--font-display); font-weight: 800; font-size: 22px; color: var(--lime); }
@@ -243,7 +243,7 @@
   font-size: 9.5px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase;
   transition: background-color .18s;
 }
-.side-btn:hover { background: rgb(158 213 43 / .1); }
+.side-btn:hover { background: rgb(var(--lime-rgb) / .1); }
 .side-btn .ico { width: 14px; height: 14px; }
 
 /* játékos statisztikák */
@@ -259,7 +259,7 @@
 /* elérések */
 .ach { display: flex; flex-direction: column; gap: 9px; margin-bottom: 10px; }
 .ach-item { display: flex; align-items: flex-start; gap: 11px; }
-.ach-ico { width: 38px; height: 38px; border-radius: 10px; display: grid; place-items: center; background: rgb(158 213 43 / .1); border: 1px solid rgb(158 213 43 / .3); color: var(--lime); flex: none; }
+.ach-ico { width: 38px; height: 38px; border-radius: 10px; display: grid; place-items: center; background: rgb(var(--lime-rgb) / .1); border: 1px solid rgb(var(--lime-rgb) / .3); color: var(--lime); flex: none; }
 .ach-ico .ico { width: 19px; height: 19px; }
 .ach-body { flex: 1; min-width: 0; }
 .ach-top { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
@@ -272,9 +272,9 @@
   padding: 16px 16px;
   border-radius: 12px;
   background:
-    radial-gradient(120% 160% at 100% 100%, rgb(158 213 43 / .16) 0%, rgb(158 213 43 / 0) 55%),
+    radial-gradient(120% 160% at 100% 100%, rgb(var(--lime-rgb) / .16) 0%, rgb(var(--lime-rgb) / 0) 55%),
     linear-gradient(180deg, #131c0d, #0d1109);
-  border: 1px solid rgb(158 213 43 / .5);
+  border: 1px solid rgb(var(--lime-rgb) / .5);
 }
 .join-cta h3 { font-size: 15px; font-weight: 900; text-transform: uppercase; color: #fff; margin-bottom: 4px; }
 .join-cta p { font-size: 11.5px; color: var(--text-2); line-height: 1.4; margin-bottom: 12px; }

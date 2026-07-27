@@ -151,8 +151,18 @@ window.questCardHTML = function (id) {
   const f = q.filters || {};
   const favCls = q.fav ? ' is-on' : '';
 
+  /* A kártya a küldetés SAJÁT színét viseli: a --lime tokent csak ezen az
+     egy elemen írjuk felül, így a rács minden kártyája más világot mutat,
+     miközben az oldal többi része (és a logó) érintetlen marad. A --ok,
+     --warn, --hint és --brand token nem témázódik, tehát a jelzés-színek
+     jelentése végig ugyanaz. */
+  const tema = q.themeAccent && window.UQTema ? window.UQTema.normalizal(q.themeAccent) : null;
+  const temaStyle = tema
+    ? ` style="--lime:${tema.hex};--lime-rgb:${tema.rgb.join(' ')}"`
+    : '';
+
   return `
-  <article class="quest-card acc-${accKey}" data-id="${q.id}"
+  <article class="quest-card acc-${accKey}" data-id="${q.id}"${temaStyle}
     data-nehezseg="${f.nehezseg || ''}" data-kategoria="${f.kategoria || ''}" data-helyszin="${f.helyszin || ''}"
     data-csoport="${f.csoport || ''}" data-idotartam="${f.idotartam || ''}"
     role="link" tabindex="0" aria-label="${esc(q.title)}">
