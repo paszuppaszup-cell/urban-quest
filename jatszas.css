@@ -118,3 +118,353 @@
   text-decoration: underline;
 }
 .uq-play-restartlink:hover { color: var(--text, #f1f4ec); }
+
+/* =====================================================================
+   VÉGIGJÁTSZÁS — terepre szabott, egyoszlopos felület
+   ---------------------------------------------------------------------
+   Ez a lap az admin.css UTÁN töltődik be, ezért az itteni szabályok
+   írják felül a régi kétoszlopos szerkesztő-nézetet. A játékot egy
+   kézben tartott telefonon játsszák séta közben: egyetlen kb. 460 px
+   széles sáv, nagy érintőfelületek, és minden képernyőn ugyanaz.
+   ===================================================================== */
+
+/* ---------- felső sáv: vissza | logó | menü ---------- */
+.play-top-btn {
+  width: 38px; height: 38px; flex: 0 0 38px;
+  display: grid; place-items: center;
+  border-radius: 12px;
+  background: #141a12;
+  border: 1px solid var(--line, #232a1e);
+  color: var(--text-2, #b9c2b1);
+  cursor: pointer; text-decoration: none;
+  transition: background .15s, color .15s, border-color .15s;
+}
+.play-top-btn:hover { background: #1b2218; color: #fff; border-color: rgb(255 255 255 / .18); }
+.play-top-btn .ico { width: 17px; height: 17px; }
+.play-top .play-brand { flex: 1 1 auto; justify-content: center; }
+
+/* ---------- egyoszlopos játéktér ---------- */
+.play-wrap { max-width: none; padding: 0 0 44px; }
+#playRoot .uq-play {
+  display: block;
+  max-width: 460px;
+  margin: 0 auto;
+  padding: 0 14px;
+}
+#playRoot .uq-play-main { display: block; width: auto; }
+#playRoot .uq-play-side { display: none; }
+.uq-play-stage { margin-top: 14px; }
+
+/* ---------- állapotsáv ---------- */
+.uq-hud {
+  display: flex; align-items: stretch;
+  margin-top: 14px;
+  background: #12160f;
+  border: 1px solid var(--line, #232a1e);
+  border-radius: 16px;
+  overflow: hidden;
+}
+.uq-hud-cell { flex: 1 1 0; display: flex; align-items: center; gap: 9px; padding: 12px 10px; min-width: 0; }
+/* Az óra kapja a legtöbb helyet: a „02:59:46" a leghosszabb érték a sávban. */
+.uq-hud-cell:nth-child(2) { flex-grow: 1.3; }
+.uq-hud-cell + .uq-hud-cell { border-left: 1px solid var(--line, #232a1e); }
+/* Az első cella ikonja felül igazodik, mert a szöveg alatt ott a csík is. */
+.uq-hud-first { align-items: flex-start; }
+.uq-hud-first .uq-hud-ic { margin-top: 1px; }
+.uq-hud-first .uq-hud-txt { flex: 1 1 auto; }
+.uq-hud-ic {
+  width: 30px; height: 30px; flex: 0 0 30px;
+  display: grid; place-items: center;
+  border-radius: 50%;
+  background: rgb(158 213 43 / .12);
+  border: 1px solid rgb(158 213 43 / .3);
+  color: var(--lime, #9ed52b);
+}
+.uq-hud-ic .ico { width: 15px; height: 15px; }
+.uq-hud-txt { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.uq-hud-txt b {
+  font-family: var(--font-display, 'Archivo'), sans-serif;
+  font-size: 16px; line-height: 1.15; color: #fff;
+  font-variant-numeric: tabular-nums; white-space: nowrap;
+}
+.uq-hud-txt b small { font-family: 'Inter', sans-serif; font-size: 11px; color: var(--muted, #8b957f); font-weight: 500; }
+.uq-hud-txt b.lime { color: var(--lime, #9ed52b); }
+.uq-hud-txt b.warn { color: #e0733a; }
+.uq-hud-txt > span {
+  font-size: 9px; text-transform: uppercase; letter-spacing: .04em;
+  color: var(--muted, #8b957f);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+/* A `flex` visszaállítása nem díszítés: a régi szabály `flex-basis: 0`-t ad,
+   és oszlop-flexben a basis a MAGASSÁGRA vonatkozik — a csík eltűnne. */
+.uq-hud-bar {
+  display: block; flex: none;
+  height: 3px; min-width: 0; margin-top: 5px;
+  border-radius: 99px; background: rgb(255 255 255 / .09); overflow: hidden;
+}
+.uq-hud-bar i { display: block; height: 100%; border-radius: 99px; background: var(--lime, #9ed52b); transition: width .35s ease; }
+
+/* ---------- állomás-fejléc ---------- */
+#playRoot .uq-pl-hero {
+  position: relative;
+  height: 190px;
+  margin-bottom: 14px;
+  border-radius: 18px;
+  overflow: hidden;
+  background-size: cover;
+  background-position: center;
+}
+/* A régi ::after-fátyol az utolsó gyerekként a CÍM FÖLÉ festett, ezért
+   látszott szürkének a fehér állomásnév. Saját fátylunk van helyette. */
+#playRoot .uq-pl-hero::after { content: none; }
+.uq-pl-hero-fade {
+  position: absolute; inset: 0;
+  background: linear-gradient(180deg, rgb(10 13 10 / .12) 0%, rgb(10 13 10 / .55) 58%, rgb(10 13 10 / .93) 100%);
+}
+.uq-pl-hero-in {
+  position: absolute; left: 0; right: 0; bottom: 15px;
+  padding: 0 18px;
+  display: flex; flex-direction: column; align-items: flex-start; gap: 9px;
+}
+#playRoot .uq-pl-hero .uq-pl-badge {
+  position: static;
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 5px 11px;
+  border-radius: 99px;
+  background: rgb(10 13 10 / .6);
+  border: 1px solid rgb(158 213 43 / .5);
+  color: var(--lime, #9ed52b);
+  font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em;
+  backdrop-filter: blur(4px);
+}
+.uq-pl-hero-cim {
+  font-family: var(--font-display, 'Archivo'), sans-serif;
+  font-size: 25px; font-weight: 800; line-height: 1.12;
+  color: #fff; text-shadow: 0 2px 14px rgb(0 0 0 / .7);
+  text-wrap: balance;
+}
+
+/* ---------- feladatkártya ---------- */
+#playRoot .uq-pl-card {
+  background: #12160f;
+  border: 1px solid var(--line, #232a1e);
+  border-radius: 18px;
+  padding: 18px;
+}
+.uq-pl-taskhead { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+.uq-pl-tico {
+  width: 44px; height: 44px; flex: 0 0 44px;
+  display: grid; place-items: center;
+  border-radius: 50%;
+}
+.uq-pl-tico .ico { width: 21px; height: 21px; }
+.uq-pl-tmeta { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.uq-pl-tlabel { font-size: 10px; text-transform: uppercase; letter-spacing: .08em; color: var(--lime, #9ed52b); font-weight: 700; }
+.uq-pl-tmeta b { font-family: var(--font-display, 'Archivo'), sans-serif; font-size: 18px; color: #fff; line-height: 1.2; }
+.uq-pl-desc { margin: 0 0 12px; font-size: 13.5px; line-height: 1.6; color: var(--text-2, #b9c2b1); }
+.uq-pl-loc { display: flex; align-items: flex-start; gap: 7px; margin: 0 0 16px; font-size: 12.5px; line-height: 1.45; color: #e8c15a; }
+.uq-pl-loc .ico { width: 15px; height: 15px; flex: none; margin-top: 1px; }
+
+/* ---------- kérdés ---------- */
+.uq-pl-q { padding-top: 15px; margin-bottom: 13px; border-top: 1px solid var(--line, #232a1e); }
+.uq-pl-qlabel {
+  display: block; margin-bottom: 7px;
+  font-size: 10px; text-transform: uppercase; letter-spacing: .08em;
+  color: var(--lime, #9ed52b); font-weight: 700;
+}
+.uq-pl-q b { display: block; font-size: 15px; line-height: 1.45; font-weight: 600; color: #fff; }
+
+/* ---------- válasz és műveletek ---------- */
+#playRoot .uq-pl-answer { display: block; }
+#playRoot .uq-pl-actions {
+  display: flex; flex-direction: column; align-items: stretch;
+  gap: 0; margin-top: 14px; padding: 0; border: 0; background: none;
+}
+#playRoot .uq-pl-input { display: flex; flex-direction: column; gap: 10px; }
+#playRoot .uq-pl-input input,
+#playRoot .uq-pl-input textarea {
+  width: 100%; box-sizing: border-box;
+  padding: 14px 16px;
+  border-radius: 13px;
+  background: #0b0f0a;
+  border: 1px solid var(--line, #232a1e);
+  color: #fff; font: inherit; font-size: 14px;
+}
+#playRoot .uq-pl-input input::placeholder { color: #5d6b58; }
+#playRoot .uq-pl-input input:focus,
+#playRoot .uq-pl-input textarea:focus {
+  outline: none;
+  border-color: rgb(158 213 43 / .55);
+  box-shadow: 0 0 0 3px rgb(158 213 43 / .12);
+}
+
+/* ---------- feleletválasztó ---------- */
+#playRoot .uq-pl-opts { display: flex; flex-direction: column; gap: 9px; }
+#playRoot .uq-pl-opt {
+  width: 100%; box-sizing: border-box; text-align: left;
+  padding: 14px 16px;
+  border-radius: 13px;
+  background: #0b0f0a;
+  border: 1px solid var(--line, #232a1e);
+  color: #fff; font: inherit; font-size: 14px; cursor: pointer;
+  transition: border-color .15s, background .15s;
+}
+#playRoot .uq-pl-opt:hover:not(:disabled) { border-color: rgb(158 213 43 / .45); background: #0f140d; }
+#playRoot .uq-pl-opt.ok { border-color: var(--lime, #9ed52b); background: rgb(158 213 43 / .12); color: var(--lime, #9ed52b); }
+#playRoot .uq-pl-opt.bad { border-color: #e0733a; background: rgb(224 115 58 / .1); color: #e0733a; }
+
+/* ---------- fő gomb ---------- */
+#playRoot .uq-pl-go,
+#playRoot .uq-pl-do {
+  width: 100%; box-sizing: border-box;
+  display: flex; align-items: center; justify-content: center; gap: 9px;
+  padding: 15px 18px;
+  border: 0; border-radius: 14px;
+  background: var(--lime, #9ed52b); color: #0a0d0a;
+  font-family: var(--font-display, 'Archivo'), sans-serif;
+  font-size: 14.5px; font-weight: 800;
+  text-transform: uppercase; letter-spacing: .04em;
+  cursor: pointer;
+  transition: filter .15s, transform .1s;
+}
+/* A „tovább" és a kezdő gomb az admin gombosztályát örökölte. Ugyanazt a
+   megjelenést kapják, de szélességet NEM írunk elő: a művelet-sávban a
+   nyújtás úgyis kitölti, a bevezetőn viszont tartalom szerint méreteződik. */
+#playRoot .adm-btn-lime {
+  display: inline-flex; align-items: center; justify-content: center; gap: 9px;
+  padding: 15px 22px;
+  border: 0; border-radius: 14px;
+  background: var(--lime, #9ed52b); color: #0a0d0a;
+  font-family: var(--font-display, 'Archivo'), sans-serif;
+  font-size: 14.5px; font-weight: 800;
+  text-transform: uppercase; letter-spacing: .04em;
+  cursor: pointer; text-decoration: none;
+  transition: filter .15s, transform .1s;
+}
+#playRoot .adm-btn-lime:hover { filter: brightness(1.08); }
+#playRoot .adm-btn-lime:active { transform: translateY(1px); }
+#playRoot .uq-pl-go:hover, #playRoot .uq-pl-do:hover { filter: brightness(1.08); }
+#playRoot .uq-pl-go:active, #playRoot .uq-pl-do:active { transform: translateY(1px); }
+#playRoot .uq-pl-go .ico, #playRoot .uq-pl-do .ico { width: 17px; height: 17px; }
+
+/* ---------- átugrás: másodlagos, hogy ne versenyezzen a beküldéssel ---------- */
+#playRoot .uq-pl-skip {
+  width: 100%; box-sizing: border-box; margin-top: 10px;
+  display: flex; align-items: center; justify-content: center; gap: 7px;
+  padding: 11px;
+  border-radius: 12px;
+  background: transparent;
+  border: 1px solid var(--line, #232a1e);
+  color: var(--muted, #8b957f);
+  font: inherit; font-size: 12.5px; cursor: pointer;
+}
+#playRoot .uq-pl-skip:hover { color: var(--text-2, #b9c2b1); border-color: rgb(255 255 255 / .18); }
+
+/* ---------- tippek ---------- */
+.uq-pl-hints { display: flex; flex-direction: column; gap: 9px; margin-bottom: 11px; }
+#playRoot .uq-pl-hint {
+  display: flex; align-items: flex-start; gap: 8px; margin: 0;
+  padding: 11px 13px;
+  border-radius: 12px;
+  background: rgb(232 193 90 / .09);
+  border: 1px solid rgb(232 193 90 / .28);
+  color: #f0d68f; font-size: 13px; line-height: 1.5;
+}
+#playRoot .uq-pl-hint .ico { width: 15px; height: 15px; flex: none; margin-top: 2px; color: #e8c15a; }
+.uq-pl-hint-btn {
+  width: 100%; box-sizing: border-box;
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  padding: 12px 15px;
+  border-radius: 13px;
+  background: transparent;
+  border: 1px solid rgb(232 193 90 / .45);
+  color: #e8c15a;
+  font: inherit; font-size: 13px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .05em;
+  cursor: pointer; transition: background .15s;
+}
+.uq-pl-hint-btn:hover { background: rgb(232 193 90 / .1); }
+.uq-pl-hint-btn > span:first-child { display: flex; align-items: center; gap: 8px; }
+.uq-pl-hint-btn .ico { width: 15px; height: 15px; }
+.uq-pl-hint-cost {
+  padding: 3px 9px; border-radius: 99px;
+  background: rgb(232 193 90 / .16);
+  font-size: 11px; font-weight: 700; letter-spacing: .02em;
+  text-transform: none; white-space: nowrap;
+}
+.uq-pl-hint-cost.free { color: var(--lime, #9ed52b); background: rgb(158 213 43 / .14); }
+.uq-pl-hint-none { margin: 0; font-size: 12px; text-align: center; color: var(--muted, #8b957f); }
+
+/* ---------- jutalom ---------- */
+.uq-pl-reward {
+  display: flex; gap: 10px;
+  margin-top: 12px; padding: 14px;
+  border-radius: 16px;
+  background: #12160f;
+  border: 1px solid var(--line, #232a1e);
+}
+.uq-pl-rw { flex: 1 1 0; display: flex; align-items: center; gap: 10px; min-width: 0; }
+.uq-pl-rw + .uq-pl-rw { padding-left: 12px; border-left: 1px solid var(--line, #232a1e); }
+.uq-pl-rw-ic {
+  width: 34px; height: 34px; flex: 0 0 34px;
+  display: grid; place-items: center;
+  border-radius: 11px;
+  background: rgb(158 213 43 / .12);
+  border: 1px solid rgb(158 213 43 / .28);
+  color: var(--lime, #9ed52b);
+}
+.uq-pl-rw-ic .ico { width: 16px; height: 16px; }
+/* a tippre költött pont arannyal, hogy ne olvadjon össze a jutalommal */
+.uq-pl-rw-ic.minus { background: rgb(232 193 90 / .12); border-color: rgb(232 193 90 / .3); color: #e8c15a; }
+.uq-pl-rw-txt b.minus { color: #e8c15a; }
+.uq-pl-rw-txt { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.uq-pl-rw-txt b {
+  font-family: var(--font-display, 'Archivo'), sans-serif;
+  font-size: 17px; line-height: 1.15; color: var(--lime, #9ed52b);
+  font-variant-numeric: tabular-nums;
+}
+.uq-pl-rw-txt > span {
+  font-size: 10px; text-transform: uppercase; letter-spacing: .05em;
+  color: var(--muted, #8b957f);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+/* ---------- helyszín-emlékeztető ---------- */
+.uq-pl-onsite {
+  display: flex; align-items: center; justify-content: center; gap: 7px;
+  margin: 13px 0 0;
+  font-size: 11.5px; line-height: 1.4; text-align: center;
+  color: var(--muted, #8b957f);
+}
+.uq-pl-onsite .ico { width: 14px; height: 14px; flex: none; }
+
+/* ---------- lecsukható útvonal + haladás ---------- */
+.uq-play-more {
+  margin-top: 16px;
+  border: 1px solid var(--line, #232a1e);
+  border-radius: 16px;
+  background: #12160f;
+  overflow: hidden;
+}
+.uq-play-more > summary {
+  display: flex; align-items: center; gap: 9px;
+  padding: 14px 16px;
+  font-size: 12.5px; font-weight: 600;
+  color: var(--text-2, #b9c2b1);
+  cursor: pointer; list-style: none; user-select: none;
+}
+.uq-play-more > summary::-webkit-details-marker { display: none; }
+.uq-play-more > summary:hover { color: #fff; }
+.uq-play-more > summary .ico { width: 16px; height: 16px; }
+.uq-play-more-c { margin-left: auto; transition: transform .2s; }
+.uq-play-more[open] .uq-play-more-c { transform: rotate(180deg); }
+.uq-play-more-in { display: flex; flex-direction: column; gap: 14px; padding: 0 16px 16px; }
+
+/* ---------- keskeny telefon ---------- */
+@media (max-width: 520px) {
+  #playRoot .uq-play { padding: 0 12px; }
+  #playRoot .uq-pl-hero { height: 165px; }
+  .uq-pl-hero-cim { font-size: 21px; }
+  #playRoot .uq-pl-card { padding: 16px; }
+  .play-brand-sub { display: none; }
+}

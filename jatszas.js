@@ -220,7 +220,8 @@
     const tag = document.querySelector('.play-top-tag'); if (tag) tag.remove();
     const brand = document.querySelector('.play-brand'); if (brand) brand.setAttribute('href', 'index.html');
     const back = document.getElementById('playBack');
-    if (back) { back.setAttribute('href', 'kuldetes.html?id=' + encodeURIComponent(QUEST_ID)); back.lastChild && (back.lastChild.textContent = 'Kilépés'); }
+    /* csak ikon van a gombon — a szöveg helyett a címkét állítjuk */
+    if (back) { back.setAttribute('href', 'kuldetes.html?id=' + encodeURIComponent(QUEST_ID)); back.setAttribute('aria-label', 'Kilépés'); back.title = 'Kilépés'; }
   }
 
   /* fejléc / cím */
@@ -272,7 +273,22 @@
     info:   { l: 'Állomásfeladat', c: '#5b9de0', ic: 'a-task' }
   };
 
-  const play = { active: false, view: 'intro', path: [], points: 0, done: 0, skipped: 0, taskIdx: 0, stationTasks: [], result: null, decOpts: [], pv: {}, startTs: 0, timer: null, finished: false, finalMs: 0 };
+  /* `points` a SZERZETT pont, `hintCost` a felfedett tippek összege.
+     A kettőt külön tartjuk, mert a szerver is így számol: a végösszeg
+     max(szerzett − tippek, 0). Ha lépésenként vágnánk nullára, a kliens
+     és a szerver eltérő végeredményt adna. */
+  const play = { active: false, view: 'intro', path: [], points: 0, hintCost: 0, hintsUsed: [], solvedIds: [], done: 0, skipped: 0, taskIdx: 0, stationTasks: [], result: null, decOpts: [], pv: {}, startTs: 0, timer: null, finished: false, finalMs: 0, moreOpen: false };
+
+  /* Egy feladat pontja EGYSZER jár. A mentett állapot a már megoldott
+     feladatok azonosítóit is tárolja, mert a folytatás ugyanazt a feladatot
+     megválaszolhatóként hozza vissza — enélkül a lap újratöltése
+     korlátlanul ismételhető pontszerzés lenne. */
+  function marMegoldott(task) {
+    return !!task && play.solvedIds.indexOf(String(task.id)) > -1;
+  }
+
+  /* a játékosnak MUTATOTT pontszám */
+  function playPoints() { return Math.max(0, (play.points || 0) - (play.hintCost || 0)); }
 
   function revealFor(type, c) {
     c = c || {};
@@ -291,7 +307,10 @@
       points: t.points || 0, reveal: revealFor(t.type, t.cfg),
       image: t.image || '', video: t.video || '',
       /* az adatbázisból jövő csomag megoldása CSAK hash-ként utazik */
-      answer_hashes: t.answer_hashes || null, salt: t.salt || '', auto_ok: !!t.auto_ok
+      answer_hashes: t.answer_hashes || null, salt: t.salt || '', auto_ok: !!t.auto_ok,
+      /* A tippek átvitele nem elhagyható: enélkül a tipp-felület sosem
+         jelenik meg, és a levonás sem történik meg. */
+      hints: t.hints || []
     }));
     // fallback #1: pálya-szerkesztő állomás saját feladat-mezőiből (taskType/question/answer)
     if (s.taskType || s.question || s.answer) {
@@ -312,13 +331,28 @@
   }
 
   /* --- idő --- */
-  function playFmt(ms) { const s = Math.max(0, Math.floor(ms / 1000)); const m = Math.floor(s / 60); const r = s % 60; return (m < 10 ? '0' : '') + m + ':' + (r < 10 ? '0' : '') + r; }
+  /* Egy óra felett órát is írunk (02:45:30) — a visszaszámláló pályánként
+     több órás is lehet, „245:12" olvashatatlan volna. */
+  function playFmt(ms) {
+    const s = Math.max(0, Math.floor(ms / 1000));
+    const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), r = s % 60;
+    const p = (n) => (n < 10 ? '0' : '') + n;
+    return h ? (p(h) + ':' + p(m) + ':' + p(r)) : (p(m) + ':' + p(r));
+  }
   function playElapsed() { return play.startTs ? Date.now() - play.startTs : 0; }
   function stopTimer() { if (play.timer) { clearInterval(play.timer); play.timer = null; } }
   function startTimer() {
     stopTimer();
     play.timer = setInterval(() => {
-      if (play.active && !play.finished) { const el = $('#uqPlayTime'); if (el) el.textContent = playFmt(playElapsed()); }
+      if (!play.active || play.finished) return;
+      const el = $('#uqPlayTime'); if (!el) return;
+      /* A fejléc visszaszámlálót mutat, ha a pályához van időtartam —
+         a címke is vele változik, amikor lejár. */
+      const t = playIdoAdat();
+      el.textContent = t.szoveg;
+      el.classList.toggle('warn', !!t.lejart);
+      const c = el.nextElementSibling;
+      if (c && c.textContent !== t.cimke) c.textContent = t.cimke;
     }, 500);
   }
 
@@ -328,17 +362,31 @@
     if (!window.UQAuth || !window.UQAuth.isRegistered()) return;
     window.UQAccount.saveProgress({
       questId: QUEST_ID, questTitle: TITLE, total: COURSE.length,
-      pathLen: play.path.length, points: play.points, done: play.done, skipped: play.skipped,
+      pathLen: play.path.length, points: playPoints(), done: play.done, skipped: play.skipped,
       timeMs: playElapsed(),
-      state: { path: play.path.slice(), points: play.points, done: play.done, skipped: play.skipped, taskIdx: play.taskIdx, elapsedMs: playElapsed() }
+      state: {
+        path: play.path.slice(), points: play.points, hintCost: play.hintCost,
+        hintsUsed: play.hintsUsed.slice(), solvedIds: play.solvedIds.slice(),
+        done: play.done, skipped: play.skipped, taskIdx: play.taskIdx,
+        /* abszolút kezdés + eltelt idő: az előbbi a határidőhöz, az utóbbi a
+           fiókban megjelenített játékidőhöz kell */
+        startTs: play.startTs, elapsedMs: playElapsed()
+      }
     });
   }
+
+  /* A lap elhagyása (fülváltás, vissza-gomb, bezárás) is mentsen: enélkül a
+     legutóbbi mentés óta megoldott feladatok elvesznének. */
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden' && play.active && !play.finished) saveSnapshot();
+  });
+  window.addEventListener('pagehide', () => { if (play.active && !play.finished) saveSnapshot(); });
   function finishSave() {
     if (!PUBLIC || !window.UQAccount || !window.UQAccount.finishPlay) return;
     if (!window.UQAuth || !window.UQAuth.isRegistered()) return;
     window.UQAccount.finishPlay({
       questId: QUEST_ID, questTitle: TITLE, total: COURSE.length,
-      pathLen: play.path.length, points: play.points, done: play.done, skipped: play.skipped, timeMs: play.finalMs
+      pathLen: play.path.length, points: playPoints(), done: play.done, skipped: play.skipped, timeMs: play.finalMs
     });
   }
 
@@ -347,7 +395,7 @@
     let startIdx = COURSE.findIndex(s => s.type === 'kezdo' || s.type === 'Kezdő állomás');
     if (startIdx < 0) startIdx = 0;
     play.active = true; play.finished = false; play.view = 'station';
-    play.path = [startIdx]; play.points = 0; play.done = 0; play.skipped = 0;
+    play.path = [startIdx]; play.points = 0; play.hintCost = 0; play.hintsUsed = []; play.solvedIds = []; play.done = 0; play.skipped = 0;
     play.taskIdx = 0; play.result = null; play.decOpts = []; play.pv = {};
     play.stationTasks = stationPlayTasks(startIdx);
     play.startTs = Date.now(); play.finalMs = 0;
@@ -359,18 +407,35 @@
   /* folytatás mentett állapotból */
   function playResume(state) {
     let idx = (state.path && state.path.length) ? state.path[state.path.length - 1] : 0;
-    if (idx < 0 || idx >= COURSE.length) idx = 0;
+    if (!(idx >= 0 && idx < COURSE.length)) idx = 0;
     play.active = true; play.finished = false; play.view = 'station';
+    /* A javított indexet vissza KELL írni az útvonalba: a playCurIdx() az
+       útvonal végét olvassa, tehát a helyi javítás önmagában nem érne
+       semmit — az állomás és a hozzá betöltött feladatok elcsúsznának. */
     play.path = (state.path && state.path.length) ? state.path.slice() : [idx];
-    play.points = state.points || 0; play.done = state.done || 0; play.skipped = state.skipped || 0;
+    play.path[play.path.length - 1] = idx;
+    play.points = state.points || 0; play.hintCost = state.hintCost || 0;
+    play.hintsUsed = Array.isArray(state.hintsUsed) ? state.hintsUsed.slice() : [];
+    play.solvedIds = Array.isArray(state.solvedIds) ? state.solvedIds.map(String) : [];
+    play.done = state.done || 0; play.skipped = state.skipped || 0;
     play.result = null; play.decOpts = []; play.pv = {};
     play.stationTasks = stationPlayTasks(idx);
-    play.taskIdx = Math.min(state.taskIdx || 0, play.stationTasks.length);
-    play.startTs = Date.now() - (state.elapsedMs || 0); play.finalMs = 0;
+    /* A felső korlát a HOSSZ − 1: a hosszra korlátozva a taskIdx a tömbön
+       kívülre mutatna, és a kirajzolás undefined feladaton hasalna el. */
+    play.taskIdx = Math.max(0, Math.min(state.taskIdx || 0, play.stationTasks.length - 1));
+    /* A visszaszámláló valódi határidő, ezért abszolút kezdőidőt tárolunk.
+       A relatív „eltelt idő" a lap bezárásakor megállt volna, és minden
+       újratöltés visszaugrott volna az utolsó mentésre. */
+    play.startTs = state.startTs ? Number(state.startTs) : (Date.now() - (state.elapsedMs || 0));
+    play.finalMs = 0;
     startTimer();
     renderPlay();
   }
-  function playExit() { play.active = false; play.finished = false; play.view = 'intro'; stopTimer(); renderPlay(); }
+  function playExit() {
+    /* Kilépés előtt mentünk — a felső sáv vissza-nyila is ide fut be. */
+    if (play.active && !play.finished) saveSnapshot();
+    play.active = false; play.finished = false; play.view = 'intro'; stopTimer(); renderPlay();
+  }
   function playCurIdx() { return play.path[play.path.length - 1]; }
   function playGoto(i) {
     play.path.push(i); play.taskIdx = 0; play.result = null; play.pv = {}; play.view = 'station';
@@ -394,16 +459,24 @@
   }
   function playTaskDone(credited, revealText) {
     const task = play.stationTasks[play.taskIdx];
-    if (credited) { play.points += (task.points || 0); play.done++; }
-    else play.skipped++;
-    play.result = { ok: credited, reveal: revealText || null, task: task };
+    if (!task) return playNextTask();
+    const ujra = marMegoldott(task);
+    if (credited && !ujra) {
+      play.points += (task.points || 0); play.done++;
+      play.solvedIds.push(String(task.id));
+    } else if (!credited && !ujra) {
+      play.skipped++;
+    }
+    play.result = { ok: credited, reveal: revealText || null, task: task, ujra: ujra && credited };
     saveSnapshot();
     renderPlay();
   }
   function playNextTask() {
     play.taskIdx++; play.result = null; play.pv = {};
+    /* A továbblépés is mentendő: enélkül a mentett taskIdx egy feladattal
+       lemaradna, és a folytatás az utolsót újra feladná. */
     if (play.taskIdx >= play.stationTasks.length) playAfterStation();
-    else renderPlay();
+    else { saveSnapshot(); renderPlay(); }
   }
 
   /* --- fő render --- */
@@ -418,11 +491,39 @@
       if (rb) rb.addEventListener('click', () => { const st = resumeState(); if (st) playResume(st); else playStart(); });
       return;
     }
+    /* Egyoszlopos, telefonra szabott elrendezés minden képernyőn. Az
+       útvonal és a lépéslista lecsukható blokkba került: elérhető, de nem
+       vonja el a figyelmet a helyszínen megoldandó feladatról. */
     host.innerHTML = '<div class="uq-play">' +
-      '<div class="uq-play-main">' + playHudHTML() + '<div class="uq-play-stage" id="uqPlayStage"></div></div>' +
-      '<aside class="uq-play-side">' + playMapHTML() + playStepsHTML() + '</aside>' +
+      playHudHTML() +
+      '<div class="uq-play-stage" id="uqPlayStage"></div>' +
+      /* A nyitottságot állapotban tartjuk: a renderPlay() minden válasz után
+         kicseréli a teljes DOM-ot, így a natív <details> különben minden
+         lépésnél becsukódna a játékos alatt. */
+      '<details class="uq-play-more" id="uqPlayMore"' + (play.moreOpen ? ' open' : '') + '>' +
+        '<summary><svg class="ico ico-sm" aria-hidden="true"><use href="#a-map"/></svg>Útvonal és haladás' +
+          '<svg class="ico ico-xs uq-play-more-c" aria-hidden="true"><use href="#a-down"/></svg></summary>' +
+        '<div class="uq-play-more-in">' + playMapHTML() + playStepsHTML() + '</div>' +
+      '</details>' +
       '</div>';
     const ex = $('#uqPlayExit'); if (ex) ex.addEventListener('click', playExit);
+
+    /* a fejléc ☰ gombja és a blokk saját fejléce ugyanazt az állapotot írja */
+    const mb = document.getElementById('playMenu'), more = $('#uqPlayMore');
+    const jeloles = () => { if (mb) mb.setAttribute('aria-expanded', String(play.moreOpen)); };
+    if (more) {
+      more.addEventListener('toggle', () => { play.moreOpen = more.open; jeloles(); });
+    }
+    jeloles();
+    if (mb && !mb._kotve) {
+      mb._kotve = true;
+      mb.addEventListener('click', () => {
+        const m = document.getElementById('uqPlayMore');
+        if (!m) return;
+        m.open = !m.open;                       // a toggle-esemény frissíti az állapotot
+        if (m.open) m.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      });
+    }
     const stage = $('#uqPlayStage');
     if (play.view === 'summary') { stage.innerHTML = playSummaryHTML(); wirePlaySummary(); }
     else if (play.view === 'decision') { stage.innerHTML = playDecisionHTML(); wirePlayDecision(); }
@@ -481,39 +582,147 @@
   function playHudHTML() {
     const total = COURSE.length;
     const pct = Math.min(100, Math.round(play.path.length / total * 100));
-    return '<div class="uq-play-hud">' +
-      '<div class="uq-hud-item"><span class="uq-hud-label">Haladás</span><b>' + play.path.length + '<small>/' + total + '</small></b></div>' +
-      '<div class="uq-hud-item"><span class="uq-hud-label">Pont</span><b class="lime">' + play.points + '</b></div>' +
-      '<div class="uq-hud-item"><span class="uq-hud-label">Idő</span><b id="uqPlayTime">' + playFmt(play.finished ? play.finalMs : playElapsed()) + '</b></div>' +
-      '<div class="uq-hud-bar"><span style="width:' + pct + '%"></span></div>' +
-      '<button class="uq-hud-exit" type="button" id="uqPlayExit" aria-label="Kilépés a teszt-módból"><svg class="ico ico-sm" aria-hidden="true"><use href="#a-x"/></svg></button>' +
+    const ossz = playTasksTotal();
+    const jelen = Math.min(play.done + play.skipped + 1, ossz || 1);
+    const fpct = ossz ? Math.round((play.done + play.skipped) / ossz * 100) : pct;
+    const t = playIdoAdat();
+
+    const cella = (ikon, ertek, cimke, extra) =>
+      '<div class="uq-hud-cell">' +
+        '<span class="uq-hud-ic"><svg class="ico" aria-hidden="true"><use href="#' + ikon + '"/></svg></span>' +
+        '<span class="uq-hud-txt">' +
+          '<b' + (extra && extra.cls ? ' class="' + extra.cls + '"' : '') +
+            (extra && extra.id ? ' id="' + extra.id + '"' : '') + '>' + ertek + '</b>' +
+          '<span>' + cimke + '</span>' +
+        '</span>' +
       '</div>';
+
+    return '<div class="uq-hud">' +
+      '<div class="uq-hud-cell uq-hud-first">' +
+        '<span class="uq-hud-ic"><svg class="ico" aria-hidden="true"><use href="#a-play"/></svg></span>' +
+        '<span class="uq-hud-txt">' +
+          '<b>' + jelen + ' <small>/ ' + (ossz || 1) + '</small></b>' +
+          '<span>Feladat</span>' +
+          '<span class="uq-hud-bar"><i style="width:' + fpct + '%"></i></span>' +
+        '</span>' +
+      '</div>' +
+      cella('a-clock', t.szoveg, t.cimke, { id: 'uqPlayTime', cls: t.lejart ? 'warn' : '' }) +
+      cella('a-star', playPoints(), 'Pontod', { cls: 'lime' }) +
+      '</div>';
+  }
+
+  /* Az összes feladat a pályán — a fejléc „N / M feladat" számlálójához. */
+  /* Szándékosan NEM gyorstárazunk: az első HUD-rajzoláskor a pálya még
+     érkezhet az adatbázisból, és egy korán befagyasztott szám a játék
+     végéig hibás nevezőt mutatna. Az újraszámolás pár tömbművelet. */
+  function playTasksTotal() {
+    let n = 0;
+    COURSE.forEach((s, i) => { n += (stationPlayTasks(i) || []).length; });
+    return n;
+  }
+
+  /* Visszaszámláló: a pálya időtartamának FELSŐ határából indul (a „3–4 óra"
+     esetén 4 órából), hogy ne érezze szűkösnek a csapat. Ha a pályához nincs
+     megadva időtartam, a régi, felfelé számláló marad. */
+  /* A pálya időkerete. Csak a POZITÍV eredményt jegyezzük meg: a katalógus
+     külön kérésben töltődik, és az első HUD-rajzoláskor még üres lehet —
+     egy korai 0-t elmentve a visszaszámláló véglegesen felfelé számlálóvá
+     válna. Az órán kívül a percet és a vegyes („2 ó 30 p") alakot is értjük.
+     Tartománynál a FELSŐ határ a keret, hogy ne büntessük a lassabb csapatot. */
+  function playLimitMs() {
+    if (playLimitMs._c) return playLimitMs._c;
+    const q = (window.QUESTS && QUEST_ID && window.QUESTS[QUEST_ID]) || {};
+    const txt = String(q.durationText || q.duration || q.dur || '').replace(/,/g, '.');
+    let ms = 0;
+
+    const ora = txt.match(/(\d+(?:\.\d+)?)(?:\s*[–—-]\s*(\d+(?:\.\d+)?))?\s*(?:óra|ó)\b/i);
+    if (ora) ms += Math.round(parseFloat(ora[2] || ora[1]) * 3600000);
+
+    const perc = txt.match(/(\d+(?:\.\d+)?)(?:\s*[–—-]\s*(\d+(?:\.\d+)?))?\s*(?:perc|p)\b/i);
+    if (perc) ms += Math.round(parseFloat(perc[2] || perc[1]) * 60000);
+
+    if (ms) playLimitMs._c = ms;
+    return ms;
+  }
+
+  function playIdoAdat() {
+    const eltelt = play.finished ? play.finalMs : playElapsed();
+    const limit = playLimitMs();
+    /* A feliratok szándékosan rövidek: a sáv harmadában egy telefonon
+       a „Hátralévő idő" elipszissel csonkolódna. */
+    if (!limit) return { szoveg: playFmt(eltelt), cimke: 'Eltelt', lejart: false };
+    const hatra = limit - eltelt;
+    /* Lejárat után nem zárjuk ki a csapatot — csak jelezzük. Terepen a
+       kizárás értelmetlen büntetés lenne. */
+    if (hatra <= 0) return { szoveg: playFmt(-hatra), cimke: 'Túllépve', lejart: true };
+    return { szoveg: playFmt(hatra), cimke: 'Hátralévő', lejart: false };
   }
 
   function playStationHTML() {
     const i = playCurIdx(); const s = COURSE[i];
     const total = play.stationTasks.length;
     const tno = Math.min(play.taskIdx + 1, total);
-    let h = '<div class="uq-pl-card">';
-    h += '<div class="uq-pl-hero" style="background:' + (s.img || HERO_GRADS[i % HERO_GRADS.length]) + '"><span class="uq-pl-badge"><svg class="ico ico-xs" aria-hidden="true"><use href="#' + (s.isDecision ? 'a-diamond' : 'a-pin') + '"/></svg>' + play.path.length + '. állomás</span><span class="uq-pl-type">' + esc(typeLabel(s)) + '</span></div>';
-    h += '<div class="uq-pl-body">';
-    h += '<h3>' + esc(s.name) + '</h3>';
-    h += '<p class="uq-pl-desc">' + esc(s.desc || 'Nincs leírás ehhez az állomáshoz.') + '</p>';
+    /* Hero: az állomás képe (vagy gradiens), rajta a sorszám-jelvény és az
+       állomás neve — ez mondja meg a csapatnak, hova kell menniük. */
+    let h = '<div class="uq-pl-hero" style="background:' + (s.img || HERO_GRADS[i % HERO_GRADS.length]) + '">' +
+      '<span class="uq-pl-hero-fade" aria-hidden="true"></span>' +
+      '<span class="uq-pl-hero-in">' +
+        '<span class="uq-pl-badge">' +
+          '<svg class="ico ico-xs" aria-hidden="true"><use href="#' + (s.isDecision ? 'a-diamond' : 'a-pin') + '"/></svg>' +
+          play.path.length + '. állomás' +
+        '</span>' +
+        '<span class="uq-pl-hero-cim">' + esc(s.name) + '</span>' +
+      '</span>' +
+    '</div>';
+
+    h += '<div class="uq-pl-card">';
     if (total) {
       const task = play.stationTasks[play.taskIdx];
       const ty = PLAY_TYPE[task.type] || { l: task.type, c: '#8b957f', ic: 'a-task' };
-      h += '<div class="uq-pl-taskhead"><span class="uq-pl-tico" style="color:' + ty.c + ';background:' + ty.c + '22"><svg class="ico ico-sm" aria-hidden="true"><use href="#' + ty.ic + '"/></svg></span>' +
-        '<div class="uq-pl-tmeta"><span class="uq-pl-tlabel">' + ty.l + (total > 1 ? ' · ' + tno + '/' + total + ' feladat' : '') + '</span><b>' + esc(task.question) + '</b></div>' +
-        '<span class="uq-pl-tpts"><svg class="ico ico-xs" aria-hidden="true"><use href="#a-star"/></svg>' + (task.points || 0) + '</span></div>';
+
+      h += '<div class="uq-pl-taskhead">' +
+        '<span class="uq-pl-tico" style="color:' + ty.c + ';background:' + ty.c + '1f;border-color:' + ty.c + '55">' +
+          '<svg class="ico ico-sm" aria-hidden="true"><use href="#' + ty.ic + '"/></svg></span>' +
+        '<span class="uq-pl-tmeta">' +
+          '<span class="uq-pl-tlabel">Feladat' + (total > 1 ? ' · ' + tno + '/' + total : '') + '</span>' +
+          '<b>' + esc(ty.l) + '</b>' +
+        '</span>' +
+      '</div>';
+
+      if (s.desc) h += '<p class="uq-pl-desc">' + esc(s.desc) + '</p>';
+      if (s.loc) h += '<p class="uq-pl-loc"><svg class="ico ico-xs" aria-hidden="true"><use href="#a-pin"/></svg>Helyszín: ' + esc(s.loc) + '</p>';
+
+      h += '<div class="uq-pl-q"><span class="uq-pl-qlabel">Kérdés</span><b>' + esc(task.question) + '</b></div>';
+
       if (task.image) h += '<div class="uq-pl-taskimg"><img src="' + esc(task.image) + '" alt=""></div>';
       if (task.video) h += videoEmbedHTML(task.video, 'uq-pl-taskvid');
       h += '<div class="uq-pl-answer" id="uqPlayAnswer"></div>';
       h += '<div class="uq-pl-actions" id="uqPlayActions"></div>';
+      h += '</div>';
+
+      /* Jutalom-blokk: mit ér a feladat, és mennyi tipp jár hozzá. */
+      /* Jutalom-blokk. Ha már fizettetek tippért, a levonás IDE is kiül —
+         különben a felület bruttó pontot ígérne, a fejléc meg nettót mutat. */
+      const tippDb = (task.hints || []).length;
+      const koltseg = tippKoltseg(task);
+      h += '<div class="uq-pl-reward" id="uqPlayReward">' +
+        '<div class="uq-pl-rw"><span class="uq-pl-rw-ic"><svg class="ico ico-sm" aria-hidden="true"><use href="#a-star"/></svg></span>' +
+          '<span class="uq-pl-rw-txt"><b>+' + (task.points || 0) + '</b><span>Pont a megoldásért</span></span></div>' +
+        (koltseg
+          ? '<div class="uq-pl-rw"><span class="uq-pl-rw-ic minus"><svg class="ico ico-sm" aria-hidden="true"><use href="#a-bolt"/></svg></span>' +
+            '<span class="uq-pl-rw-txt"><b class="minus">−' + koltseg + '</b><span>Tippekre költve</span></span></div>'
+          : tippDb
+          ? '<div class="uq-pl-rw"><span class="uq-pl-rw-ic"><svg class="ico ico-sm" aria-hidden="true"><use href="#a-bolt"/></svg></span>' +
+            '<span class="uq-pl-rw-txt"><b>' + tippDb + ' tipp</b><span>Ha elakadtok</span></span></div>'
+          : '') +
+      '</div>';
+      h += '<p class="uq-pl-onsite"><svg class="ico ico-xs" aria-hidden="true"><use href="#a-lock"/></svg>A válasz beküldéséhez a helyszínen kell lennetek.</p>';
     } else {
-      h += '<div class="uq-pl-notask">Ehhez az állomáshoz nincs feladat — csak áthaladsz rajta.</div>';
-      h += '<div class="uq-pl-actions"><button class="adm-btn adm-btn-lime" type="button" id="uqPlayCont"><svg class="ico ico-sm" aria-hidden="true"><use href="#a-check"/></svg>Tovább</button></div>';
+      if (s.desc) h += '<p class="uq-pl-desc">' + esc(s.desc) + '</p>';
+      h += '<div class="uq-pl-notask">Ehhez az állomáshoz nincs feladat — csak áthaladtok rajta.</div>';
+      h += '<div class="uq-pl-actions"><button class="uq-pl-do" type="button" id="uqPlayCont"><svg class="ico ico-sm" aria-hidden="true"><use href="#a-check"/></svg>Állomás kész — tovább</button></div>';
+      h += '</div>';
     }
-    h += '</div></div>';
     return h;
   }
   function wirePlayStation() {
@@ -597,12 +806,92 @@
     };
     draw();
   }
+  /* ---------- TIPP ----------
+     A tipp valódi döntés: pontba kerül. A levonás tippenként EGYSZER
+     történik (a szerver is így számol), tehát a már felfedett tipp
+     újranyitása ingyenes. */
+
+  /* A kulcs a tipp SAJÁT azonosítója, ha a csomag adja — a szerver
+     (rebuild_session_state) is hint_id szerint vonja le a pontot, tehát
+     tömbindexszel a kliens és a szerver eltérő végösszeget adna. */
+  function tippKulcs(task, idx) {
+    const h = (task.hints || [])[idx];
+    return (h && h.id) ? String(h.id) : String(task.id) + ':' + idx;
+  }
+
+  /* Amennyit ezen a feladaton eddig tippekre költöttetek. */
+  function tippKoltseg(task) {
+    return (task.hints || []).reduce((sum, h, i) =>
+      sum + (play.hintsUsed.indexOf(tippKulcs(task, i)) > -1 ? (Number(h.cost) || 0) : 0), 0);
+  }
+
+  function kovetkezoTipp(task) {
+    const hints = task.hints || [];
+    for (let i = 0; i < hints.length; i++) {
+      if (play.hintsUsed.indexOf(tippKulcs(task, i)) < 0) return i;
+    }
+    return -1;
+  }
+
+  function tippSorHTML(task) {
+    const hints = task.hints || [];
+    if (!hints.length) return '';
+    const felfedett = hints
+      .map((h, i) => ({ h, i }))
+      .filter(x => play.hintsUsed.indexOf(tippKulcs(task, x.i)) > -1);
+    const kov = kovetkezoTipp(task);
+
+    let h = '<div class="uq-pl-hints" id="uqPlayHints">';
+    felfedett.forEach(x => {
+      h += '<p class="uq-pl-hint"><svg class="ico ico-xs" aria-hidden="true"><use href="#a-bolt"/></svg>' + esc(x.h.text) + '</p>';
+    });
+    if (kov > -1) {
+      const ar = Number(hints[kov].cost) || 0;
+      h += '<button class="uq-pl-hint-btn" type="button" id="uqPlayHint">' +
+        '<span><svg class="ico ico-sm" aria-hidden="true"><use href="#a-bolt"/></svg>Tipp kérése</span>' +
+        (ar ? '<span class="uq-pl-hint-cost">−' + ar + ' pont</span>' : '<span class="uq-pl-hint-cost free">ingyenes</span>') +
+        '</button>';
+    } else if (felfedett.length) {
+      h += '<p class="uq-pl-hint-none">Nincs több tipp ehhez a feladathoz.</p>';
+    }
+    return h + '</div>';
+  }
+
+  function wireTipp(task) {
+    const b = $('#uqPlayHint');
+    if (!b) return;
+    b.addEventListener('click', () => {
+      const i = kovetkezoTipp(task);
+      if (i < 0) return;
+      const ar = Number((task.hints[i] || {}).cost) || 0;
+      if (ar && !window.confirm('Tipp kérése ' + ar + ' pontért.\n\nEz levonódik a pontszámodból, akkor is, ha a végén megoldjátok.\n\nKéred?')) return;
+      play.hintsUsed.push(tippKulcs(task, i));
+      play.hintCost += ar;
+      const hud = $('.uq-hud-cell:last-child b'); if (hud) hud.textContent = playPoints();
+      const box = $('#uqPlayHints');
+      if (box) { box.outerHTML = tippSorHTML(task); wireTipp(task); }
+      /* a jutalom-blokk levonás-sora is frissül, hogy a két szám egyezzen */
+      const rw = $('#uqPlayReward');
+      if (rw && ar) {
+        const k = tippKoltseg(task);
+        const masodik = rw.querySelector('.uq-pl-rw + .uq-pl-rw');
+        const uj = '<span class="uq-pl-rw-ic minus"><svg class="ico ico-sm" aria-hidden="true"><use href="#a-bolt"/></svg></span>' +
+          '<span class="uq-pl-rw-txt"><b class="minus">−' + k + '</b><span>Tippekre költve</span></span>';
+        if (masodik) masodik.innerHTML = uj;
+        else rw.insertAdjacentHTML('beforeend', '<div class="uq-pl-rw">' + uj + '</div>');
+      }
+      saveSnapshot();
+    });
+  }
+
   function renderPlayAnswer() {
     const task = play.stationTasks[play.taskIdx];
     const c = task.cfg || {}; const box = $('#uqPlayAnswer'); const act = $('#uqPlayActions');
     play.pv = { code: '', order: null };
-    act.innerHTML = '<button class="uq-pl-skip" type="button" id="uqPlaySkip"><svg class="ico ico-xs" aria-hidden="true"><use href="#a-collapse"/></svg>Megoldás / átugrás</button>';
+    act.innerHTML = tippSorHTML(task) +
+      '<button class="uq-pl-skip" type="button" id="uqPlaySkip"><svg class="ico ico-xs" aria-hidden="true"><use href="#a-collapse"/></svg>Feladat átugrása</button>';
     $('#uqPlaySkip').addEventListener('click', () => playTaskDone(false, task.reveal));
+    wireTipp(task);
     const done = (ok) => playTaskDone(ok, ok ? null : task.reveal);
 
     if (task.type === 'kviz') {
@@ -653,7 +942,10 @@
   function renderPlayResult() {
     const r = play.result; const box = $('#uqPlayAnswer'); const act = $('#uqPlayActions');
     const last = play.taskIdx >= play.stationTasks.length - 1;
-    if (r.ok) box.innerHTML = '<div class="uq-pl-res good"><svg class="ico" aria-hidden="true"><use href="#a-check-c"/></svg><div><b>Helyes!</b><small>+' + (r.task.points || 0) + ' pont</small></div></div>';
+    /* Ha ezt a feladatot már megoldottátok (folytatás után újra elétek
+       került), a válasz helyes marad, de pont nem jár érte másodszor. */
+    if (r.ok && r.ujra) box.innerHTML = '<div class="uq-pl-res good"><svg class="ico" aria-hidden="true"><use href="#a-check-c"/></svg><div><b>Helyes!</b><small>Ezt a feladatot már megoldottátok — a pont egyszer jár.</small></div></div>';
+    else if (r.ok) box.innerHTML = '<div class="uq-pl-res good"><svg class="ico" aria-hidden="true"><use href="#a-check-c"/></svg><div><b>Helyes!</b><small>+' + (r.task.points || 0) + ' pont' + (tippKoltseg(r.task) ? ' · −' + tippKoltseg(r.task) + ' tippért' : '') + '</small></div></div>';
     else box.innerHTML = '<div class="uq-pl-res skip"><svg class="ico" aria-hidden="true"><use href="#a-collapse"/></svg><div><b>Átugorva</b>' + (r.reveal ? '<small>Megoldás: ' + esc(r.reveal) + '</small>' : '') + '</div></div>';
     act.innerHTML = '<button class="adm-btn adm-btn-lime" type="button" id="uqPlayNext"><svg class="ico ico-sm" aria-hidden="true"><use href="#a-check"/></svg>' + (last ? 'Állomás kész — tovább' : 'Következő feladat') + '</button>';
     $('#uqPlayNext').addEventListener('click', playNextTask);
@@ -721,7 +1013,7 @@
         '<h2>' + (PUBLIC ? 'Kaland teljesítve! 🎉' : 'Pálya teljesítve!') + '</h2>' +
         '<p>Végigjátszottad a(z) <b>' + esc(TITLE) + '</b> ' + (PUBLIC ? 'kalandot' : 'tesztjét') + '.</p>' +
         '<div class="uq-pl-sum-grid">' +
-          stat('a-star', 'Összpont', play.points, true) +
+          stat('a-star', 'Összpont', playPoints(), true) +
           stat('a-clock', 'Idő', playFmt(play.finalMs)) +
           stat('a-pin', 'Bejárt állomás', play.path.length) +
           stat('a-check-c', 'Megoldott feladat', play.done + '<small>/' + total + '</small>') +
