@@ -762,3 +762,14 @@
   .uq-pl-sum-grid{grid-template-columns:1fr!important;}
   .uq-pl-sum-cim{font-size:19px;}
 }
+
+/* Szűrő-sáv: ha egy lista EGY játékra van szűrve, azt látni kell — különben
+   a rövid lista úgy néz ki, mintha adatok tűntek volna el. */
+.uq-szuro-sav{display:flex;align-items:center;justify-content:space-between;gap:12px;
+  margin:0 0 10px;padding:10px 14px;border-radius:10px;
+  background:rgb(var(--lime-rgb) / .08);border:1px solid rgb(var(--lime-rgb) / .25);
+  font-size:12.5px;color:var(--text-2);}
+.uq-szuro-sav span{display:inline-flex;align-items:center;gap:8px;}
+.uq-szuro-sav b{color:#fff;}
+.uq-szuro-sav a{color:var(--lime);font-weight:600;text-decoration:none;white-space:nowrap;}
+.uq-szuro-sav a:hover{text-decoration:underline;}

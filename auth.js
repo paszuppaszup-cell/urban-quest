@@ -135,4 +135,28 @@
       field && field.classList.remove('is-error');
     });
   });
+
+  /* ---------- Google-bejelentkezés ----------
+     Átirányításos folyamat: a Google után a Supabase IDE irányít vissza,
+     a tokent az uq-api.js fogadja betöltéskor. Ha volt ?next= cél, azt a
+     visszairányítás is megőrzi. */
+  /* a regisztrációs oldalon a gomb régről ott van (.btn-google), csak
+     eddig semmit nem csinált — most ugyanaz a folyamat fut mindkettőn */
+  document.querySelectorAll('#btnGoogle, .btn-google').forEach((g) => {
+    g.addEventListener('click', () => {
+      if (!window.UQAPI || !UQAPI.signInWithGoogle) return;
+      const next = new URLSearchParams(location.search).get('next');
+      const cel = location.origin + location.pathname.replace(/[^/]*$/, '') +
+        (next && /^[\w.\-]+\.html(\?[^#]*)?$/.test(next) ? next : 'index.html');
+      UQAPI.signInWithGoogle(cel);
+    });
+  });
+
+  /* ha Google-visszairányításból érkeztünk és már él a munkamenet, tovább */
+  if (window.UQAPI) UQAPI.onAuth((u) => {
+    if (u && /bejelentkezes|regisztracio/.test(location.pathname)) {
+      const next = new URLSearchParams(location.search).get('next');
+      location.href = next && /^[\w.\-]+\.html(\?[^#]*)?$/.test(next) ? next : 'index.html';
+    }
+  });
 })();

@@ -15,7 +15,7 @@
 (function () {
   'use strict';
 
-  var LEJATSZO = 'jatszas.js?v=6';
+  var LEJATSZO = 'jatszas.js?v=7';
   var CACHE_ELO = 'uq_bundle_';           // offline tartalék pályánként
 
   var DIFF_LABEL = { konnyu: 'Könnyű', kozepes: 'Közepes', nehez: 'Nehéz', extrem: 'Extrém' };
@@ -40,6 +40,9 @@
 
     st.forEach(function (s) {
       allomasok.push({
+        /* az állomás UUID-ja kell a szerveroldali menet-naplóhoz
+           (station_visited események) */
+        id: s.id,
         name: s.name,
         type: s.kind || 'feladat',              // 'dontes' → elágazás a lejátszóban
         diff: DIFF_LABEL[s.difficulty] || 'Közepes',
@@ -76,7 +79,11 @@
       stations: allomasok,
       tasks: feladatok,
       _fromDb: true,
-      _version: bundle.course && bundle.course.version
+      _version: bundle.course && bundle.course.version,
+      /* a szerveroldali menet-rögzítéshez (sync_batch): melyik pálya
+         melyik befagyasztott verzióját játssza a csapat */
+      _courseId: bundle.course && bundle.course.id,
+      _versionId: bundle.course && bundle.course.version_uuid
     };
   }
 
@@ -121,10 +128,13 @@
      (vagy a beégetett adattal) indulunk. */
   var idozito = setTimeout(tovabb, 6000);
 
-  UQAPI.rest('/v_play_bundle?select=bundle,version&slug=eq.' + encodeURIComponent(slug), { anon: !UQAPI.user() })
+  UQAPI.rest('/v_play_bundle?select=bundle,version,version_id,course_id&slug=eq.' + encodeURIComponent(slug), { anon: !UQAPI.user() })
     .then(function (rows) {
       var b = rows && rows[0] && rows[0].bundle;
       if (!b || !(b.stations || []).length) throw new Error('nincs publikált csomag');
+      /* a verzió UUID-ját a csomagba tesszük, hogy OFFLINE (gyorstárból
+         indulva) is meglegyen a szerveroldali menethez */
+      if (b.course) b.course.version_uuid = rows[0].version_id;
       cacheIr(slug, b);
       window.QUEST_COURSES = window.QUEST_COURSES || {};
       window.QUEST_COURSES[slug] = atalakit(b);

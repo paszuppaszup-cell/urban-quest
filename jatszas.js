@@ -92,6 +92,9 @@
     if (s.location != null && String(s.location).trim() !== '') ll = parseLoc(s.location);
     else ll = { lat: num(s.lat, 47.515), lng: num(s.lng, 19.08) };
     return {
+      /* az állomás UUID-ja (csak adatbázisból jövő pályánál van) — a
+         szerveroldali menet-naplóhoz kell */
+      id: s.id || null,
       name: s.name || 'Állomás',
       desc: s.desc || '',
       img: s.img || '',                       // lehet undefined → gradiens fallback a hero-ban
@@ -389,7 +392,9 @@
         done: play.done, skipped: play.skipped, taskIdx: play.taskIdx,
         /* abszolút kezdés + eltelt idő: az előbbi a határidőhöz, az utóbbi a
            fiókban megjelenített játékidőhöz kell */
-        startTs: play.startTs, elapsedMs: playElapsed()
+        startTs: play.startTs, elapsedMs: playElapsed(),
+        /* a szerveroldali menet azonosítója — a folytatás ugyanoda ír */
+        sessionId: SYNC.session ? SYNC.session.id : null
       }
     });
   }
@@ -400,6 +405,119 @@
     if (document.visibilityState === 'hidden' && play.active && !play.finished) saveSnapshot();
   });
   window.addEventListener('pagehide', () => { if (play.active && !play.finished) saveSnapshot(); });
+
+  /* =========================================================
+     SZERVEROLDALI MENET — az események beküldése
+
+     A ranglista és a csapatjáték a szerveren számolt eredményből él
+     (session_events → rebuild_session_state). Ez a rész eddig TELJESEN
+     hiányzott a kliensből: a szerveroldali csővezeték készen állt, de
+     soha senki nem küldött bele eseményt — ezért maradt üres a ranglista.
+
+     Csak publikus módban, adatbázisból jövő pályán, bejelentkezve fut.
+     Offline is működik: az események az uq-api kimenő sorába kerülnek,
+     és akkor mennek el, amikor van hálózat.
+     ========================================================= */
+  const SYNC = { on: false, session: null };
+
+  function uuidv4() {
+    if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+      const r = Math.random() * 16 | 0; return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
+    });
+  }
+  function deviceId() {
+    let d = null;
+    try { d = localStorage.getItem('uq_device_v1'); } catch (e) {}
+    if (!d) { d = uuidv4(); try { localStorage.setItem('uq_device_v1', d); } catch (e) {} }
+    return d;
+  }
+  const uuidszeru = v => /^[0-9a-f-]{36}$/i.test(String(v || ''));
+
+  function syncInit(restoredSessionId) {
+    SYNC.on = false; SYNC.session = null;
+    if (!PUBLIC || !window.UQAPI) return;
+    const q = window.QUEST_COURSES && QUEST_COURSES[QUEST_ID];
+    if (!q || !q._courseId || !q._versionId) return;          // beégetett/próba adat
+    if (!(window.UQAuth && UQAuth.isRegistered && UQAuth.isRegistered())) return; // vendég
+    const u = UQAuth.getUser();
+
+    /* csapatban játszunk? — a váróból kapott közös menet-azonosító */
+    const t = (window.UQTeam && UQTeam.ctx) ? UQTeam.ctx() : null;
+    if (t && t.slug === QUEST_ID && uuidszeru(t.session_id)) {
+      SYNC.session = {
+        id: t.session_id,
+        course_id: t.course_id || q._courseId,
+        course_version_id: t.course_version_id || q._versionId,
+        team_id: t.team_id || null,
+        team_key: 'team:' + t.team_id,
+        team_name: t.team_name || ''
+      };
+    } else {
+      SYNC.session = {
+        id: uuidszeru(restoredSessionId) ? restoredSessionId : uuidv4(),
+        course_id: q._courseId,
+        course_version_id: q._versionId,
+        team_key: 'solo:' + u.id,
+        team_name: u.teamName || u.name || ''
+      };
+    }
+    SYNC.on = true;
+  }
+
+  function emit(kind, extra) {
+    if (!SYNC.on || !window.UQAPI) return;
+    let seq = 1;
+    const kulcs = 'uq_seq_v1:' + SYNC.session.id + ':' + deviceId();
+    try {
+      seq = (parseInt(localStorage.getItem(kulcs), 10) || 0) + 1;
+      localStorage.setItem(kulcs, String(seq));
+    } catch (e) {}
+    const esemeny = Object.assign({
+      event_id: uuidv4(),
+      seq: seq,
+      kind: kind,
+      client_elapsed_ms: play.finished ? play.finalMs : playElapsed(),
+      client_ts: new Date().toISOString()
+    }, extra || {});
+    UQAPI.queue({
+      path: '/rpc/sync_batch',
+      method: 'POST',
+      body: {
+        p_session: SYNC.session,
+        p_events: [esemeny],
+        p_device: { id: deviceId(), label: 'böngésző', user_agent: String(navigator.userAgent || '').slice(0, 180) }
+      }
+    });
+    UQAPI.flush();
+  }
+
+  /* URL-ben érkező csapatkód (megosztott link): ha nincs helyi csapat-
+     kontextus, belépünk a kóddal — így a link önmagában is elég. */
+  (function () {
+    const kod = new URLSearchParams(location.search).get('team');
+    if (!kod || !PUBLIC || !window.UQAPI || !UQAPI.user() || !window.UQTeam) return;
+    const t = UQTeam.ctx();
+    if (t && t.slug === QUEST_ID && t.session_id) return;     // már megvan
+    UQAPI.rest('/rpc/join_team_by_code', { method: 'POST', body: { p_code: kod } })
+      .then(r => {
+        const cs = Array.isArray(r) ? r[0] : r;
+        if (!cs || cs.status !== 'playing' || !cs.session_id) return;
+        return UQAPI.rest('/v_play_bundle?select=course_id,version_id&slug=eq.' + encodeURIComponent(QUEST_ID))
+          .then(rows => {
+            const b = rows && rows[0];
+            try {
+              localStorage.setItem('uq_team_ctx_v1', JSON.stringify({
+                team_id: cs.id, team_name: cs.name, join_code: cs.join_code,
+                session_id: cs.session_id, course_version_id: b && b.version_id,
+                course_id: b && b.course_id, slug: QUEST_ID
+              }));
+            } catch (e) {}
+            syncInit();
+          });
+      })
+      .catch(() => {});
+  })();
   function finishSave() {
     if (!PUBLIC || !window.UQAccount || !window.UQAccount.finishPlay) return;
     if (!window.UQAuth || !window.UQAuth.isRegistered()) return;
@@ -419,6 +537,11 @@
     play.stationTasks = stationPlayTasks(startIdx);
     play.startTs = Date.now(); play.finalMs = 0;
     startTimer();
+    /* szerveroldali menet: új játék = új (vagy csapatnál a közös) menet */
+    syncInit();
+    if (COURSE[startIdx] && uuidszeru(COURSE[startIdx].id)) {
+      emit('station_visited', { station_id: COURSE[startIdx].id });
+    }
     saveSnapshot();
     renderPlay();
   }
@@ -448,6 +571,8 @@
     play.startTs = state.startTs ? Number(state.startTs) : (Date.now() - (state.elapsedMs || 0));
     play.finalMs = 0;
     startTimer();
+    /* a folytatás UGYANABBA a szerveroldali menetbe ír tovább */
+    syncInit(state.sessionId);
     renderPlay();
   }
   function playExit() {
@@ -459,10 +584,15 @@
   function playGoto(i) {
     play.path.push(i); play.taskIdx = 0; play.result = null; play.pv = {}; play.view = 'station';
     play.stationTasks = stationPlayTasks(i);
+    if (COURSE[i] && uuidszeru(COURSE[i].id)) emit('station_visited', { station_id: COURSE[i].id });
     saveSnapshot();
     renderPlay();
   }
-  function playFinish() { play.finished = true; play.view = 'summary'; play.finalMs = playElapsed(); stopTimer(); finishSave(); renderPlay(); }
+  function playFinish() {
+    play.finished = true; play.view = 'summary'; play.finalMs = playElapsed(); stopTimer();
+    emit('session_finished', {});
+    finishSave(); renderPlay();
+  }
   function playAfterStation() {
     const i = playCurIdx();
     if (COURSE[i].isDecision) {
@@ -476,7 +606,7 @@
     if (i + 1 < COURSE.length) return playGoto(i + 1);
     return playFinish();
   }
-  function playTaskDone(credited, revealText) {
+  function playTaskDone(credited, revealText, atugorva) {
     const task = play.stationTasks[play.taskIdx];
     if (!task) return playNextTask();
     const ujra = marMegoldott(task);
@@ -486,6 +616,17 @@
     } else if (!credited && !ujra) {
       play.skipped++;
     }
+    /* A szerver a NYERS választ kapja meg, és maga dönt a helyességről —
+       a kliens állítása (is_correct) csak audit. Átugrásnál nincs válasz. */
+    if (uuidszeru(task.id)) {
+      emit('task_attempted', {
+        task_id: task.id,
+        is_correct: !!credited,
+        skipped: !!atugorva,
+        answer: atugorva ? null : (play.lastAnswer != null ? play.lastAnswer : null)
+      });
+    }
+    play.lastAnswer = null;
     play.result = { ok: credited, reveal: revealText || null, task: task, ujra: ujra && credited };
     saveSnapshot();
     renderPlay();
@@ -778,6 +919,9 @@
      kiértékelés aszinkron. A beégetett (régi) adatnál marad a korábbi,
      szinkron logika, amit a hívó `regiOk` néven ad át. */
   function ertekel(task, valasz, regiOk) {
+    /* a beküldött nyers válasz megy a szervernek is (task_attempted) —
+       a szerver ebből számol pontot, a kliens ítélete csak audit */
+    play.lastAnswer = valasz == null ? null : valasz;
     if (window.UQCheck && UQCheck.tudEllenorizni(task)) return UQCheck.helyes(task, valasz);
     if (task && task.auto_ok) return Promise.resolve(true);
     return Promise.resolve(!!regiOk);
@@ -836,6 +980,8 @@
         const t = play.pv.order[pos]; play.pv.order[pos] = play.pv.order[np]; play.pv.order[np] = t; draw();
       }));
       $('#uqPlayGo').addEventListener('click', () => {
+        /* a szerver a sorbarakott elemeket kapja válaszként (tömbként) */
+        play.lastAnswer = play.pv.order.map(idx => String((c.items || [])[idx] == null ? '' : c.items[idx]));
         const correct = play.pv.order.filter((idx, pos) => idx === pos).length;
         if (correct === (c.items || []).length) done(true); else playWrong();
       });
@@ -903,6 +1049,10 @@
       if (ar && !window.confirm('Tipp kérése ' + ar + ' pontért.\n\nEz levonódik a pontszámodból, akkor is, ha a végén megoldjátok.\n\nKéred?')) return;
       play.hintsUsed.push(tippKulcs(task, i));
       play.hintCost += ar;
+      /* a szerver hint-UUID szerint vonja le a pontot — csak valódi
+         azonosítóval küldjük (a régi, tömbindexes kulcs nem uuid) */
+      const hid = tippKulcs(task, i);
+      if (uuidszeru(hid)) emit('hint_revealed', { hint_id: hid });
       const hud = $('.uq-hud-cell:last-child b'); if (hud) hud.textContent = playPoints();
       const box = $('#uqPlayHints');
       if (box) { box.outerHTML = tippSorHTML(task); wireTipp(task); }
@@ -926,7 +1076,8 @@
     play.pv = { code: '', order: null };
     act.innerHTML = tippSorHTML(task) +
       '<button class="uq-pl-skip" type="button" id="uqPlaySkip"><svg class="ico ico-xs" aria-hidden="true"><use href="#a-collapse"/></svg>Feladat átugrása</button>';
-    $('#uqPlaySkip').addEventListener('click', () => playTaskDone(false, task.reveal));
+    /* az átugrás explicit jelzés a szervernek is (skipped=true, válasz nélkül) */
+    $('#uqPlaySkip').addEventListener('click', () => playTaskDone(false, task.reveal, true));
     wireTipp(task);
     const done = (ok) => playTaskDone(ok, ok ? null : task.reveal);
 
@@ -963,7 +1114,15 @@
       drawPuzzle(box, c, done);
     } else if (task.type === 'puzzle') {
       box.innerHTML = '<div class="uq-pl-match">' + (c.pairs || []).map((p, i) => '<div class="uq-pl-mrow"><span>' + esc(p.left) + '</span><select data-i="' + i + '"><option value="">…</option>' + (c.pairs || []).map((q, j) => '<option value="' + j + '">' + esc(q.right) + '</option>').join('') + '</select></div>').join('') + '</div><button class="uq-pl-go uq-pl-wide" type="button" id="uqPlayGo">Ellenőrzés</button>';
-      $('#uqPlayGo').addEventListener('click', () => { const ok = Array.prototype.every.call(box.querySelectorAll('select'), s => String(s.value) === String(s.dataset.i)); if (ok) done(true); else playWrong(); });
+      $('#uqPlayGo').addEventListener('click', () => {
+        const valasztott = Array.prototype.map.call(box.querySelectorAll('select'), s => {
+          const p = (c.pairs || [])[+s.value];
+          return p ? String(p.right) : '';
+        });
+        play.lastAnswer = valasztott;
+        const ok = Array.prototype.every.call(box.querySelectorAll('select'), s => String(s.value) === String(s.dataset.i));
+        if (ok) done(true); else playWrong();
+      });
     } else if (task.type === 'info') {
       // szintetizált nyugtázós állomásfeladat (nincs "megoldás", nincs átugrás)
       act.innerHTML = '';

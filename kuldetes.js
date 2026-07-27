@@ -19,12 +19,14 @@
 
   /* ---------- melyik küldetés ---------- */
   const params = new URLSearchParams(location.search);
-  let id = params.get('id');
-  if (!QUESTS[id]) id = Object.keys(QUESTS)[0] || 'szerelem';
-  let q = QUESTS[id] || {};
+  /* A kért azonosítót MEGTARTJUK akkor is, ha az adat még nem ért ide:
+     a katalógus a szerverről töltődik, és amíg nincs meg, betöltő állapot
+     megy — nem egy MÁSIK (akár rég törölt) küldetés tartalma. */
+  let id = params.get('id') || Object.keys(QUESTS)[0] || '';
+  let q = QUESTS[id] || null;
 
   // ugyanaz az akcentus, mint a küldetés kártyáján (nehézség színe / romantikus)
-  let accKey = q.catCls === 'romantikus' ? 'romantikus' : q.diff;
+  let accKey = (q && q.catCls === 'romantikus') ? 'romantikus' : ((q && q.diff) || 'kozepes');
   const page = document.querySelector('.detail-page');
 
   /* A küldetés SAJÁT színe. A lap eddig a nehézség színét használta
@@ -59,9 +61,20 @@
   }
 
   function renderAll() {
+    /* amíg a katalógus nem ért ide, betöltő állapot — nem másik küldetés */
+    if (!q) {
+      const hero = document.getElementById('detailHero');
+      if (hero) hero.innerHTML =
+        '<div class="detail-toltes"><p>A küldetés betöltése…</p>' +
+        '<p><a href="index.html#kuldetesek">Vissza a küldetésekhez</a></p></div>';
+      return;
+    }
     renderHero();
     renderInfo();
     renderSimilar();
+    /* a hero újrarajzolása a foglaló-kártyát is újraépíti — a becsatlakozó
+       mezőt minden alkalommal vissza kell tenni az indító gomb alá */
+    mountJoinBox();
   }
 
   ujraOlvas();
@@ -94,7 +107,7 @@
 
     document.getElementById('detailHero').innerHTML = `
       <div class="detail-hero-media">
-        <img class="detail-hero-img" src="${q.image}" alt="${esc(q.heroTitle)}">
+        <img class="detail-hero-img" src="${q.image || 'assets/hero-mountain.svg'}" alt="${esc(q.heroTitle)}">
         <span class="badge badge-${accKey} hero-badge-m">${esc(q.catLabel || q.cat)}</span>
         <button class="hero-fav-m" type="button" aria-label="Kedvencekhez adás">${ico('i-heart', 'ico ico-sm')}</button>
         <span class="hero-dots" aria-hidden="true"><i class="dot is-on"></i><i class="dot"></i><i class="dot"></i><i class="dot"></i><i class="dot"></i></span>
@@ -174,7 +187,7 @@
     }
   }
 
-  /* ---------- CTA: regisztráció-kapu, majd a játék indítása (végigjátszó) ---------- */
+  /* ---------- CTA: regisztráció-kapu, majd egyéni/csapatos indítás ---------- */
   function ctaClick() {
     // még nincs fiók → jöjjön a regisztráció, utána indul a játék
     if (window.UQAuth && !window.UQAuth.isRegistered()) {
@@ -189,8 +202,37 @@
   }
 
   function startGame() {
+    /* Indítás előtt a játékos eldönti: egyedül vagy csapatban. Csapatnál
+       kód készül, a társak azzal csatlakoznak, és a váróból együtt indul
+       mindenki ugyanabba a közös menetbe. */
+    if (window.UQTeam && window.UQTeam.openStart) {
+      UQTeam.openStart({ slug: id, title: q.heroTitle || q.title });
+      return;
+    }
     location.href = 'jatszas.html?quest=' + encodeURIComponent(id);
   }
+
+  /* ---------- Becsatlakozás kóddal — a foglaló-kártyán, az indító gomb alatt ---------- */
+  function mountJoinBox() {
+    const cta = document.getElementById('bookBtn');
+    if (!cta || document.getElementById('uqJoinBox')) return;
+    const host = document.createElement('div');
+    host.id = 'uqJoinBox';
+    host.innerHTML =
+      '<span class="uq-join-cimke">Kaptál csapatkódot? Csatlakozz be itt:</span>' +
+      '<div class="uq-join">' +
+        '<input type="text" id="uqJoinInput" maxlength="6" placeholder="Csapatkód" autocomplete="off" aria-label="Csapatkód">' +
+        '<button type="button" id="uqJoinBtn">Becsatlakozás</button>' +
+      '</div>';
+    cta.parentNode.insertBefore(host, cta.nextSibling);
+    const megy = () => {
+      const kod = document.getElementById('uqJoinInput').value.trim();
+      if (window.UQTeam) UQTeam.openJoin(kod);
+    };
+    document.getElementById('uqJoinBtn').addEventListener('click', megy);
+    document.getElementById('uqJoinInput').addEventListener('keydown', e => { if (e.key === 'Enter') megy(); });
+  }
+  mountJoinBox();
 
   function renderInfo() {
     const check = (items, iconId, cls) => items.map(t =>

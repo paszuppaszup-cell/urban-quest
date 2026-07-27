@@ -285,9 +285,16 @@
   /* =========================================================
      TÁBLÁZAT RENDERELÉSE
      ========================================================= */
+  /* Egy JÁTÉK ütemezései. A Játékok oldal „Ütemezés" menüpontja ide küld
+     ?game=<uuid>-vel; a paraméter korábban némán elveszett, ezért a szerző
+     az általános listára érkezett, abban a hitben, hogy ennek a játéknak az
+     ütemezését nyitotta meg. */
+  const CEL_PALYA = new URLSearchParams(location.search).get('game') || '';
+
   function filtered() {
     const s = state.search.trim().toLowerCase();
     return SCHEDULES.filter(sc => {
+      if (CEL_PALYA && String(sc.courseId) !== CEL_PALYA) return false;
       if (state.route !== 'all' && sc.route !== state.route) return false;
       if (state.status !== 'all' && sc.status !== state.status) return false;
       if (s) {
@@ -324,6 +331,22 @@
         <button class="jtk-act jtk-act-del" type="button" data-act="delete" aria-label="Törlés">${ico('a-trash')}</button>
       </div>
     </div>`;
+  }
+
+  /* A szűrésnek látszania kell, különben a rövid lista úgy néz ki, mintha
+     időzítések tűntek volna el. */
+  function palyaSavKiir(db) {
+    let sav = document.getElementById('palyaSav');
+    if (!CEL_PALYA) { if (sav) sav.remove(); return; }
+    if (!sav) {
+      sav = document.createElement('div');
+      sav.id = 'palyaSav';
+      sav.className = 'uq-szuro-sav';
+      tbody.parentNode.insertBefore(sav, tbody);
+    }
+    const nev = (SCHEDULES.find(s => String(s.courseId) === CEL_PALYA) || {}).route || 'a kiválasztott játék';
+    sav.innerHTML = '<span>' + ico('a-game', 'ico-sm') + '<b>' + esc(nev) + '</b> időzítései — ' + db + ' db</span>' +
+      '<a href="idozitesek.html">Összes időzítés</a>';
   }
 
   function renderPager(total, pages, startIdx, count) {
@@ -395,6 +418,7 @@
     tbody.innerHTML = pageItems.map(rowHTML).join('');
     emptyEl.hidden = total > 0;
     renderPager(total, pages, startIdx, pageItems.length);
+    palyaSavKiir(total);
     updateStats();
     updateBulk();
     syncSortHeads();

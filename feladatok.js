@@ -75,14 +75,20 @@
     foto:   { label: 'Fotó',        color: '#9d7ce0', icon: 'a-camera', sub: 'Képfeltöltés' },
     gps:    { label: 'GPS',         color: '#4fb84f', icon: 'a-target', sub: 'Helyszín elérése' },
     qr:     { label: 'QR-kód',      color: '#39c0c8', icon: 'a-qr',     sub: 'Kód beolvasása' },
-    gyors:  { label: 'Gyorsasági',  color: '#e05b9d', icon: 'a-bolt',   sub: 'Mini-játék' }
+    /* A „Gyorsasági" típus MENTHETETLEN volt: a tasks_kind_check nem ismeri
+       a 'gyors' értéket, tehát minden ilyen feladat 23514-gyel bukott.
+       Helyette a DB által valóban engedett két típus került be. */
+    info:   { label: 'Állomásfeladat', color: '#5b9de0', icon: 'a-task', sub: 'Nyugtázós, nincs válasz' },
+    dontes: { label: 'Döntési pont',   color: '#9d7ce0', icon: 'a-route', sub: 'Útvonalválasztás' }
   };
   const STATUS = {
     active:   { cls: 'is-pub',   label: 'Aktív',   color: '#4fb84f', glow: true },
     draft:    { cls: 'is-draft', label: 'Vázlat',  color: '#7c86e0', glow: false },
-    inactive: { cls: 'is-arch',  label: 'Inaktív', color: '#5b6553', glow: false }
+    /* A felület 'inactive'-et küldött, a tasks_status_check viszont csak
+       active/draft/archived értéket enged — a mentés TELJESEN elbukott. */
+    archived: { cls: 'is-arch',  label: 'Archivált', color: '#5b6553', glow: false }
   };
-  const STATUS_BY_LABEL = { 'Aktív': 'active', 'Vázlat': 'draft', 'Inaktív': 'inactive' };
+  const STATUS_BY_LABEL = { 'Aktív': 'active', 'Vázlat': 'draft', 'Archivált': 'archived' };
 
   function defaultCfg(type) {
     switch (type) {
@@ -174,9 +180,13 @@
       type: r.kind || 'szoveg',
       points: r.points || 0,
       status: r.status || 'active',
-      diff: 'Közepes',
-      image: r.image || '', media: r.image || '', video: '',
-      badge: '',
+      /* Ezek a config-ban utaznak (nincs rájuk oszlop a tasks táblában).
+         Korábban be voltak égetve, ezért a lista Nehézség oszlopa mind a 30
+         sornál ugyanazt mutatta, a videó és a kitűző pedig sosem tért vissza. */
+      diff: (r.config && r.config.difficulty) || 'Közepes',
+      image: r.image || '', media: r.image || '',
+      video: (r.config && r.config.video) || '',
+      badge: (r.config && r.config.badge) || '',
       hints: (r.hints || []).map(h => ({ text: h.text, cost: h.cost })),
       cfg: cfgMegoldassal(r.kind, r.config, r.solution)
     };
@@ -188,7 +198,7 @@
     if (!window.UQAPI) return Promise.reject(new Error('Hiányzik az adatréteg.'));
     return Promise.all([
       UQAPI.rest('/v_admin_tasks?select=*&order=course_name.asc,station_position.asc,position.asc'),
-      UQAPI.rest('/v_admin_stations?select=id,name,course_name&order=course_name.asc,position.asc')
+      UQAPI.rest('/v_admin_stations?select=id,name,course_name,course_id&order=course_name.asc,position.asc')
     ]).then(([sorok, allomasok]) => {
       STATIONS_OPT = allomasok || [];
       TASKS.splice(0, TASKS.length, ...(sorok || []).map(dbSor));
@@ -211,9 +221,15 @@
   /* =========================================================
      TÁBLÁZAT
      ========================================================= */
+  /* Egy JÁTÉKHOZ tartozó feladatok. A Játékok oldalról idáig nem vezetett
+     út: az oldalsáv linkje a teljes listát nyitotta meg, és nem lehetett
+     megnézni, milyen feladatai vannak egy adott pályának. */
+  const CEL_PALYA = new URLSearchParams(location.search).get('game') || '';
+
   function filtered() {
     const s = state.search.trim().toLowerCase();
     return TASKS.filter(t => {
+      if (CEL_PALYA && String(t.courseId) !== CEL_PALYA) return false;
       if (state.type !== 'all' && t.type !== state.type) return false;
       if (s) { const hay = (t.question + ' ' + t.station + ' ' + t.route).toLowerCase(); if (!hay.includes(s)) return false; }
       return true;
@@ -255,7 +271,25 @@
     tbody.innerHTML = pageItems.map(rowHTML).join('');
     emptyEl.hidden = total > 0;
     renderPager(total, pages, startIdx, pageItems.length);
+    palyaSavKiir(total);
     saveStore();
+  }
+
+  /* Ha egy játékra szűrünk, azt LÁTNI kell — különben a rövid lista úgy
+     néz ki, mintha feladatok tűntek volna el. A sávból egy kattintással
+     vissza lehet térni a teljes listához. */
+  function palyaSavKiir(db) {
+    let sav = document.getElementById('palyaSav');
+    if (!CEL_PALYA) { if (sav) sav.remove(); return; }
+    if (!sav) {
+      sav = document.createElement('div');
+      sav.id = 'palyaSav';
+      sav.className = 'uq-szuro-sav';
+      tbody.parentNode.insertBefore(sav, tbody);
+    }
+    const nev = (TASKS.find(t => String(t.courseId) === CEL_PALYA) || {}).route || 'a kiválasztott játék';
+    sav.innerHTML = '<span>' + ico('a-game', 'ico-sm') + '<b>' + esc(nev) + '</b> feladatai — ' + db + ' db</span>' +
+      '<a href="feladatok.html">Összes feladat</a>';
   }
 
   /* =========================================================
@@ -289,7 +323,11 @@
   /* --- típus-specifikus konfig --- */
   function renderTypeConfig() {
     const t = cur, c = t.cfg; let h = '';
-    el.typeSecTitle.textContent = TYPE[t.type].label + ' beállításai';
+    /* Ismeretlen típusnál (pl. a DB-ben létező 'info') ez TypeError-t dobott,
+       és mivel az overlay csak EZUTÁN nyílt volna ki, a Szerkesztés gomb
+       látszólag semmit nem csinált — hibaüzenet nélkül. */
+    const tm = TYPE[t.type] || TYPE.szoveg;
+    el.typeSecTitle.textContent = tm.label + ' beállításai';
     if (t.type === 'kviz') {
       h += `<div class="fe-fg"><label>Válaszlehetőségek <span class="fe-hint-note">jelöld a helyese(ke)t</span></label><div class="fe-list" data-list="opt">`;
       c.options.forEach((o, i) => {
@@ -349,7 +387,7 @@
      ÉLŐ ELŐNÉZET (interaktív)
      ========================================================= */
   function renderPreview() {
-    const t = cur, ty = TYPE[t.type];
+    const t = cur, ty = TYPE[t.type] || TYPE.szoveg;
     pv = { attempts: 0, solved: false, hints: 0, order: null, code: '' };
     let h = `<div class="pv-topbar"><span class="pv-station">${ico('a-pin')}${esc(t.station || '—')}</span><span class="pv-badges"><span class="pv-badge type" style="color:${ty.color};background:${ty.color}22">${ty.label}</span><span class="pv-badge xp">${t.points} XP</span></span></div>`;
     if (t.type !== 'gyors') {
@@ -487,22 +525,40 @@
      ========================================================= */
   function fillBase() {
     el.q.value = cur.question; el.cq.textContent = cur.question.length;
-    el.route.value = cur.route; el.station.value = cur.station;
+    /* Előbb a játék, aztán a HOZZÁ TARTOZÓ állomások — a két lista eddig
+       független volt, ezért más játékhoz nem lehetett feladatot rendelni:
+       az állomás-lista nem követte a játék-választást. */
+    el.route.value = cur.route;
+    if (el.route.selectedIndex < 0 && el.route.options.length) {
+      el.route.selectedIndex = 0; cur.route = el.route.value;
+    }
+    szurtAllomasok(cur.route);
+    el.station.value = cur.station;
+    if (el.station.selectedIndex < 0 && el.station.options.length) {
+      el.station.selectedIndex = 0; cur.station = el.station.value;
+    }
     el.diff.value = cur.diff; applyDiffDot();
     el.points.value = cur.points;
-    el.status.value = STATUS[cur.status].label; applyStatusDot();
+    el.status.value = (STATUS[cur.status] || STATUS.draft).label; applyStatusDot();
     el.rewardXp.value = cur.points + ' XP';
     el.badge.value = cur.badge || '';
   }
   function applyDiffDot() { const dk = DIFF_KEY[cur.diff] || 'kozepes'; el.diffDot.style.background = DIFF_COLOR[dk]; }
-  function applyStatusDot() { const st = STATUS[cur.status]; el.statusDot.style.background = st.color; el.statusDot.style.boxShadow = st.glow ? '0 0 6px ' + st.color : 'none'; }
+  function applyStatusDot() { const st = STATUS[cur.status] || STATUS.draft; el.statusDot.style.background = st.color; el.statusDot.style.boxShadow = st.glow ? '0 0 6px ' + st.color : 'none'; }
 
   function renderEditor() { renderTypeGrid(); renderTypeConfig(); renderHints(); renderPreview(); renderTaskImage(); renderTaskVideo(); refreshValidity(); }
 
   function openEditor(id) {
     const src = id != null ? byId(id) : null;
     curId = id != null ? id : null;
-    cur = src ? clone(src) : { question: '', station: 'Főbejárat', route: 'Városliget Felfedező', type: 'kviz', points: 30, diff: 'Könnyű', status: 'draft', media: '', image: '', video: '', hints: [], badge: '', cfg: defaultCfg('kviz') };
+    /* Új feladat alapértéke: LÉTEZŐ állomás. Korábban a rég törölt demó
+       („Főbejárat" / „Városliget Felfedező") volt beírva, ezért a
+       legördülők üresen nyíltak, és a mentés elhasalt. Ha játékra szűrve
+       érkeztünk, annak az első állomását kapjuk. */
+    const elsoAllomas = (CEL_PALYA
+      ? STATIONS_OPT.find(s => String(s.course_id) === CEL_PALYA)
+      : STATIONS_OPT[0]) || STATIONS_OPT[0] || {};
+    cur = src ? clone(src) : { question: '', station: elsoAllomas.name || '', route: elsoAllomas.course_name || '', type: 'kviz', points: 30, diff: 'Könnyű', status: 'draft', media: '', image: '', video: '', hints: [], badge: '', cfg: defaultCfg('kviz') };
     if (!cur.cfg) cur.cfg = defaultCfg(cur.type);
     el.title.textContent = curId ? 'Feladat szerkesztése' : 'Új feladat';
     fillBase(); renderEditor();
@@ -535,8 +591,12 @@
     if (errs.length) { toast('Hiányzó mezők', { type: 'error', sub: errs.join(', ') }); refreshValidity(); return; }
     cur.question = cur.question.trim();
 
-    const stId = (curId != null ? (byId(curId) || {}).stationId : null) ||
-                 allomasIdNevbol(cur.station, cur.route);
+    /* A VÁLASZTOTT állomás nyer, nem az eredeti: a fordított sorrend miatt
+       létező feladatnál a rövidzár mindig a régi station_id-t adta vissza,
+       ezért a feladatot nem lehetett másik állomáshoz átrakni — a mentés
+       sikert jelzett, a sor mégsem változott. */
+    const stId = allomasIdNevbol(cur.station, cur.route) ||
+                 (curId != null ? (byId(curId) || {}).stationId : null);
     if (!stId) {
       toast('Nincs meg az állomás', { type: 'error',
         sub: 'Válassz létező állomást — a feladat csak állomáshoz menthető.' });
@@ -551,14 +611,44 @@
       points: String(cur.points || 0),
       status: cur.status || 'active',
       image: cur.image || cur.media || '',
-      config: cfgMegoldasNelkul(cur.type, cur.cfg),
+      /* A nehézség, a videó és a kitűző nem külön oszlop a tasks táblában,
+         ezért a config-ban utaznak — eddig mentés után nyomtalanul eltűntek. */
+      config: Object.assign(cfgMegoldasNelkul(cur.type, cur.cfg), {
+        difficulty: cur.diff || '', video: cur.video || '', badge: cur.badge || ''
+      }),
       solution: megoldasCfgbol(cur.type, cur.cfg),
       hints: (cur.hints || []).filter(h => h && h.text)
     } } })
-      .then(() => ujratolt('Feladat elmentve',
-        cur.question.length > 42 ? cur.question.slice(0, 42) + '…' : cur.question))
+      /* A szerkesztő CSAK sikeres mentés után zárul. Korábban a closeEditor()
+         a lánc után, szinkronban futott: ha a mentés elbukott, a panel
+         bezárult és a beírt munka elveszett — csak egy hibaüzenet maradt. */
+      .then(() => {
+        closeEditor();
+        /* A játékos a pálya BEFAGYASZTOTT verziójából játszik, ezért a
+           mentés önmagában sosem jutna el a játékig. Az érintett játékot
+           automatikusan újrapublikáljuk — enélkül a feladat csak az admin
+           listában létezne, a játékban nem. */
+        return frissenTartPalyat(stId).then(() =>
+          ujratolt('Feladat elmentve — a játékban is frissült',
+            cur.question.length > 42 ? cur.question.slice(0, 42) + '…' : cur.question));
+      })
       .catch(hibaToast);
-    closeEditor();
+  }
+
+  /* Az állomáshoz tartozó játék újrapublikálása. Hibája nem nyeli el a
+     mentés sikerét: a feladat ilyenkor is elmentődött, csak a figyelmeztetés
+     szól (pl. „állomás koordináta nélkül"). */
+  function frissenTartPalyat(stationId) {
+    const st = STATIONS_OPT.find(s => String(s.id) === String(stationId));
+    if (!st || !st.course_id) return Promise.resolve();
+    return UQAPI.rest('/rpc/publish_course', { method: 'POST', body: { p_course: st.course_id } })
+      .then(r => {
+        const v = Array.isArray(r) ? r[0] : r;
+        if (v && v.warnings && v.warnings.length) {
+          toast('Figyelmeztetés a pályán', { type: 'info', sub: v.warnings.join('; ') });
+        }
+      })
+      .catch(e => { toast('A játék frissítése nem sikerült', { type: 'error', sub: String(e && e.message || '') + ' — a feladat elmentődött, a Közzététel gombbal frissítheted.' }); });
   }
 
   /* =========================================================
@@ -573,7 +663,16 @@
   });
   // alapmezők
   el.q.addEventListener('input', () => { cur.question = el.q.value; el.cq.textContent = el.q.value.length; document.querySelector('.pv-q').textContent = el.q.value || 'A feladat kérdése…'; refreshValidity(); });
-  el.route.addEventListener('change', () => { cur.route = el.route.value; });
+  el.route.addEventListener('change', () => {
+    cur.route = el.route.value;
+    /* játék-váltáskor az állomás-lista is az új játékra szűr */
+    szurtAllomasok(cur.route);
+    if (el.station.options.length) {
+      el.station.selectedIndex = 0;
+      cur.station = el.station.value;
+      const s = document.querySelector('.pv-station'); if (s) s.innerHTML = ico('a-pin') + esc(cur.station);
+    }
+  });
   el.station.addEventListener('change', () => { cur.station = el.station.value; const s = document.querySelector('.pv-station'); if (s) s.innerHTML = ico('a-pin') + esc(cur.station); });
   el.diff.addEventListener('change', () => { cur.diff = el.diff.value; applyDiffDot(); });
   el.points.addEventListener('input', () => { cur.points = Math.max(0, parseInt(el.points.value, 10) || 0); el.rewardXp.value = cur.points + ' XP'; const x = document.querySelector('.pv-badge.xp'); if (x) x.textContent = cur.points + ' XP'; });
@@ -603,7 +702,15 @@
   el.typeCfg.addEventListener('change', e => {
     const c = cur.cfg, f = e.target.dataset.f;
     if (f === 'correct') { const i = +e.target.closest('.fe-item').dataset.i; c.options[i].correct = e.target.checked; e.target.closest('.fe-item').classList.toggle('is-correct', e.target.checked); renderPreview(); refreshValidity(); }
-    else if (f === 'subtype') { c.subtype = e.target.value; renderTypeConfig(); renderPreview(); refreshValidity(); }
+    else if (f === 'subtype') {
+      c.subtype = e.target.value;
+      /* Az élő adatban a puzzle-konfigban csak `items` van, `pairs` nincs.
+         „Párosítás"-ra váltva a renderTypeConfig a nem létező c.pairs-en
+         szállt el, és utána a Mentés is némán elhalt. */
+      if (!Array.isArray(c.pairs)) c.pairs = [];
+      if (!Array.isArray(c.items)) c.items = [];
+      renderTypeConfig(); renderPreview(); refreshValidity();
+    }
     else if (f === 'codeType') { c.codeType = e.target.value; renderPreview(); }
     else if (f === 'game') { c.game = e.target.value; renderPreview(); }
   });
@@ -699,20 +806,32 @@
 
   let mediaMode = 'image';
   const feMediaModalTitle = document.getElementById('feMediaModalTitle');
+  /* A választó a localStorage 'uq_media_v1' kulcsát olvasta — egy halott
+     tárolót, amit a média Supabase Storage-ba költözésekor senki nem
+     követett —, ezért MINDIG üresnek látszott. Most ugyanabból a nézetből
+     dolgozik, mint a Média oldal. */
   function openMediaPicker(mode) {
     mediaMode = mode || 'image';
-    let items = [];
-    try { const arr = JSON.parse(localStorage.getItem('uq_media_v1') || '[]'); if (Array.isArray(arr)) items = arr.filter(m => m && m.type === mediaMode && m.src); } catch (e) {}
     if (feMediaModalTitle) feMediaModalTitle.textContent = mediaMode === 'video' ? 'Videó a Média-tárból' : 'Kép a Média-tárból';
-    if (!items.length) {
-      feMediaGrid.innerHTML = '<div class="fe-mp-empty">Nincs feltöltött ' + (mediaMode === 'video' ? 'videó' : 'kép') + ' a Média-tárban. Tölts fel a Média oldalon, vagy használd a fenti gombokat.</div>';
-    } else if (mediaMode === 'video') {
-      feMediaGrid.innerHTML = items.map(m => `<button class="fe-mp-item fe-mp-vid" type="button" data-src="${esc(m.src)}"><span class="fe-mp-vic">${ico('a-play-c')}</span><span>${esc(m.name || 'videó')}</span></button>`).join('');
-    } else {
-      feMediaGrid.innerHTML = items.map(m => `<button class="fe-mp-item" type="button" data-src="${esc(m.src)}"><img src="${esc(m.src)}" alt=""><span>${esc(m.name || 'kép')}</span></button>`).join('');
-    }
+    feMediaGrid.innerHTML = '<div class="fe-mp-empty">Betöltés…</div>';
     feMediaModal.classList.add('is-open');
     document.body.style.overflow = 'hidden';
+
+    const kert = mediaMode === 'video' ? 'video' : 'image';
+    Promise.resolve(window.UQAPI
+      ? UQAPI.rest('/v_admin_media?select=id,title,kind,url&kind=eq.' + kert + '&order=created_at.desc').catch(() => [])
+      : []
+    ).then(rows => {
+      const items = (rows || []).filter(m => m && m.url);
+      if (!items.length) {
+        feMediaGrid.innerHTML = '<div class="fe-mp-empty">Nincs feltöltött ' + (mediaMode === 'video' ? 'videó' : 'kép') +
+          ' a Média-tárban. Tölts fel a <a href="media.html">Média oldalon</a>, vagy használd a fenti gombokat.</div>';
+      } else if (mediaMode === 'video') {
+        feMediaGrid.innerHTML = items.map(m => `<button class="fe-mp-item fe-mp-vid" type="button" data-src="${esc(m.url)}"><span class="fe-mp-vic">${ico('a-play-c')}</span><span>${esc(m.title || 'videó')}</span></button>`).join('');
+      } else {
+        feMediaGrid.innerHTML = items.map(m => `<button class="fe-mp-item" type="button" data-src="${esc(m.url)}"><img src="${esc(m.url)}" alt=""><span>${esc(m.title || 'kép')}</span></button>`).join('');
+      }
+    });
   }
   function closeMediaPicker() { feMediaModal.classList.remove('is-open'); document.body.style.overflow = ''; }
   document.getElementById('feMediaPick').addEventListener('click', () => openMediaPicker('image'));
@@ -828,10 +947,13 @@
       question: src.question + ' (másolat)',
       points: String(src.points || 0),
       status: 'draft',
+      /* a kép is a feladat része — a másolat eddig elvesztette */
+      image: src.image || src.media || '',
       config: cfgMegoldasNelkul(src.type, src.cfg),
       solution: megoldasCfgbol(src.type, src.cfg),
       hints: src.hints || []
     } } })
+      .then(() => frissenTartPalyat(src.stationId))
       .then(() => ujratolt('Feladat duplikálva', src.question.slice(0, 42)))
       .catch(hibaToast);
   }
@@ -841,9 +963,11 @@
     const q = t.question.length > 60 ? t.question.slice(0, 60) + '…' : t.question;
     if (!window.confirm(
       'Feladat törlése — nincs visszavonás.\n\n' + q + '\n(' + t.station + ' · ' + t.route + ')\n\n' +
-      'A már publikált verziókat nem érinti, tehát a futó játékok nem törnek el.\n\nBiztosan törlöd?')) return;
+      'Biztosan törlöd?')) return;
     UQAPI.rest('/rpc/delete_task', { method: 'POST', body: { p_task: id } })
-      .then(() => ujratolt('Feladat törölve', q))
+      /* a játékból is tűnjön el, ne csak az admin listából */
+      .then(() => frissenTartPalyat(t.stationId))
+      .then(() => ujratolt('Feladat törölve — a játékból is', q))
       .catch(hibaToast);
   }
 
@@ -866,27 +990,75 @@
   perPageSel.addEventListener('change', () => { state.perPage = parseInt(perPageSel.value, 10) || 10; state.page = 1; render(); });
   document.getElementById('btnNewTask').addEventListener('click', () => openEditor(null));
 
-  /* felső sáv: mentés / közzététel / user */
-  document.getElementById('btnSave').addEventListener('click', () => toast('Módosítások mentve', { sub: 'A piszkozat elmentve' }));
-  document.getElementById('btnPublish').addEventListener('click', () => toast('Feladatok közzétéve', { sub: 'Élő a nyilvános pályákon' }));
-  document.querySelectorAll('[data-pub]').forEach(b => b.addEventListener('click', () => { const a = b.dataset.pub; if (a === 'now') toast('Feladatok közzétéve', { sub: 'Élő a nyilvános pályákon' }); else if (a === 'schedule') toast('Közzététel ütemezve', { type: 'info', sub: 'Időzített megjelenés' }); else if (a === 'draft') toast('Piszkozatként mentve', { type: 'info' }); }));
-  document.querySelectorAll('[data-user]').forEach(b => b.addEventListener('click', () => { const a = b.dataset.user; if (a === 'profile') toast('Profil', { type: 'info' }); else if (a === 'settings') toast('Beállítások', { type: 'info' }); else if (a === 'logout') toast('Kijelentkezés', { type: 'info' }); }));
+  /* felső sáv: mentés / közzététel / user
+     Mind a négy gomb csak egy sikeres visszajelzést írt ki és SEMMIT nem
+     csinált — a Kijelentkezés sem jelentkeztetett ki. Most vagy valódi
+     műveletet végeznek, vagy őszintén megmondják, hogy hol a helyük. */
+  document.getElementById('btnSave').addEventListener('click', () => {
+    if (ov && !ov.classList.contains('is-hidden')) { saveEditor(); return; }
+    toast('Nincs mit menteni', { type: 'info', sub: 'Nyiss meg egy feladatot a szerkesztéshez.' });
+  });
+
+  /* A feladat önmagában nem „publikálható": a játékos a pálya befagyasztott
+     verziójából játszik. Ezért a közzététel a PÁLYÁRA vonatkozik. */
+  function palyatKozzetesz() {
+    const cel = CEL_PALYA || (TASKS[0] || {}).courseId;
+    if (!cel) { toast('Nincs mit közzétenni', { type: 'error', sub: 'Előbb válassz játékot a Játékok oldalon.' }); return; }
+    const nev = (TASKS.find(t => String(t.courseId) === String(cel)) || {}).route || 'A játék';
+    UQAPI.rest('/rpc/publish_course', { method: 'POST', body: { p_course: cel } })
+      .then(r => {
+        const v = Array.isArray(r) ? r[0] : r;
+        const figy = (v && v.warnings && v.warnings.length) ? ' — figyelmeztetés: ' + v.warnings.join('; ') : '';
+        toast('Közzétéve', { sub: nev + ' (v' + (v && v.version) + ')' + figy });
+      })
+      .catch(hibaToast);
+  }
+  document.getElementById('btnPublish').addEventListener('click', palyatKozzetesz);
+
+  document.querySelectorAll('[data-pub]').forEach(b => b.addEventListener('click', () => {
+    const a = b.dataset.pub;
+    if (a === 'now') palyatKozzetesz();
+    else if (a === 'schedule') {
+      window.location.href = 'idozitesek.html' + (CEL_PALYA ? '?game=' + encodeURIComponent(CEL_PALYA) : '');
+    } else if (a === 'draft') {
+      toast('A státusz feladatonként állítható', { type: 'info', sub: 'Nyisd meg a feladatot, és állítsd Vázlatra.' });
+    }
+  }));
+
+  document.querySelectorAll('[data-user]').forEach(b => b.addEventListener('click', () => {
+    const a = b.dataset.user;
+    if (a === 'profile') window.location.href = 'fiokom.html';
+    else if (a === 'settings') window.location.href = 'beallitasok.html';
+    else if (a === 'logout') {
+      Promise.resolve(window.UQAPI && UQAPI.signOut ? UQAPI.signOut() : null)
+        .catch(() => {})
+        .then(() => { window.location.href = 'bejelentkezes.html'; });
+    }
+  }));
 
   /* =========================================================
      INDÍTÁS — az adatbázisból töltünk, ezért aszinkron
      ========================================================= */
   function ures(html) { if (emptyEl) { emptyEl.hidden = false; emptyEl.innerHTML = html; } }
 
-  function toltAllomasValaszto() {
+  /* Az állomás-lista MINDIG a választott játékra szűr. Korábban az összes
+     játék összes állomása egyetlen ömlesztett listában volt, a játék-választó
+     pedig semmit nem csinált — ezért tűnt úgy, hogy csak egy játékhoz lehet
+     feladatot rendelni. */
+  function szurtAllomasok(palyaNev) {
     if (!el.station) return;
-    // Az állomás-legördülő eddig 8 beégetett nevet ismert, ezért a
-    // varázslóval készült állomásokhoz nem lehetett feladatot rendelni.
-    el.station.innerHTML = STATIONS_OPT
+    const lista = palyaNev
+      ? STATIONS_OPT.filter(s => s.course_name === palyaNev)
+      : STATIONS_OPT;
+    el.station.innerHTML = lista
       .map(s => `<option value="${esc(s.name)}">${esc(s.name)}</option>`).join('');
-    if (el.route) {
-      const palyak = [...new Set(STATIONS_OPT.map(s => s.course_name))];
-      el.route.innerHTML = palyak.map(p => `<option value="${esc(p)}">${esc(p)}</option>`).join('');
-    }
+  }
+
+  function toltAllomasValaszto() {
+    if (!el.route) return;
+    const palyak = [...new Set(STATIONS_OPT.map(s => s.course_name))];
+    el.route.innerHTML = palyak.map(p => `<option value="${esc(p)}">${esc(p)}</option>`).join('');
+    szurtAllomasok(el.route.value);
   }
 
   function indul() {

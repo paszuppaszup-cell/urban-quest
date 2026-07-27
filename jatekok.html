@@ -9,9 +9,9 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&family=Inter:wght@400..700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css?v=6">
-<link rel="stylesheet" href="admin.css?v=8">
-<link rel="stylesheet" href="jatekok.css?v=6">
+<link rel="stylesheet" href="styles.css?v=7">
+<link rel="stylesheet" href="admin.css?v=9">
+<link rel="stylesheet" href="jatekok.css?v=7">
 </head>
 <body class="admin-body">
 
@@ -213,11 +213,15 @@
       <div class="jtk-fg-row">
         <div class="jtk-fg">
           <label>Nehézség <span class="req">*</span> <span class="jtk-diff jtk-diff-kozepes" id="fDiffDots" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span></label>
-          <div class="ed-field ed-select"><span class="ed-dot ed-dot-kozepes" id="fDiffDot"></span><select id="fDiff"><option>Könnyű</option><option selected>Közepes</option><option>Nehéz</option></select><svg class="ico ico-xs" aria-hidden="true"><use href="#a-down"/></svg></div>
+          <div class="ed-field ed-select"><span class="ed-dot ed-dot-kozepes" id="fDiffDot"></span><select id="fDiff"><option>Könnyű</option><option selected>Közepes</option><option>Nehéz</option><option>Extrém</option></select><svg class="ico ico-xs" aria-hidden="true"><use href="#a-down"/></svg></div>
         </div>
         <div class="jtk-fg">
           <label>Időtartam <span class="req">*</span></label>
-          <div class="ed-field ed-select"><select id="fDur"><option>1–1,5 óra</option><option>1,5–2 óra</option><option selected>2–3 óra</option><option>3+ óra</option></select><svg class="ico ico-xs" aria-hidden="true"><use href="#a-down"/></svg></div>
+          <!-- Szabad szöveg, nem fix lista: a rögzített négy opció egyike sem
+               fedte a valós értékeket (3–4, 4–5 óra), ezért a puszta megnyitás
+               és mentés KINULLÁZTA az időtartamot. A tartomany() eddig is
+               szabad szöveget elemzett. -->
+          <div class="ed-field"><input type="text" id="fDur" placeholder="pl. 2–3 óra" autocomplete="off"></div>
         </div>
       </div>
 
@@ -355,6 +359,22 @@
       </div>
     </div>
 
+    <!-- A játék tartalma. Eddig innen nem vezetett út az állomásokhoz és a
+         feladatokhoz: az oldalsáv linkje a TELJES listát nyitotta meg. -->
+    <div class="jtk-fg jtk-tartalom">
+      <label>A játék tartalma</label>
+      <div class="jtk-tartalom-sor">
+        <a class="adm-btn jtk-link-allomas" href="allomasok.html">
+          <svg class="ico ico-sm" aria-hidden="true"><use href="#a-pin"/></svg>
+          Állomások <b id="dbAllomas">0</b>
+        </a>
+        <a class="adm-btn jtk-link-feladat" href="feladatok.html">
+          <svg class="ico ico-sm" aria-hidden="true"><use href="#a-task"/></svg>
+          Feladatok <b id="dbFeladat">0</b>
+        </a>
+      </div>
+    </div>
+
     <div class="jtk-drawer-foot">
       <button class="adm-btn adm-btn-lime jtk-save" type="button"><svg class="ico ico-sm" aria-hidden="true"><use href="#a-folder"/></svg>Mentés</button>
       <button class="adm-btn jtk-prev" type="button"><svg class="ico ico-sm" aria-hidden="true"><use href="#a-eye"/></svg>Előnézet</button>
@@ -379,9 +399,9 @@
 <!-- ===================== TOAST KONTÉNER ===================== -->
 <div class="uq-toast-wrap" id="uqToasts"></div>
 
-<script src="uq-api.js?v=2"></script>
-<script src="uq-tema.js?v=2"></script>
-<script src="uq-imgprompt.js?v=2"></script>
-<script src="jatekok.js?v=11"></script>
+<script src="uq-api.js?v=3"></script>
+<script src="uq-tema.js?v=3"></script>
+<script src="uq-imgprompt.js?v=3"></script>
+<script src="jatekok.js?v=12"></script>
 </body>
 </html>

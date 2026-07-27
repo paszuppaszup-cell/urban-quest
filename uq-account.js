@@ -72,10 +72,17 @@
       'stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + p + '</svg>';
   }
 
-  /* ---------- profil ---------- */
+  /* ---------- profil ----------
+     KIZÁRÓLAG az élő munkamenetből. Korábban a localStorage uq_user_v1
+     kulcsából olvasott — a demó-korszak maradványából —, ezért kijelentkezés
+     után is „bejelentkezettnek" mutatta a főoldal személyes sávját: a
+     Supabase-munkamenet törlődött, a régi kulcs nem. */
   function getProfile() {
-    var u = read(USER, null);
-    return (u && u.email) ? u : null;
+    var u = (window.UQAuth && UQAuth.getUser) ? UQAuth.getUser() : null;
+    if (u) return u;
+    // az ottragadt demó-rekordot egyszer s mindenkorra eltakarítjuk
+    try { localStorage.removeItem(USER); } catch (e) {}
+    return null;
   }
   function updateProfile(patch) {
     var u = getProfile() || {};
@@ -85,11 +92,33 @@
     return next;
   }
 
-  /* ---------- kedvencek ---------- */
-  function getFavs() { var a = read(FAVS, []); return Array.isArray(a) ? a.slice() : []; }
+  /* ---------- kedvencek ----------
+     FELHASZNÁLÓNKÉNT külön kulcson. Korábban egyetlen közös listán éltek,
+     ezért kijelentkezés után is piroslottak a szívek és látszott a kedvenc-
+     sor — a vendég ugyanazt a listát látta, mint a kijelentkezett fiók. */
+  function favsKey() {
+    var u = (window.UQAuth && UQAuth.getUser) ? UQAuth.getUser() : null;
+    return u && u.id ? FAVS + ':' + u.id : FAVS;
+  }
+  function getFavs() {
+    var kulcs = favsKey();
+    var a = read(kulcs, null);
+    /* Első bejelentkezés: a korábbi közös lista a fiókhoz kerül át, hogy a
+       meglévő kedvencek ne vesszenek el — a közös kulcs kiürül, így
+       kijelentkezés után már nem látszanak. */
+    if (a == null && kulcs !== FAVS) {
+      var regi = read(FAVS, null);
+      if (Array.isArray(regi) && regi.length) {
+        write(kulcs, regi);
+        try { localStorage.removeItem(FAVS); } catch (e) {}
+        return regi.slice();
+      }
+    }
+    return Array.isArray(a) ? a.slice() : [];
+  }
   function isFav(id) { return getFavs().indexOf(id) > -1; }
   function favCount() { return getFavs().length; }
-  function setFavs(a) { write(FAVS, a); fire('uq:favs', { favs: a }); }
+  function setFavs(a) { write(favsKey(), a); fire('uq:favs', { favs: a }); }
   function toggleFav(id) {
     if (!id) return false;
     var a = getFavs(), i = a.indexOf(id);
@@ -130,6 +159,14 @@
         if (b) { b.classList.toggle('is-on', on); b.setAttribute('aria-pressed', String(on)); }
       });
     }, true); // capture: a kártyák saját handlerei elé kerül
+
+    /* Be- és kijelentkezéskor a szívek is váltsanak listát: a kedvencek
+       felhasználónként élnek, tehát az összes látható kártyát újra kell
+       színezni az aktuális (fiókos vagy vendég-) lista szerint. */
+    document.addEventListener('uq:auth', function () {
+      syncFavs(document);
+      fire('uq:favs', { favs: getFavs() });
+    });
   }
 
   /* ---------- játékaim (elkezdett + befejezett végigjátszások) ----------

@@ -377,70 +377,135 @@ window.PVP = (function () {
   }
 
   /* ===========================================================
-     PUBLIKÁLÁS AZ ADMIN FELÜLETRE (localStorage)
-     Idempotens: ugyanazzal a pályanévvel újra futtatva CSERÉL, nem duplikál.
+     PUBLIKÁLÁS AZ ADMINBA — az ADATBÁZISBA.
+
+     Korábban a localStorage uq_games_v1 / uq_stations_v1 / uq_tasks_v1
+     kulcsokba mentett — HALOTT tárakba: az admin oldalak rég az
+     adatbázisból olvasnak, így a varázslóval készült játék sehol nem
+     jelent meg. Most az import_course RPC-t hívjuk (idempotens: azonos
+     legacy_key-jel újrafuttatva cserél, nem duplikál), majd a
+     publish_course befagyaszt egy játszható verziót.
+
+     PROMISE-t ad vissza: {ok, replaced, stations, tasks, route, slug}.
      =========================================================== */
+
+  /* feladat-megoldás leválasztása a configról — a config a telefonra kerül,
+     a helyes válasz nem utazhat benne */
+  function pvMegoldas(t) {
+    var cfg = t.cfg || {};
+    if (t.type === 'kviz') {
+      var jo = (cfg.options || []).filter(function (o) { return o && o.correct; })
+        .map(function (o) { return String(o.text == null ? '' : o.text); });
+      return jo.length ? { accepted: jo } : {};
+    }
+    if (t.type === 'kod') return cfg.code ? { accepted: [String(cfg.code)] } : {};
+    if (t.type === 'szoveg') {
+      var a = (Array.isArray(cfg.accepted) ? cfg.accepted : []).map(String).filter(Boolean);
+      return a.length ? { accepted: a } : {};
+    }
+    if (t.type === 'puzzle') {
+      var it = (Array.isArray(cfg.items) ? cfg.items : []).map(String);
+      return it.length ? { accepted: [it.join('|')] } : {};
+    }
+    return {};
+  }
+  function pvTisztaCfg(t) {
+    var cfg = JSON.parse(JSON.stringify(t.cfg || {}));
+    if (Array.isArray(cfg.options)) {
+      cfg.options = cfg.options.map(function (o) { return { id: o.id || null, text: o.text }; });
+    }
+    delete cfg.accepted; delete cfg.code; delete cfg.answer;
+    return cfg;
+  }
+
   function publishToAdmin(W) {
     var route = (W.course && W.course.route) || '';
-    if (!route) return { ok: false, err: 'A pályának nincs neve.' };
-
-    var prevStations = P.lsGet('uq_stations_v1', []);
-    var prevTasks = P.lsGet('uq_tasks_v1', []);
-    var prevGames = P.lsGet('uq_games_v1', []);
-    if (!Array.isArray(prevStations)) prevStations = [];
-    if (!Array.isArray(prevTasks)) prevTasks = [];
-    if (!Array.isArray(prevGames)) prevGames = [];
-
-    /* mentés visszaállításhoz, ha a kvóta közben elfogy */
-    var backup = {
-      s: JSON.stringify(prevStations), t: JSON.stringify(prevTasks), g: JSON.stringify(prevGames)
-    };
-
-    var hadBefore = prevStations.some(function (s) { return s.route === route; });
-
-    /* a pálya korábbi állomásait/feladatait kivesszük — így az újrapublikálás
-       frissít, nem pedig megkettőz */
-    var keptStations = prevStations.filter(function (s) { return s.route !== route; });
-    var keptTasks = prevTasks.filter(function (t) { return t.route !== route; });
-
-    var maxId = keptStations.reduce(function (m, s) { return Math.max(m, s.id || 0); }, 0);
-    var maxTaskId = keptTasks.reduce(function (m, t) { return Math.max(m, t.id || 0); }, 0);
-    var newStations = keptStations.concat(toStations(W, maxId + 1));
-    var newTasks = keptTasks.concat(toTasks(W, maxTaskId + 1));
-
-    /* A Játékok oldal a TELJES listát lecseréli erre a tömbre, és 15 mezőt
-       vár egy kártyához. Korábban ide csak `{id, name}` került, ezért az
-       első publikálás után a Játékok oldal ÜRESEN maradt — a pálya
-       játszható volt, de a listában nyoma sem volt. */
-    var games = prevGames.slice();
-    var gid = games.reduce(function (m, g) { return Math.max(m, (g && g.id) || 0); }, 0) + 1;
-    var ujJatek = toGame(W, gid);
-    var hol = -1;
-    games.forEach(function (g, i) {
-      if ((typeof g === 'string' ? g : g && g.name) === route) hol = i;
-    });
-    if (hol >= 0) { ujJatek.id = games[hol].id || gid; games[hol] = ujJatek; }
-    else games.push(ujJatek);
-
-    if (!P.lsSet('uq_stations_v1', newStations)) return restore('Nem fért el a tárban (állomások).');
-    if (!P.lsSet('uq_tasks_v1', newTasks)) return restore('Nem fért el a tárban (feladatok).');
-    if (!P.lsSet('uq_games_v1', games)) return restore('Nem fért el a tárban (játékok).');
-
-    return {
-      ok: true, replaced: hadBefore,
-      stations: newStations.length - keptStations.length,
-      tasks: newTasks.length - keptTasks.length,
-      route: route
-    };
-
-    function restore(msg) {
-      try {
-        localStorage.setItem('uq_stations_v1', backup.s);
-        localStorage.setItem('uq_tasks_v1', backup.t);
-        localStorage.setItem('uq_games_v1', backup.g);
-      } catch (e) { /* ha ez sem megy, már nincs mit tenni */ }
-      return { ok: false, err: msg + ' A korábbi állapotot visszaállítottam.' };
+    if (!route) return Promise.resolve({ ok: false, err: 'A pályának nincs neve.' });
+    if (!window.UQAPI || !UQAPI.user()) {
+      return Promise.resolve({ ok: false, err: 'Nem vagy bejelentkezve — a mentéshez admin fiók kell.' });
     }
+
+    var c = W.course || {};
+    var sk = W.skeleton || [];
+    var sSlug = slug(route);
+    var st = (P.routeStats && sk.length > 1) ? P.routeStats(sk, !!c.loop) : { total: 0, walkMin: 0 };
+    var solveMin = P.solveMinutes ? P.solveMinutes(sk) : sk.length * 5;
+    var oraTol = Math.max(1, Math.round((st.walkMin + solveMin) / 60));
+    var intro = (W.intro || '').trim();
+    var elsoMondat = intro.split(/(?<=[.!?])\s/)[0] || ('Városi kaland: ' + route);
+    var DIFF = { 'Könnyű': 'konnyu', 'Közepes': 'kozepes', 'Nehéz': 'nehez', 'Extrém': 'extrem' };
+
+    /* állomásonként a hozzájuk rendelt feladatok */
+    var byStation = {};
+    (W.tasks || []).forEach(function (t) {
+      (byStation[t.station] = byStation[t.station] || []).push(t);
+    });
+
+    var payload = {
+      legacy_key: 'varazslo:' + sSlug,
+      slug: sSlug,
+      name: route,
+      subtitle: elsoMondat,
+      summary: elsoMondat,
+      about: intro || elsoMondat,
+      difficulty: DIFF[c.level] || 'kozepes',
+      category: 'varosi',
+      /* piszkozatként érkezik: az admin a Játékok oldalon teszi közzé,
+         amikor átnézte — de a befagyasztott verzió már készül, így a
+         Végigjátszás gombbal azonnal tesztelhető */
+      status: 'draft',
+      city: 'Budapest',
+      area: (W.area && W.area.n) || null,
+      duration_min: String(oraTol),
+      duration_max: String(oraTol + 1),
+      distance_m: String(Math.round(st.total || 0)),
+      team_min: '2', team_max: '6', age_min: '12',
+      languages: ['hu'],
+      do_list: ['Valós helyszínek felfedezése', 'Feladatok megoldása a helyszínen', 'Közös döntések'],
+      know_list: [sk.length + ' állomás', ((st.total || 0) / 1000).toFixed(1) + ' km séta', (c.level || 'Közepes') + ' nehézség'],
+      stations: sk.map(function (s, i) {
+        return {
+          name: s.name,
+          kind: (s.type === 'Döntési pont' || s.type === 'dontes') ? 'dontes'
+              : (i === 0 ? 'kezdo' : (i === sk.length - 1 ? 'zaro' : 'feladat')),
+          description: s.desc || null,
+          task_short: s.taskShort || null,
+          address: s.loc || null,
+          lat: coord(s.lat), lng: coord(s.lng),
+          emotion: s.emotion || null,
+          tasks: (byStation[s.name] || []).map(function (t, ti) {
+            return {
+              position: ti + 1,
+              kind: t.type,
+              question: t.question || '(nincs kérdés)',
+              points: String(t.points || 0),
+              image: t.image || null,
+              config: pvTisztaCfg(t),
+              solution: pvMegoldas(t),
+              hints: []
+            };
+          })
+        };
+      })
+    };
+
+    var hadBefore = typeof nameConflict === 'function' ? !!nameConflict(W) : false;
+
+    return UQAPI.rest('/rpc/import_course', { method: 'POST', body: { p: payload } })
+      .then(function (r) {
+        var v = Array.isArray(r) ? r[0] : r;
+        /* befagyasztott verzió is készül, hogy azonnal játszható legyen */
+        return UQAPI.rest('/rpc/publish_course', { method: 'POST', body: { p_course: v.course_id } })
+          .then(function () { return v; })
+          .catch(function () { return v; });   // a mentés ettől még sikeres
+      })
+      .then(function (v) {
+        try { localStorage.removeItem('uq_catalog_v1'); } catch (e) {}
+        return { ok: true, replaced: hadBefore, stations: v.stations, tasks: v.tasks, route: route, slug: sSlug };
+      })
+      .catch(function (e) {
+        return { ok: false, err: String(e && e.message || 'A mentés nem sikerült.') };
+      });
   }
 
   /* van-e már ilyen nevű pálya, amit NEM ez a varázsló csinált */

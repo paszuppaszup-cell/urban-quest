@@ -311,3 +311,94 @@
   .uq-ma-title { font-size: 22px; }
   .uq-usermenu { position: fixed; top: 66px; right: 12px; left: 12px; width: auto; }
 }
+
+/* =====================================================================
+   CSAPAT-MODAL ÉS VÁRÓ (uq-team.js)
+   A fiók-modal (.uq-ma) vázára épül, azzal egy stíluslapon él, mert
+   ugyanazokon az oldalakon töltődik be.
+   ===================================================================== */
+.uq-team-modal { max-width: 420px; }
+.uq-team-cim { font-family: var(--font-display, 'Archivo'), sans-serif; font-size: 22px; font-weight: 800; color: #fff; margin: 0 0 4px; }
+.uq-team-sub { font-size: 13px; color: var(--text-2, #b9c2b1); margin: 0 0 16px; }
+
+.uq-team-valaszto { display: flex; flex-direction: column; gap: 10px; }
+.uq-team-opt {
+  text-align: left; padding: 14px 16px; border-radius: 13px; cursor: pointer;
+  background: #0b0f0a; border: 1px solid var(--line, #232a1e); color: #fff; font: inherit;
+  display: flex; flex-direction: column; gap: 3px;
+  transition: border-color .15s, background .15s;
+}
+.uq-team-opt:hover { border-color: rgb(var(--lime-rgb, 158 213 43) / .5); background: #0f140d; }
+.uq-team-opt b { font-size: 14.5px; }
+.uq-team-opt span { font-size: 12px; color: var(--muted, #8b957f); line-height: 1.45; }
+
+.uq-team-mezo { display: block; margin-bottom: 12px; font-size: 12px; font-weight: 600; color: var(--text-2, #b9c2b1); }
+.uq-team-mezo input, .uq-team-mezo select {
+  display: block; width: 100%; margin-top: 6px; padding: 12px 14px;
+  border-radius: 11px; background: #0b0f0a; border: 1px solid var(--line, #232a1e);
+  color: #fff; font: inherit; font-size: 14px;
+}
+.uq-team-mezo input:focus, .uq-team-mezo select:focus {
+  outline: none; border-color: rgb(var(--lime-rgb, 158 213 43) / .55);
+  box-shadow: 0 0 0 3px rgb(var(--lime-rgb, 158 213 43) / .12);
+}
+
+.uq-team-go {
+  width: 100%; padding: 14px 18px; margin-top: 4px;
+  border: 0; border-radius: 13px; cursor: pointer;
+  background: var(--lime, #9ed52b); color: #0a0d0a;
+  font-family: var(--font-display, 'Archivo'), sans-serif;
+  font-size: 14px; font-weight: 800; text-transform: uppercase; letter-spacing: .04em;
+}
+.uq-team-go:disabled { opacity: .5; cursor: not-allowed; }
+.uq-team-err { margin: 8px 0 0; font-size: 12.5px; color: #ff8b6b; }
+
+.uq-team-kod {
+  display: flex; align-items: center; gap: 12px;
+  padding: 14px 16px; margin: 6px 0 8px;
+  border-radius: 13px; background: rgb(var(--lime-rgb, 158 213 43) / .08);
+  border: 1px dashed rgb(var(--lime-rgb, 158 213 43) / .5);
+}
+.uq-team-kod span { font-size: 10.5px; text-transform: uppercase; letter-spacing: .07em; color: var(--muted, #8b957f); }
+.uq-team-kod b {
+  flex: 1; font-family: var(--font-display, 'Archivo'), sans-serif;
+  font-size: 26px; letter-spacing: .22em; color: var(--lime, #9ed52b);
+  font-variant-numeric: tabular-nums;
+}
+.uq-team-kod button {
+  padding: 7px 12px; border-radius: 9px; cursor: pointer; font: inherit; font-size: 12px;
+  background: none; border: 1px solid var(--line, #232a1e); color: var(--text-2, #b9c2b1);
+}
+.uq-team-kod button:hover { color: #fff; border-color: rgb(255 255 255 / .2); }
+.uq-team-hint { font-size: 12px; color: var(--muted, #8b957f); margin: 0 0 12px; line-height: 1.5; }
+
+.uq-team-tagok { border: 1px solid var(--line, #232a1e); border-radius: 13px; padding: 12px 14px; margin-bottom: 12px; }
+.uq-team-tagfej { font-size: 13px; color: var(--text-2, #b9c2b1); padding-bottom: 8px; border-bottom: 1px solid var(--line-soft, #1b2117); margin-bottom: 8px; }
+.uq-team-tagfej b { color: var(--lime, #9ed52b); font-variant-numeric: tabular-nums; }
+.uq-team-tag { display: flex; align-items: center; gap: 9px; padding: 6px 0; font-size: 13.5px; color: #fff; }
+.uq-team-tag em { font-style: normal; font-size: 10px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted, #8b957f); background: rgb(255 255 255 / .06); padding: 2px 7px; border-radius: 99px; }
+.uq-team-tag.is-me .uq-team-tag-pont { background: var(--lime, #9ed52b); box-shadow: 0 0 6px var(--lime, #9ed52b); }
+.uq-team-tag-pont { width: 7px; height: 7px; border-radius: 50%; background: var(--muted, #8b957f); flex: none; }
+.uq-team-varakozik {
+  text-align: center; font-size: 13px; color: var(--text-2, #b9c2b1);
+  padding: 12px; border-radius: 11px; background: rgb(255 255 255 / .04); margin: 0;
+}
+
+/* becsatlakozó mező a küldetés-oldalon, az indító gomb alatt */
+.uq-join {
+  display: flex; gap: 8px; margin-top: 10px;
+}
+.uq-join input {
+  flex: 1; min-width: 0; padding: 11px 13px;
+  border-radius: 10px; background: #0b0f0a; border: 1px solid var(--line, #232a1e);
+  color: #fff; font: inherit; font-size: 13px;
+  text-transform: uppercase; letter-spacing: .15em; text-align: center;
+}
+.uq-join input::placeholder { text-transform: none; letter-spacing: normal; text-align: left; }
+.uq-join button {
+  padding: 11px 16px; border-radius: 10px; cursor: pointer; white-space: nowrap;
+  background: none; border: 1px solid rgb(var(--lime-rgb, 158 213 43) / .5);
+  color: var(--lime, #9ed52b); font: inherit; font-size: 12.5px; font-weight: 700;
+}
+.uq-join button:hover { background: rgb(var(--lime-rgb, 158 213 43) / .1); }
+.uq-join-cimke { display: block; margin-top: 14px; font-size: 11px; text-transform: uppercase; letter-spacing: .07em; color: var(--muted, #8b957f); }

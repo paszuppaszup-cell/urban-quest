@@ -42,8 +42,11 @@
       category: 'varosi', doList: DEFAULT_DO.slice(), knowList: DEFAULT_KNOW.slice() }
   ];
 
-  const DIFF_KEY = { 'Könnyű': 'konnyu', 'Közepes': 'kozepes', 'Nehéz': 'nehez' };
-  const DIFF_COLOR = { konnyu: '#4fb84f', kozepes: '#e0b93a', nehez: '#e8813a' };
+  /* Az „Extrém" hiányzott innen, ezért a Danger Zone nehézsége a listában
+     rossz osztályt kapott, a fiókban pedig nem létező opcióra állt — amitől
+     egy puszta Mentés Közepesre fokozta le. */
+  const DIFF_KEY = { 'Könnyű': 'konnyu', 'Közepes': 'kozepes', 'Nehéz': 'nehez', 'Extrém': 'extrem' };
+  const DIFF_COLOR = { konnyu: '#4fb84f', kozepes: '#e0b93a', nehez: '#e8813a', extrem: '#e03a2f' };
   const STATUS = {
     pub: { cls: 'is-pub', label: 'Közzétéve', color: '#4fb84f', glow: true },
     draft: { cls: 'is-draft', label: 'Piszkozat', color: '#7c86e0', glow: false },
@@ -122,8 +125,12 @@
     return UQAPI.rest('/v_admin_courses?select=*&order=sort_order.asc,name.asc')
       .then(rows => {
         GAMES.splice(0, GAMES.length, ...(rows || []).map(dbSor));
-        if (!GAMES.some(g => g.id === state.selectedId)) {
-          state.selectedId = GAMES.length ? GAMES[0].id : null;
+        /* Ha a kijelölés kifutott a lista alól (törlés, archiválás, szűrés),
+           NEM találunk ki helyette másikat: a nyitott fiók még a régi játék
+           mezőit mutatná, és a következő Mentés arra írná rá őket. */
+        if (state.selectedId && !GAMES.some(g => g.id === state.selectedId)) {
+          state.selectedId = null;
+          drawer.classList.add('is-hidden');
         }
         return GAMES;
       });
@@ -296,6 +303,25 @@
   /* Új borítókép → automatikus módban azonnal új szín. */
   fImage.addEventListener('change', () => { if (temaMod() === 'auto') temaSzamol(true); });
 
+  /* A fiók „A játék tartalma" sávja: mély-link az adott játék állomásaira
+     és feladataira, a darabszámmal együtt. A darabszám azért fontos, mert
+     az üres pálya (0 állomás) a leggyakoribb oka annak, hogy egy játék
+     közzétett, mégsem játszható. */
+  function tartalomLinkek(g) {
+    const la = document.querySelector('.jtk-link-allomas');
+    const lf = document.querySelector('.jtk-link-feladat');
+    const da = document.getElementById('dbAllomas');
+    const df = document.getElementById('dbFeladat');
+    if (!la || !lf) return;
+    const q = '?game=' + encodeURIComponent(g.id);
+    la.href = 'allomasok.html' + q;
+    lf.href = 'feladatok.html' + q;
+    if (da) da.textContent = g._allomas == null ? '0' : g._allomas;
+    if (df) df.textContent = g._feladat == null ? '0' : g._feladat;
+    la.classList.toggle('is-ures', !g._allomas);
+    lf.classList.toggle('is-ures', !g._feladat);
+  }
+
   function temaBetolt(g) {
     tema.mod = g.temaMod || 'auto';
     tema.szin = g.temaSzin || '';
@@ -370,13 +396,30 @@
     '<path d="M4 7h16"/><path d="M10 11v6M14 11v6"/>' +
     '<path d="M6 7l1 12a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1l1-12"/><path d="M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>';
 
+  /* A lista eddig egy AZONOSÍTÓBÓL HASHELT színes foltot mutatott
+     (jtk-thumb-1..6), nem a valódi borítóképet — ezért nem lehetett ránézésre
+     megmondani, melyik játékhoz melyik kép tartozik. Most a tényleges
+     cover_image látszik; ahol nincs, ott nem egy semmitmondó gradiens áll,
+     hanem egy kép-ikon a játék SAJÁT színével — így egy pillantásból kiderül,
+     melyikhez kell még borítót készíteni. */
+  function boritoHTML(g) {
+    if (g.image) {
+      return `<span class="jtk-thumb has-kep" style="background-image:url(&quot;${esc(g.image)}&quot;)"
+                    role="img" aria-label="${esc(g.name)} borítóképe"></span>`;
+    }
+    const t = (g.temaSzin && window.UQTema) ? window.UQTema.normalizal(g.temaSzin) : null;
+    const stilus = t ? ` style="--lime:${t.hex};--lime-rgb:${t.rgb.join(' ')}"` : '';
+    return `<span class="jtk-thumb nincs-kep"${stilus} title="Ehhez a játékhoz még nincs borítókép">
+              ${ico('a-image', 'ico-sm')}</span>`;
+  }
+
   function rowHTML(g) {
     const dk = DIFF_KEY[g.diff] || 'kozepes';
     const st = STATUS[g.status] || STATUS.draft;
     const langs = g.langs.map(langChip).join('') + (g.more ? `<span class="jtk-more">+${g.more}</span>` : '');
     return `<div class="jtk-row${g.id === state.selectedId ? ' is-active' : ''}" data-id="${g.id}">
       <div class="jtk-name">
-        <span class="jtk-thumb jtk-thumb-${g.thumb}"></span>
+        ${boritoHTML(g)}
         <span class="jtk-name-txt"><b>${esc(g.name)}</b><small>${esc(g.desc)}</small></span>
       </div>
       <div class="jtk-cell-diff"><span class="jtk-diff jtk-diff-${dk}"><i></i><i></i><i></i><i></i><i></i></span><span class="jtk-diff-lbl">${esc(g.diff)}</span></div>
@@ -483,6 +526,7 @@
     fSubtitle.value = g.subtitle || '';
     fImage.value = g.image || '';
     temaBetolt(g);
+    tartalomLinkek(g);
     fRating.value = (g.rating != null ? g.rating : '');
     fReviews.value = (g.reviews != null ? g.reviews : '');
     fDistance.value = g.distance || '';
@@ -555,7 +599,11 @@
       id: id || null,
       name: fName.value.trim() || 'Névtelen játék',
       about: fDesc.value,
-      summary: firstSentence(fDesc.value) || fDesc.value.trim(),
+      /* A `summary` SZÁNDÉKOSAN nincs itt. A fiókban nincs hozzá mező, mégis
+         minden mentés felülírta a leírás első mondatával — pedig ez az a
+         szöveg, ami a publikus katalógus-kártyán látszik, és hatból négy
+         pályánál eltért. A save_course `p ? 'summary'` őre miatt a hiányzó
+         kulcs érintetlenül hagyja a mezőt. Új pályánál a newGame() adja meg. */
       subtitle: fSubtitle.value.trim(),
       difficulty: DIFF_DB[fDiff.value] || 'kozepes',
       category: fCategory.value || 'varosi',
@@ -717,7 +765,11 @@
 
     UQAPI.rest('/rpc/delete_course', { method: 'POST', body: { p_course: id } })
       .then(() => {
-        if (state.selectedId === id) state.selectedId = null;
+        /* A fiókot is be KELL csukni. Korábban nyitva maradt a törölt játék
+           adataival, miközben a betolt() a kijelölést némán a lista első
+           elemére állította — egy következő Mentés a törölt játék mezőit
+           írta volna rá egy létező, ártatlan pályára. */
+        if (state.selectedId === id) { state.selectedId = null; drawer.classList.add('is-hidden'); }
         return ujratolt('Véglegesen törölve', g.name);
       })
       .catch(hibaToast);
@@ -772,10 +824,15 @@
      másodikat is elvégezzük — különben a pálya „közzétett”, de láthatatlan. */
   function setSelectedStatus(status) {
     const g = byId(state.selectedId);
-    if (!g) { toast('Nincs kiválasztott játék', { type: 'error' }); return false; }
+    if (!g) { toast('Nincs kiválasztott játék', { type: 'error' }); return Promise.resolve(false); }
     const id = g.id;
 
-    UQAPI.rest('/rpc/save_course', { method: 'POST', body: { p: { id: id, status: STATUS_DB[status] || status } } })
+    /* A fiókban látott ADATOKAT fagyasztjuk be, nem a régieket: korábban
+       csak {id, status} ment el, ezért a közzétett verzió a mentetlen
+       szerkesztés ELŐTTI állapotot rögzítette. */
+    const payload = Object.assign(urlapPayload(id), { status: STATUS_DB[status] || status });
+
+    return UQAPI.rest('/rpc/save_course', { method: 'POST', body: { p: payload } })
       .then(() => {
         if (status !== 'pub') return ujratolt('Piszkozatként mentve', g.name + ' — nem jelenik meg nyilvánosan');
         // közzététel: friss verziót fagyasztunk be, ettől lesz látható és játszható
@@ -788,8 +845,12 @@
             return ujratolt('Közzétéve', g.name + ' (v' + (v && v.version) + ')' + figy);
           });
       })
-      .catch(hibaToast);
-    return true;
+      .then(() => true)
+      /* Bukáskor is ÚJRA KELL tölteni: az első lépés (status='pub') már
+         lefutott, tehát a pálya „közzétett", de élő verzió nélkül —
+         láthatatlanul. A frissítés kiteszi rá a „nem látható" jelvényt,
+         különben a szerző csak kézi újratöltésnél szembesülne vele. */
+      .catch(err => { hibaToast(err); return ujratolt().then(() => false); });
   }
 
   /* A pálya „közzétett”, de nincs élő verziója → nem látszik sehol.
@@ -835,25 +896,48 @@
   });
 
   /* felső sáv: Mentés / Közzététel */
-  document.getElementById('btnSave').addEventListener('click', () => { saveStore(); toast('Módosítások mentve', { sub: 'Minden változás elmentve' }); });
-  document.getElementById('btnPublish').addEventListener('click', () => {
-    if (setSelectedStatus('pub')) toast('Közzétéve — megjelenik a főoldalon');
-  });
+  /* A fejléc Mentés gombja korábban a saveStore()-t hívta — egy ÜRES
+     függvényt a localStorage-korszakból —, majd kiírta, hogy „Minden
+     változás elmentve". Vagyis a szerkesztés némán elveszett, miközben a
+     felület sikert jelzett. Most ugyanazt csinálja, mint a fiók Mentés
+     gombja: valóban elküldi a save_course-t. */
+  document.getElementById('btnSave').addEventListener('click', saveDrawer);
+  /* A visszajelzést a setSelectedStatus adja, amikor a művelet TÉNYLEG
+     befejeződött. Korábban itt volt egy azonnali „Közzétéve" üzenet, ami
+     akkor is megjelent, ha a publikálás elbukott — és sikeres esetben
+     duplán mondta ugyanazt. */
+  document.getElementById('btnPublish').addEventListener('click', () => setSelectedStatus('pub'));
 
   /* Közzététel legördülő */
   document.querySelectorAll('[data-pub]').forEach(b => b.addEventListener('click', () => {
     const a = b.dataset.pub;
-    if (a === 'now') { if (setSelectedStatus('pub')) toast('Közzétéve — megjelenik a főoldalon'); }
-    else if (a === 'schedule') { saveStore(); toast('Közzététel ütemezve', { type: 'info', sub: 'Időzített megjelenés beállítva' }); }
-    else if (a === 'draft') { if (setSelectedStatus('draft')) toast('Piszkozatként mentve', { type: 'info', sub: 'Nem jelenik meg nyilvánosan' }); }
+    /* A visszajelzést mindkét ágon a setSelectedStatus adja, a művelet
+       tényleges befejezése után — nem előtte. */
+    if (a === 'now') { setSelectedStatus('pub'); }
+    else if (a === 'schedule') {
+      /* Eddig csak kiírta, hogy „Közzététel ütemezve", és semmit nem
+         ütemezett. Az időzítés valódi helye az Időzítések oldal, ezért
+         odaviszünk a kiválasztott játékkal — hamis visszajelzés helyett. */
+      const g = byId(state.selectedId);
+      if (!g) { toast('Nincs kiválasztott játék', { type: 'error' }); return; }
+      window.location.href = 'idozitesek.html?game=' + encodeURIComponent(g.id);
+    }
+    else if (a === 'draft') { setSelectedStatus('draft'); }
   }));
 
   /* Felhasználói legördülő */
   document.querySelectorAll('[data-user]').forEach(b => b.addEventListener('click', () => {
+    /* Mindhárom pont csak egy visszajelzést írt ki és nem csinált semmit —
+       a Kijelentkezés sem jelentkeztetett ki. Most tényleg oda visznek,
+       ahová a nevük ígéri. */
     const a = b.dataset.user;
-    if (a === 'profile') toast('Profil', { type: 'info', sub: 'Profil megnyitása' });
-    else if (a === 'settings') toast('Beállítások', { type: 'info', sub: 'Fiókbeállítások megnyitása' });
-    else if (a === 'logout') toast('Kijelentkezés', { type: 'info', sub: 'Munkamenet lezárása' });
+    if (a === 'profile') window.location.href = 'fiokom.html';
+    else if (a === 'settings') window.location.href = 'beallitasok.html';
+    else if (a === 'logout') {
+      Promise.resolve(window.UQAPI && UQAPI.signOut ? UQAPI.signOut() : null)
+        .catch(() => {})
+        .then(() => { window.location.href = 'bejelentkezes.html'; });
+    }
   }));
 
   /* fiók: élő karakterszámlálók */
@@ -904,22 +988,30 @@
   bindListRemove(fDoList);
   bindListRemove(fKnowList);
 
-  /* fiók: Média-tár képválasztó */
-  const MEDIA_STORE = 'uq_media_v1';
+  /* fiók: Média-tár képválasztó
+     Ez a választó a localStorage 'uq_media_v1' kulcsát olvasta — egy halott
+     tárolót, amit a média Supabase Storage-ba költözésekor senki nem
+     követett. Ezért MINDIG üresnek látszott, akkor is, ha volt feltöltött
+     kép. Most ugyanabból a nézetből dolgozik, mint a Média oldal. */
   function loadMedia() {
-    try { const arr = JSON.parse(localStorage.getItem(MEDIA_STORE)); return Array.isArray(arr) ? arr : []; } catch (e) { return []; }
+    if (!window.UQAPI) return Promise.resolve([]);
+    return UQAPI.rest('/v_admin_media?select=id,title,kind,url&kind=eq.image&order=created_at.desc')
+      .then(rows => (rows || []).filter(m => m && m.url))
+      .catch(() => []);
   }
   function openMediaPicker() {
-    const items = loadMedia().filter(m => m && m.type === 'image' && m.src);
-    if (!items.length) {
-      mediaPickerGrid.innerHTML = '<div class="jtk-mp-empty">Nincs feltöltött kép a Média-tárban — tölts fel a <a href="media.html">Média oldalon</a>.</div>';
-    } else {
-      mediaPickerGrid.innerHTML = items.map(m =>
-        `<button class="jtk-mp-item" type="button" data-src="${esc(m.src)}"><img src="${esc(m.src)}" alt=""><span>${esc(m.name || 'kép')}</span></button>`
-      ).join('');
-    }
+    mediaPickerGrid.innerHTML = '<div class="jtk-mp-empty">Betöltés…</div>';
     mediaPicker.classList.add('is-open');
     mediaPicker.setAttribute('aria-hidden', 'false');
+    loadMedia().then(items => {
+      if (!items.length) {
+        mediaPickerGrid.innerHTML = '<div class="jtk-mp-empty">Nincs feltöltött kép a Média-tárban — tölts fel a <a href="media.html">Média oldalon</a>.</div>';
+        return;
+      }
+      mediaPickerGrid.innerHTML = items.map(m =>
+        `<button class="jtk-mp-item" type="button" data-src="${esc(m.url)}"><img src="${esc(m.url)}" alt=""><span>${esc(m.title || 'kép')}</span></button>`
+      ).join('');
+    });
   }
   function closeMediaPicker() {
     mediaPicker.classList.remove('is-open');

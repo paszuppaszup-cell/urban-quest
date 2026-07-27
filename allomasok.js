@@ -325,9 +325,13 @@
   /* =========================================================
      TÁBLÁZAT RENDERELÉSE
      ========================================================= */
+  /* Egy JÁTÉKHOZ tartozó állomások — a Játékok oldalról érkező mély-link. */
+  const CEL_PALYA = new URLSearchParams(location.search).get('game') || '';
+
   function filtered() {
     const s = state.search.trim().toLowerCase();
     return STATIONS.filter(st => {
+      if (CEL_PALYA && String(st.courseId) !== CEL_PALYA) return false;
       if (state.route !== 'all' && st.route !== state.route) return false;
       if (state.type !== 'all' && st.type !== state.type) return false;
       if (s) {
@@ -418,6 +422,22 @@
     });
   }
 
+  /* A szűrésnek látszania kell, különben a rövid lista úgy néz ki, mintha
+     állomások tűntek volna el. */
+  function palyaSavKiir(db) {
+    let sav = document.getElementById('palyaSav');
+    if (!CEL_PALYA) { if (sav) sav.remove(); return; }
+    if (!sav) {
+      sav = document.createElement('div');
+      sav.id = 'palyaSav';
+      sav.className = 'uq-szuro-sav';
+      tbody.parentNode.insertBefore(sav, tbody);
+    }
+    const nev = (STATIONS.find(s => String(s.courseId) === CEL_PALYA) || {}).route || 'a kiválasztott játék';
+    sav.innerHTML = '<span>' + ico('a-game', 'ico-sm') + '<b>' + esc(nev) + '</b> állomásai — ' + db + ' db</span>' +
+      '<a href="allomasok.html">Összes állomás</a>';
+  }
+
   function render() {
     const list = sortList(filtered());
     const total = list.length;
@@ -431,6 +451,7 @@
     tbody.innerHTML = pageItems.map(rowHTML).join('');
     emptyEl.hidden = total > 0;
     renderPager(total, pages, startIdx, pageItems.length);
+    palyaSavKiir(total);
     updateStats();
     updateBulk();
     syncSortHeads();

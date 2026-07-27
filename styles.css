@@ -3,6 +3,12 @@
    ========================================================= */
 
 :root {
+  /* A natív vezérlők (legördülő listák, dátumválasztó, görgetősáv) is a
+     sötét sémát kapják. Enélkül a <select> lenyíló listája Windowson FEHÉR
+     hátteret kapott az örökölt fehér szöveg alá — a feladat-szerkesztő
+     legördülői ezért látszottak üresnek. */
+  color-scheme: dark;
+
   /* felületek */
   --bg:            #0a0d0a;
   --bg-elev:       #12160f;
@@ -75,6 +81,10 @@
 
 /* ---------- alap ---------- */
 *, *::before, *::after { box-sizing: border-box; }
+
+/* Tartalék a color-scheme mellé: az <option> elemek explicit sötét háttere
+   olyan böngészőkben is, ahol a lenyíló lista a lap színeit örökli. */
+select option { background-color: #12160f; color: #f1f4ec; }
 
 html { scroll-behavior: smooth; }
 
@@ -1427,9 +1437,30 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
 /* =========================================================
    MOBIL — főoldal újratervezés
    ========================================================= */
-/* asztalon a kártyán csak cím + leírás + értékelés látszik */
-.quest-card .quest-tagline,
-.quest-card .quest-stats { display: none; }
+/* Asztalon is látszanak a kártya adatai (időtartam, táv, csapat, nehézség,
+   korosztály, nyelv) — korábban el voltak rejtve, és a kártya ránézésre
+   semmit nem árult el a küldetésről. Csak az alcím marad rejtve, az a
+   címmel mondana ugyanazt. */
+.quest-card .quest-tagline { display: none; }
+.quest-card .quest-stats {
+  display: grid;
+  grid-template-columns: repeat(3, auto);
+  justify-content: start;
+  gap: 6px 14px;
+  margin-top: 11px;
+  padding-top: 11px;
+  border-top: 1px solid var(--line-soft);
+}
+
+/* indulási helyszín a kártyán */
+.quest-start {
+  display: flex; align-items: center; gap: 6px;
+  margin-top: 9px;
+  font-size: 11.5px; color: var(--text-2);
+}
+.quest-start .ico { color: var(--lime); flex: none; }
+.quest-start b { color: #fff; font-weight: 600; }
+.quest-start span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
 /* lenti fül-navigáció (csak mobilon) */
 .mobile-tabbar { display: none; }
@@ -1687,3 +1718,7 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
   .bb-perk .ico { color: var(--lime); }
   .bb-btn { height: 46px; padding: 0 18px; font-size: 11.5px; white-space: nowrap; flex: none; }
 }
+
+/* a részletoldal betöltő állapota, amíg a katalógus megérkezik */
+.detail-toltes { padding: 80px 20px; text-align: center; color: var(--text-2); }
+.detail-toltes a { color: var(--lime); text-decoration: none; }

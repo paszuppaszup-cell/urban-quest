@@ -633,3 +633,50 @@
   .fk-cancel, .fk-danger-btn, .fiok-tab { transition: none; }
   .fk-stat:hover, .fk-avatar:hover { transform: none; }
 }
+
+/* =====================================================================
+   MOBIL — a fiók oldal eddig csak asztali elrendezést ismert: a 236px-es
+   oldalsáv + tartalom rács telefonon összenyomódott és olvashatatlan volt.
+   Telefonon a fülek vízszintesen görgethető sávvá válnak felül, alatta
+   egyetlen oszlop.
+   ===================================================================== */
+@media (max-width: 860px) {
+  .fiok-layout {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  /* fülek: vízszintes, görgethető sáv */
+  .fiok-side { position: static; }
+  .fiok-tabs {
+    flex-direction: row;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    gap: 6px;
+    padding: 6px;
+  }
+  .fiok-tabs::-webkit-scrollbar { display: none; }
+  .fiok-tab { flex: none; padding: 9px 13px; font-size: 12.5px; white-space: nowrap; }
+  .fiok-tab.is-active::before { display: none; }
+
+  /* statisztikák: 3 kis oszlop marad, de tömörebben */
+  .fk-stats { grid-template-columns: repeat(3, 1fr); gap: 8px; }
+
+  /* gyorsmenü: egy oszlop, nagy érintőfelület */
+  .fk-quick { grid-template-columns: 1fr; gap: 9px; }
+
+  /* foglalás/játék sorok: az elemek egymás alá törhetnek */
+  .fk-bk-top { gap: 8px; }
+  .fk-bk-meta { gap: 6px 12px; font-size: 11.5px; }
+
+  /* űrlapmezők teljes szélességben */
+  .fk-form-row, .fk-2col { grid-template-columns: 1fr !important; }
+}
+
+@media (max-width: 480px) {
+  .fiok-wrap, .fiok-layout { padding-left: 0; padding-right: 0; }
+  .fk-stats { grid-template-columns: repeat(3, 1fr); }
+  .fk-stats b { font-size: 17px; }
+  .fk-greet h1, .fk-head h1 { font-size: 21px; }
+}

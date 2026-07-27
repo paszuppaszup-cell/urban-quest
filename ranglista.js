@@ -267,4 +267,19 @@
     });
     document.addEventListener('click', function () { lang.classList.remove('is-open'); });
   }
+
+  /* ---------- „Csapat alapítása" ----------
+     Bejelentkezve a VALÓDI csapat-létrehozó nyílik (név + létszám → kód),
+     nem a regisztrációs oldal. Korábban a gomb feltétel nélkül a
+     regisztrációra vitt — bejelentkezett játékosként is. */
+  var alapit = document.getElementById('csapatAlapit');
+  if (alapit) {
+    alapit.addEventListener('click', function (e) {
+      if (window.UQAuth && UQAuth.isRegistered() && window.UQTeam) {
+        e.preventDefault();
+        UQTeam.openCreate();
+      }
+      /* kijelentkezve marad a link: regisztráció, ahogy eddig */
+    });
+  }
 })();

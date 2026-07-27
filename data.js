@@ -1,130 +1,14 @@
 /* =========================================================
    URBAN QUEST — küldetés-adatok + közös kártya-renderelő
    ========================================================= */
-window.QUEST_ORDER = ['varnegyed', 'belvaros', 'alagut', 'szerelem', 'dangerzone', 'erdo'];
+/* A beégetett demó-küldetések 2026-07-27-én KIKERÜLTEK: a felhasználó
+   kérésére minden játék törlődött az adatbázisból, és a katalógus azóta
+   kizárólag a szerverről él (uq-catalog.js). A demók itt hagyva a törölt
+   játékokat kísértetként visszahozták volna: a kártyákon a szerver-válasz
+   előtt, a részletoldalon ismeretlen azonosítónál tartalék-tartalomként. */
+window.QUEST_ORDER = [];
 
-window.QUESTS = {
-  varnegyed: {
-    id: 'varnegyed',
-    cat: 'Városi', catCls: 'varosi',
-    diff: 'konnyu', diffLabel: 'Könnyű', diffScore: '2/5 könnyű',
-    audience: 'Csapatoknak',
-    title: 'Várnegyed Nyomában',
-    heroTitle: 'Várnegyed Nyomában',
-    subtitle: 'Fedezd fel a történelem titkait!',
-    desc: 'Sétáljatok végig a Budai Várnegyed macskaköves utcáin, oldjatok meg izgalmas rejtvényeket, és fedezzétek fel a rejtett történelmi részleteket, amelyek mellett a legtöbben elsétálnak.',
-    duration: '2–3 óra', distance: '3.2 km', team: '2–6 fő', age: '8+ év',
-    langs: ['hu'], price: '10.990 Ft', rating: 4.8, reviews: 87,
-    image: 'assets/quest-varnegyed.svg',
-    filters: { nehezseg: 'konnyu', kategoria: 'varosi', helyszin: 'buda', csoport: '2-6', idotartam: 'kozep' },
-    about: 'Egy izgalmas történelmi nyomozás a Budai Várban, ahol a régi korok titkai elevenednek meg. Középkori legendák, elfeledett szimbólumok és látványos panoráma vár rátok.',
-    doList: ['Rejtvények megfejtése a helyszínen', 'Történelmi nyomok felkutatása', 'Rejtett szobrok és címerek megtalálása', 'Fotófeladatok a kilátóknál'],
-    knowList: ['Kényelmes sétával teljesíthető', 'Bármikor megállhattok pihenni', 'Offline is játszható', 'Családbarát útvonal'],
-    locCity: 'Budapest, I. kerület', startPoint: 'Bécsi kapu tér', startAddr: '1014 Budapest, Bécsi kapu tér',
-    teamText: 'Kiválóan alkalmas családoknak és baráti társaságoknak.', teamPill: '2–6 fő (ideális)'
-  },
-
-  belvaros: {
-    id: 'belvaros',
-    cat: 'Városi', catCls: 'varosi',
-    diff: 'kozepes', diffLabel: 'Közepes', diffScore: '3/5 közepes',
-    audience: 'Csapatoknak',
-    title: 'Belvárosi Rejtélyek',
-    heroTitle: 'Belvárosi Rejtélyek',
-    subtitle: 'Titkos jelek, elfeledett történetek.',
-    desc: 'A pesti belváros nyüzsgő utcái tele vannak titkokkal. Kövessétek a rejtett jeleket, fejtsétek meg a kódokat, és tárjátok fel a város elfeledett történeteit.',
-    duration: '2.5–3.5 óra', distance: '4.1 km', team: '2–6 fő', age: '10+ év',
-    langs: ['hu'], price: '9.990 Ft', rating: 4.7, reviews: 64,
-    image: 'assets/quest-belvaros.svg',
-    filters: { nehezseg: 'kozepes', kategoria: 'varosi', helyszin: 'belvaros', csoport: '2-6', idotartam: 'hosszu' },
-    about: 'Egy detektívtörténet a pesti belvárosban, ahol minden sarok új rejtvényt tartogat. Titkos jelek, kódok és meglepő fordulatok vezetnek végig a városon.',
-    doList: ['Kódok és rejtjelek feltörése', 'Titkos jelek követése', 'Elfeledett történetek felfedezése', 'Logikai feladványok megoldása'],
-    knowList: ['Kényelmes sétával teljesíthető', 'Bármikor megállhattok pihenni', 'Offline is játszható', 'Eső esetén is teljesíthető'],
-    locCity: 'Budapest, V. kerület', startPoint: 'Vörösmarty tér', startAddr: '1051 Budapest, Vörösmarty tér',
-    teamText: 'Ideális baráti társaságoknak és családoknak.', teamPill: '2–6 fő (ideális)'
-  },
-
-  alagut: {
-    id: 'alagut',
-    cat: 'Városi', catCls: 'varosi',
-    diff: 'nehez', diffLabel: 'Nehéz', diffScore: '4/5 nehéz',
-    audience: 'Csapatoknak',
-    title: 'Alagút 7',
-    heroTitle: 'Alagút 7',
-    subtitle: 'Merülj le a föld alatti titkokba.',
-    desc: 'Egy titokzatos üzenet a föld alá vezet. Fejtsétek meg a rejtvényeket, kövessétek a nyomokat a sötét folyosókon, és derítsétek ki, mit rejt az Alagút 7.',
-    duration: '3–4 óra', distance: '5.8 km', team: '2–6 fő', age: '14+ év',
-    langs: ['hu'], price: '9.990 Ft', rating: 4.9, reviews: 52,
-    image: 'assets/quest-alagut.svg',
-    filters: { nehezseg: 'nehez', kategoria: 'varosi', helyszin: 'budapest', csoport: '2-6', idotartam: 'hosszu' },
-    about: 'Egy feszült, rejtélyekkel teli kaland a város föld alatti világában. Sötét folyosók, elrejtett kódok és egy megfejtésre váró titok vár azokra, akik mernek lemerülni.',
-    doList: ['Összetett rejtvények megoldása', 'Nyomok követése a föld alatt', 'Rejtett kódok megfejtése', 'Csapatmunka próbatételei'],
-    knowList: ['Közepes tempójú séta', 'Néhány szakasz zártabb helyen', 'Offline is játszható', 'Kalandvágyóknak ajánlott'],
-    locCity: 'Budapest, belváros', startPoint: 'Deák Ferenc tér', startAddr: '1052 Budapest, Deák Ferenc tér',
-    teamText: 'A közös fejtörés a nagyobb csapatoknak áll igazán jól.', teamPill: '2–6 fő (ideális)'
-  },
-
-  szerelem: {
-    id: 'szerelem',
-    cat: 'Romantikus', catCls: 'romantikus',
-    diff: 'konnyu', diffLabel: 'Könnyű', diffScore: '2/5 könnyű',
-    audience: 'Pároknak',
-    title: 'Szerelem Nyomában',
-    heroTitle: 'Romantikus Kaland',
-    subtitle: 'Egy romantikus városi kaland kettesben.',
-    desc: 'Fedezzétek fel együtt a város rejtett helyeit, oldjatok meg izgalmas feladványokat, és éljetek át felejthetetlen pillanatokat. A küldetés tele van romantikus meglepetésekkel.',
-    duration: '2–3 óra', distance: '2.8 km', team: '2 fő', age: '16+ év',
-    langs: ['hu', 'en', 'de'], price: '9.990 Ft', rating: 5.0, reviews: 73, fav: true,
-    image: 'assets/quest-szerelem.svg',
-    filters: { nehezseg: 'konnyu', kategoria: 'romantikus', helyszin: 'budapest', csoport: '2', idotartam: 'kozep' },
-    about: 'Egy romantikus városi kaland, ahol minden állomás közelebb visz egymáshoz. Rejtett üzenetek, közös feladványok és különleges helyszínek várnak rátok.',
-    doList: ['Rejtélyek megfejtése együtt', 'Titkos helyszínek felfedezése', 'Romantikus fotófeladatok', 'Közös emlékek gyűjtése'],
-    knowList: ['Kényelmes sétával teljesíthető', 'Bármikor megállhattok pihenni', 'Offline is játszható', 'Eső esetén is teljesíthető'],
-    locCity: 'Budapest, belváros', startPoint: 'Szent István Bazilika', startAddr: '1051 Budapest, Szent István tér 1.',
-    teamText: 'Ez a küldetés kifejezetten pároknak készült.', teamPill: '2 fő (ideális)'
-  },
-
-  dangerzone: {
-    id: 'dangerzone',
-    cat: 'Városi', catCls: 'varosi',
-    diff: 'extrem', diffLabel: 'Extrém', diffScore: '5/5 extrém',
-    audience: 'Csapatoknak',
-    title: 'Danger Zone: Deadly Crisis',
-    heroTitle: 'Danger Zone: Deadly Crisis',
-    subtitle: 'A város sorsa a te kezedben van.',
-    desc: 'Vészhelyzet a városban: kevés az idő, és minden döntés számít. Fejtsétek meg a kódokat, hárítsátok el a válságot, és mentsétek meg a várost, mielőtt lejár az idő.',
-    duration: '3.5–4.5 óra', distance: '6.3 km', team: '2–6 fő', age: '16+ év',
-    langs: ['hu', 'en'], price: '12.990 Ft', rating: 4.8, reviews: 62,
-    image: 'assets/quest-dangerzone.svg',
-    filters: { nehezseg: 'extrem', kategoria: 'varosi', helyszin: 'budapest', csoport: '2-6', idotartam: 'hosszu' },
-    about: 'A legextrémebb küldetésünk: egy pörgős, akciódús válságszimuláció, ahol az óra ketyeg. Feszültség, gyors döntések és igazi csapatpróba a város utcáin.',
-    doList: ['Időre megoldandó feladványok', 'Kódok és zárak feltörése', 'Válsághelyzetek kezelése', 'Gyors, közös döntéshozatal'],
-    knowList: ['Gyorsabb tempójú útvonal', 'Erős koncentrációt igényel', 'Offline is játszható', '16 éves kortól ajánlott'],
-    locCity: 'Budapest, belváros', startPoint: 'Erzsébet tér', startAddr: '1051 Budapest, Erzsébet tér',
-    teamText: 'A nyomás alatti csapatmunka a nagyobb társaságoknak való.', teamPill: '2–6 fő (ideális)'
-  },
-
-  erdo: {
-    id: 'erdo',
-    cat: 'Természet', catCls: 'termeszet',
-    diff: 'kozepes', diffLabel: 'Közepes', diffScore: '3/5 közepes',
-    audience: 'Csapatoknak',
-    title: 'Erdei Küldetés',
-    heroTitle: 'Erdei Küldetés',
-    subtitle: 'Természet, kihívások, felfedezés.',
-    desc: 'Hagyjátok magatok mögött a várost, és induljatok felfedezőútra az erdőben. Természetes nyomok, rejtett ösvények és izgalmas próbatételek várnak a friss levegőn.',
-    duration: '3–4 óra', distance: '7.2 km', team: '2–6 fő', age: '8+ év',
-    langs: ['hu'], price: '10.990 Ft', rating: 4.6, reviews: 41,
-    image: 'assets/quest-erdo.svg',
-    filters: { nehezseg: 'kozepes', kategoria: 'termeszet', helyszin: 'pilis', csoport: '2-6', idotartam: 'hosszu' },
-    about: 'Egy természetközeli kaland az erdő mélyén, ahol a tájékozódás és a felfedezés a főszereplő. Patakok, ösvények és rejtett pontok vezetnek végig a túrán.',
-    doList: ['Természetes nyomok olvasása', 'Rejtett ösvények felfedezése', 'Tájékozódási feladatok', 'Fotózás a legszebb pontokon'],
-    knowList: ['Túracipő ajánlott', 'Hosszabb, természeti útvonal', 'Offline is játszható', 'Családbarát kihívások'],
-    locCity: 'Pilis, Budapest mellett', startPoint: 'Pilisszentkereszt, buszforduló', startAddr: '2098 Pilisszentkereszt',
-    teamText: 'Remek választás családoknak és aktív baráti köröknek.', teamPill: '2–6 fő (ideális)'
-  }
-};
-
+window.QUESTS = {};
 /* ---------- közös kártya-renderelő (főoldal + hasonló) ---------- */
 window.questCardHTML = function (id) {
   const q = window.QUESTS[id];
@@ -167,7 +51,7 @@ window.questCardHTML = function (id) {
     data-csoport="${f.csoport || ''}" data-idotartam="${f.idotartam || ''}"
     role="link" tabindex="0" aria-label="${esc(q.title)}">
     <div class="quest-media">
-      <img src="${q.image}" alt="${esc(q.title)}" loading="lazy">
+      <img src="${q.image || 'assets/hero-mountain.svg'}" alt="${esc(q.title)}" loading="lazy">
       <span class="badge badge-${badgeCls}">${badgeLabel}</span>
       <button class="fav${favCls}" type="button" aria-label="Kedvencekhez adás" aria-pressed="${q.fav ? 'true' : 'false'}">${ico('i-heart', 'ico ico-sm')}</button>
     </div>
@@ -176,6 +60,7 @@ window.questCardHTML = function (id) {
       <p class="quest-tagline">${ico(tagIcon, 'ico ico-xs')}<span>${esc(q.subtitle)}</span></p>
       <p class="quest-desc">${esc(q.desc)}</p>
       ${ratingHTML}
+      ${q.startPoint ? `<p class="quest-start">${ico('i-pin', 'ico ico-xs')}<span>Indulás: <b>${esc(q.startPoint)}</b>${q.locCity ? ' · ' + esc(q.locCity) : ''}</span></p>` : ''}
       <div class="quest-stats">
         <span class="quest-stat">${ico('i-clock', 'ico ico-xs')}<span>${esc(q.duration)}</span></span>
         <span class="quest-stat">${ico('i-pin', 'ico ico-xs')}<span>${esc(q.distance)}</span></span>

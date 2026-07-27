@@ -168,6 +168,50 @@
     }).catch(function () { /* a helyi kijelentkezés akkor is megtörtént */ });
   }
 
+  /* ---------------------------------------------------------
+     OAuth (Google) — átirányításos folyamat
+
+     A Supabase a bejelentkezés után VISSZAIRÁNYÍT erre az oldalra, a
+     tokeneket az URL #fragmentjében hozza. Betöltéskor ezt felismerjük,
+     munkamenetté alakítjuk, és letöröljük a címsorból.
+     --------------------------------------------------------- */
+
+  function signInWithGoogle(nextUrl) {
+    var vissza = nextUrl || (location.origin + location.pathname);
+    location.href = URL_BASE + '/auth/v1/authorize?provider=google' +
+      '&redirect_to=' + encodeURIComponent(vissza);
+  }
+
+  function fogadOAuthVisszairanyitast() {
+    var h = String(location.hash || '');
+    if (h.indexOf('access_token=') < 0) return;
+    var p = new URLSearchParams(h.replace(/^#/, ''));
+    var at = p.get('access_token');
+    var rt = p.get('refresh_token');
+    if (!at) return;
+
+    /* a tokenhez tartozó felhasználót le kell kérni — a fragment nem hozza */
+    fetch(URL_BASE + '/auth/v1/user', {
+      headers: { 'apikey': ANON_KEY, 'Authorization': 'Bearer ' + at }
+    }).then(function (res) { return res.ok ? res.json() : null; })
+      .then(function (u) {
+        if (!u || !u.id) return;
+        setSession({
+          access_token: at,
+          refresh_token: rt,
+          expires_in: Number(p.get('expires_in')) || 3600,
+          token_type: p.get('token_type') || 'bearer',
+          user: u
+        });
+      })
+      .catch(function () { /* sikertelen fogadás: marad kijelentkezve */ })
+      .then(function () {
+        /* a tokenek ne maradjanak a címsorban (könyvjelző, előzmények) */
+        try { history.replaceState(null, '', location.pathname + location.search); } catch (e) {}
+      });
+  }
+  fogadOAuthVisszairanyitast();
+
   /* Egyszerre csak egy frissítés fusson, különben párhuzamos 401-ek
      egymás elől használnák el a refresh tokent. */
   var refreshing = null;
@@ -481,6 +525,7 @@
     ready: ready,
     signUp: signUp,
     signIn: signIn,
+    signInWithGoogle: signInWithGoogle,
     signOut: signOut,
     session: function () { return session; },
     user: user,

@@ -120,15 +120,24 @@
           'A mentés FELÜLÍRJA annak állomásait és feladatait.\n\nFolytatod?')) return;
     }
 
-    var r = X.publishToAdmin(W);
-    if (!r.ok) { st.textContent = r.err; st.className = 'pv-status is-err'; P.toast(r.err, true); return; }
+    /* A mentés mostantól az ADATBÁZISBA megy (import_course + publish_course),
+       tehát hálózati művelet — a gomb várakozó állapotot mutat közben. */
+    st.textContent = 'Mentés az adatbázisba…';
+    st.className = 'pv-status';
+    Promise.resolve(X.publishToAdmin(W)).then(function (r) {
+      if (!r.ok) { st.textContent = r.err; st.className = 'pv-status is-err'; P.toast(r.err, true); return; }
 
-    W._published = true;
-    P.setWizard(W);
-    st.innerHTML = '✓ ' + (r.replaced ? 'Frissítve' : 'Mentve') + ' — ' + r.stations +
-      ' állomás és ' + r.tasks + ' feladat. Most már végigjátszható.';
-    st.className = 'pv-status is-ok';
-    P.toast('Mentve az adminba — próbáld ki a Végigjátszás gombbal.');
+      W._published = true;
+      W._slug = r.slug;
+      P.setWizard(W);
+      st.innerHTML = '✓ ' + (r.replaced ? 'Frissítve' : 'Mentve') + ' — ' + r.stations +
+        ' állomás és ' + r.tasks + ' feladat. Megjelent a Játékok listában (piszkozatként), és végigjátszható.';
+      st.className = 'pv-status is-ok';
+      /* a Végigjátszás link a valódi, adatbázisból játszó módra mutasson */
+      var play = $('pvPlay');
+      if (play && r.slug) play.href = 'jatszas.html?quest=' + encodeURIComponent(r.slug);
+      P.toast('Mentve a Játékok közé — próbáld ki a Végigjátszás gombbal.');
+    });
   }
 
   /* ---------------- új pálya ---------------- */
