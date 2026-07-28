@@ -1,0 +1,151 @@
+/* =========================================================
+   URBAN QUEST — főoldali szakaszok: „Hogyan működik?" és „Árak"
+
+   Külön fájl, mert a styles.css-t párhuzamosan más is szerkeszti.
+   Csak a meglévő tokenekből dolgozik (--lime, --line, --bg-card…),
+   így a szakaszok automatikusan követik a lap világát.
+   ========================================================= */
+
+/* ---------------------------------------------------------
+   Hogyan működik? — számozott lépések
+
+   A számozás itt nem dísz: a lépések VALÓDI sorrendet jelentenek,
+   a játékos ebben a sorrendben halad végig.
+   --------------------------------------------------------- */
+
+.hogyan-lead {
+  color: var(--text-2);
+  max-width: 68ch;
+  margin: 0 0 26px;
+}
+
+.hogyan-lepesek {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(230px, 100%), 1fr));
+  gap: 20px 24px;
+  counter-reset: lepes;
+}
+
+.hogyan-lepes {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  padding-top: 40px;
+  counter-increment: lepes;
+}
+
+/* A sorszám a lépés fölött ül, nem a szöveg mellett: így öt lépés is
+   végigfut egy soron anélkül, hogy a szöveg elkeskenyedne. */
+.hogyan-lepes::before {
+  content: counter(lepes);
+  position: absolute;
+  top: 0; left: 0;
+  width: 30px; height: 30px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--lime);
+  border-radius: 50%;
+  color: var(--lime);
+  font-family: Archivo, system-ui, sans-serif;
+  font-size: 14px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Széles képernyőn mind az öt lépés EGY sorban áll. Az auto-fit itt 4+1-re
+   tört, és a magára maradt ötödik megtörte a sorrend olvasatát — egy
+   lépéssor akkor mond sorrendet, ha egyben látszik. */
+@media (min-width: 1100px) {
+  .hogyan-lepesek { grid-template-columns: repeat(5, 1fr); }
+}
+
+/* Összekötő vonal a lépések között — csak ott, ahol tényleg egy sorban
+   állnak, mert tördelés után félrevezető lenne. */
+@media (min-width: 1100px) {
+  .hogyan-lepes:not(:last-child)::after {
+    content: "";
+    position: absolute;
+    top: 15px; left: 38px; right: -24px;
+    height: 1px;
+    background: linear-gradient(90deg, var(--line), transparent);
+  }
+}
+
+.hogyan-lepes h3 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+}
+.hogyan-lepes p {
+  margin: 0;
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: var(--muted);
+}
+.hogyan-lepes .hogyan-nem-kell {
+  color: var(--dim);
+  font-size: 12.5px;
+}
+
+/* ---------------------------------------------------------
+   Árak
+   --------------------------------------------------------- */
+
+.arak-fo {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 10px 14px;
+  padding: 20px 22px;
+  border: 1px solid var(--lime);
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--lime) 7%, transparent);
+  margin-bottom: 22px;
+}
+.arak-fo strong {
+  font-family: Archivo, system-ui, sans-serif;
+  font-size: clamp(22px, 3.4vw, 30px);
+  line-height: 1;
+  color: var(--lime);
+}
+.arak-fo span { color: var(--text-2); font-size: 14px; }
+
+.arak-racs {
+  list-style: none;
+  margin: 0 0 18px;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(250px, 100%), 1fr));
+  gap: 14px;
+}
+.arak-kartya {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 17px 18px;
+  border: 1px solid var(--line);
+  border-radius: 13px;
+  background: var(--bg-card);
+}
+.arak-kartya .ico { width: 26px; height: 26px; color: var(--lime); stroke-width: 1.35; }
+.arak-kartya strong { font-size: 14.5px; }
+.arak-kartya span { color: var(--muted); font-size: 13px; line-height: 1.55; }
+
+.arak-labjegyzet {
+  color: var(--dim);
+  font-size: 12.5px;
+  margin: 0;
+  max-width: 68ch;
+}
+
+@media (max-width: 760px) {
+  .hogyan-lepesek { gap: 16px; }
+  .hogyan-lepes { padding-top: 0; padding-left: 42px; }
+  .hogyan-lepes::before { width: 28px; height: 28px; font-size: 13px; }
+  .arak-fo { padding: 16px 17px; }
+}
