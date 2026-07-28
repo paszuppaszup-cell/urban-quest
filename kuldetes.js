@@ -25,6 +25,11 @@
   let id = params.get('id') || Object.keys(QUESTS)[0] || '';
   let q = QUESTS[id] || null;
 
+  /* Melyik küldetést nyitották meg — ez az a lépés, ami elárulja, mi kelti
+     fel az érdeklődést azoknál is, akik végül nem indulnak el. A mérés
+     mellékes: ha a modul nincs betöltve, ez a hívás nem csinál semmit. */
+  try { if (id && window.UQTrack) UQTrack.esemeny('kuldetes_megnyitva', id); } catch (e) {}
+
   // ugyanaz az akcentus, mint a küldetés kártyáján (nehézség színe / romantikus)
   let accKey = (q && q.catCls === 'romantikus') ? 'romantikus' : ((q && q.diff) || 'kozepes');
   const page = document.querySelector('.detail-page');
@@ -129,7 +134,6 @@
             <span class="price-unit">/ csapat</span>
           </div>
           <button type="button" class="btn btn-lime book-btn" id="bookBtn">${CTA_LABEL}</button>
-          <p class="price-perk">${ico('i-gift', 'ico ico-sm')}<span>Ajándékutalvány beváltható</span></p>
           <p class="price-perk price-perk-team">${ico('i-users', 'ico ico-sm')}<span><strong>${esc(q.team)} részére</strong>További fő hozzáadható a fizetésnél.</span></p>
         </aside>
 
@@ -178,7 +182,6 @@
       bar.innerHTML = `
         <div class="bb-left">
           <span class="bb-price"><span class="bb-amount">${esc(q.price)}</span><span class="bb-unit">/ csapat</span></span>
-          <span class="bb-perk">${ico('i-gift', 'ico ico-xs')}Ajándékutalvány beváltható</span>
         </div>
         <button class="btn btn-lime bb-btn" type="button">${CTA_LABEL}</button>`;
       document.body.appendChild(bar);

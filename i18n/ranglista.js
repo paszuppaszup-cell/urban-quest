@@ -12,7 +12,6 @@ Object.assign(window.UQI18N, {
   "Árak": { en: "Pricing", de: "Preise", fr: "Tarifs", es: "Precios", it: "Prezzi" },
   "Ranglista": { en: "Leaderboard", de: "Bestenliste", fr: "Classement", es: "Clasificación", it: "Classifica" },
   "Rólunk": { en: "About us", de: "Über uns", fr: "À propos", es: "Sobre nosotros", it: "Chi siamo" },
-  "Ajándékutalvány": { en: "Gift card", de: "Geschenkgutschein", fr: "Carte cadeau", es: "Tarjeta regalo", it: "Buono regalo" },
   "Kapcsolat": { en: "Contact", de: "Kontakt", fr: "Contact", es: "Contacto", it: "Contatti" },
   "Belépés": { en: "Log in", de: "Anmelden", fr: "Connexion", es: "Iniciar sesión", it: "Accedi" },
   "Regisztráció": { en: "Sign up", de: "Registrieren", fr: "Inscription", es: "Registrarse", it: "Registrati" },

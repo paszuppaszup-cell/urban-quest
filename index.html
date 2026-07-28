@@ -104,7 +104,6 @@
       <a href="#arak">Árak</a>
       <a href="ranglista.html">Ranglista</a>
       <a href="#rolunk">Rólunk</a>
-      <a href="#ajandek">Ajándékutalvány</a>
       <a href="#kapcsolat">Kapcsolat</a>
       <a href="bejelentkezes.html" class="nav-mobile-only">Belépés</a>
       <a href="regisztracio.html" class="nav-mobile-only nav-mobile-cta">Regisztráció</a>
@@ -259,10 +258,13 @@
   <!-- ===================== KÜLDETÉSEK ===================== -->
   <section class="section quests" id="kuldetesek">
     <div class="container">
+      <!-- Az „Összes küldetés megtekintése" link innen kikerült: sehova nem
+           vezetett (#osszes szakasz nem létezett), és nem is volt mit tennie —
+           a lista alatta MÁR az összes küldetést mutatja, kategóriánként. -->
       <div class="section-head">
         <h2 class="section-title">Küldetéseink</h2>
-        <a class="section-link" href="#osszes">
-          Összes küldetés megtekintése
+        <a class="section-link" href="terkep.html">
+          Megnézem térképen
           <svg class="ico ico-sm" aria-hidden="true"><use href="#i-chevron-right"/></svg>
         </a>
       </div>
@@ -343,59 +345,12 @@
           <span>Nem kell előre időpontot egyeztetni, és nincs csoportos indulás. Akkor
                 kezditek, amikor kedvetek van.</span>
         </li>
-        <li class="arak-kartya">
-          <svg class="ico" aria-hidden="true"><use href="#i-gift"/></svg>
-          <strong>Ajándékba is adható</strong>
-          <span>Ha meglepnél valakit egy kalanddal, az <a href="#ajandek">ajándékutalvány</a>
-                erre való.</span>
-        </li>
       </ul>
 
       <p class="arak-labjegyzet">
         A küldetéshez saját telefon és internetkapcsolat kell. Ami pénzbe kerülhet: az
         odajutás, és amit útközben megisszátok.
       </p>
-    </div>
-  </section>
-
-  <!-- ===================== AJÁNDÉKUTALVÁNY ===================== -->
-  <section class="section gift-section" id="ajandek">
-    <div class="container">
-      <div class="gift-banner">
-        <div class="gift-icon">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-gift"/></svg>
-        </div>
-
-        <div class="gift-copy">
-          <h2 class="gift-title">Ajándékozz élményt!</h2>
-          <p class="gift-sub">Lepd meg szeretteidet egy felejthetetlen kalanddal!</p>
-          <a class="btn btn-lime btn-sm" href="#utalvany">Ajándékutalvány vásárlása</a>
-        </div>
-
-        <ul class="gift-perks">
-          <li>
-            <svg class="ico" aria-hidden="true"><use href="#i-gift"/></svg>
-            <div>
-              <strong>Azonnal használható</strong>
-              <span>Online utalvány, azonnali kézbesítés</span>
-            </div>
-          </li>
-          <li>
-            <svg class="ico" aria-hidden="true"><use href="#i-refresh"/></svg>
-            <div>
-              <strong>Bármely küldetésre</strong>
-              <span>Bármelyik játékunkra beváltható</span>
-            </div>
-          </li>
-          <li>
-            <svg class="ico" aria-hidden="true"><use href="#i-valid"/></svg>
-            <div>
-              <strong>1 évig érvényes</strong>
-              <span>Rugalmas felhasználás, ahogy szeretnéd</span>
-            </div>
-          </li>
-        </ul>
-      </div>
     </div>
   </section>
 
@@ -459,61 +414,7 @@
 </main>
 
 <!-- ===================== LÁBLÉC ===================== -->
-<footer class="site-footer" id="kapcsolat">
-  <div class="container">
-    <div class="footer-top">
-      <a class="brand footer-brand" href="#">
-        <svg class="brand-mark" viewBox="0 0 64 64" aria-hidden="true"><use href="#i-logo"/></svg>
-        <span class="brand-text">
-          <span class="brand-name">URBAN <span class="brand-name-alt">QUEST</span></span>
-          <span class="brand-tagline">KALANDOK. KÜLDETÉSEK. ÉLMÉNYEK.</span>
-        </span>
-      </a>
-
-      <nav class="footer-col" aria-label="Rólunk">
-        <h3>Rólunk</h3>
-        <ul>
-          <li><a href="#csapatunk">Csapatunk</a></li>
-          <li><a href="#karrier">Karrier</a></li>
-          <li><a href="#partnereink">Partnereink</a></li>
-        </ul>
-      </nav>
-
-      <nav class="footer-col" aria-label="Információk">
-        <h3>Információk</h3>
-        <ul>
-          <li><a href="#gyik">GYIK</a></li>
-          <li><a href="#aszf">Általános Szerződési Feltételek</a></li>
-          <li><a href="#adatvedelem">Adatvédelmi tájékoztató</a></li>
-        </ul>
-      </nav>
-
-      <div class="footer-col">
-        <h3>Kapcsolat</h3>
-        <ul class="footer-contact">
-          <li><svg class="ico ico-sm" aria-hidden="true"><use href="#i-mail"/></svg><a href="mailto:info@urbanquest.hu">info@urbanquest.hu</a></li>
-          <li><svg class="ico ico-sm" aria-hidden="true"><use href="#i-phone"/></svg><a href="tel:+36301234567">+36 30 123 4567</a></li>
-          <li><svg class="ico ico-sm" aria-hidden="true"><use href="#i-location"/></svg><span>Budapest, Magyarország</span></li>
-        </ul>
-      </div>
-
-      <div class="footer-social">
-        <h3>Kövess minket!</h3>
-        <div class="social-row">
-          <a href="#facebook" aria-label="Facebook"><svg class="ico ico-sm" aria-hidden="true"><use href="#i-facebook"/></svg></a>
-          <a href="#instagram" aria-label="Instagram"><svg class="ico ico-sm" aria-hidden="true"><use href="#i-instagram"/></svg></a>
-          <a href="#youtube" aria-label="YouTube"><svg class="ico ico-sm" aria-hidden="true"><use href="#i-youtube"/></svg></a>
-          <a href="#tiktok" aria-label="TikTok"><svg class="ico ico-sm" aria-hidden="true"><use href="#i-tiktok"/></svg></a>
-        </div>
-      </div>
-    </div>
-
-    <div class="footer-bottom">
-      <p>© 2024 Urban Quest – Minden jog fenntartva.</p>
-      <a href="#cookie">Adatkezelési beállítások</a>
-    </div>
-  </div>
-</footer>
+<footer class="site-footer" id="kapcsolat"></footer>
 
 <!-- ===================== MOBIL FÜL-NAVIGÁCIÓ ===================== -->
 <nav class="mobile-tabbar" aria-label="Mobil navigáció">
@@ -522,9 +423,6 @@
   </a>
   <a href="#rolunk" class="tab">
     <svg class="ico" aria-hidden="true"><use href="#i-trophy"/></svg><span>Sikereink</span>
-  </a>
-  <a href="#ajandek" class="tab">
-    <svg class="ico" aria-hidden="true"><use href="#i-gift"/></svg><span>Ajándék</span>
   </a>
   <a href="bejelentkezes.html" class="tab">
     <svg class="ico" aria-hidden="true"><use href="#i-user-circle"/></svg><span>Belépés</span>
@@ -537,12 +435,14 @@
 <script src="uq-tema.js?v=3"></script>
 <script src="data.js?v=12"></script>
 <script src="uq-api.js?v=6"></script>
+<script src="uq-track.js?v=1"></script>
   <script src="uq-auth.js?v=7"></script>
 <script src="uq-account.js?v=7"></script>
   <script src="uq-catalog.js?v=4"></script>
 <script src="script.js?v=11"></script>
 <script src="i18n/kozos.js?v=2"></script>
 <script src="i18n/index.js?v=2"></script>
+<script src="uq-lablec.js?v=1"></script>
 <script src="uq-tabbar.js?v=1"></script>
 <script src="uq-i18n.js?v=2"></script>
 </body>

@@ -131,7 +131,6 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
 .ico-xs { width: 14px; height: 14px; }
 
 /* kitöltött ikonok (közösségi média) ne kapjanak vonalat */
-.social-row .ico { stroke: none; fill: currentColor; }
 
 .flag {
   width: 17px; height: 12px;
@@ -839,78 +838,6 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
 }
 
 /* =========================================================
-   AJÁNDÉKUTALVÁNY SÁV
-   ========================================================= */
-.gift-banner {
-  display: grid;
-  grid-template-columns: auto 1fr auto;
-  align-items: center;
-  gap: 22px;
-  padding: 13px 22px;
-  border: 1px solid rgb(var(--lime-rgb) / .55);
-  border-radius: var(--r);
-  background:
-    radial-gradient(120% 180% at 0% 50%, rgb(var(--lime-rgb) / .10) 0%, rgb(var(--lime-rgb) / 0) 55%),
-    linear-gradient(100deg, #131c0d 0%, #101609 55%, #0d1109 100%);
-}
-
-.gift-icon {
-  display: grid;
-  place-items: center;
-  width: 56px; height: 56px;
-  color: var(--lime);
-}
-.gift-icon svg {
-  width: 100%; height: 100%;
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 1.1;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-}
-
-.gift-copy { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; }
-.gift-title {
-  font-size: clamp(16px, 1.35vw, 19px);
-  font-weight: 900;
-  text-transform: uppercase;
-  color: #fff;
-  line-height: 1.1;
-}
-.gift-sub { font-size: 12px; color: var(--text-2); }
-.gift-copy .btn { margin-top: 7px; height: 30px; }
-
-.gift-perks {
-  display: flex;
-  align-items: center;
-  gap: 0;
-}
-.gift-perks li {
-  display: flex;
-  align-items: center;
-  gap: 11px;
-  padding: 4px 26px;
-  position: relative;
-}
-.gift-perks li + li::before {
-  content: "";
-  position: absolute;
-  left: 0; top: 2px; bottom: 2px;
-  width: 1px;
-  background: rgb(var(--lime-rgb) / .22);
-}
-.gift-perks .ico { width: 26px; height: 26px; color: var(--lime); stroke-width: 1.3; }
-.gift-perks div { display: flex; flex-direction: column; gap: 2px; }
-.gift-perks strong {
-  font-size: 10.5px;
-  font-weight: 700;
-  letter-spacing: .09em;
-  text-transform: uppercase;
-  color: #fff;
-}
-.gift-perks span { font-size: 11px; color: var(--muted); line-height: 1.35; }
-
-/* =========================================================
    MIÉRT VÁLASSZ MINKET
    ========================================================= */
 .why-section { padding-bottom: 30px; }
@@ -982,15 +909,14 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
 
 .footer-top {
   display: grid;
-  grid-template-columns: 1.5fr 1fr 1.5fr 1.4fr 1.2fr;
+  grid-template-columns: 1.5fr 1fr 1.5fr 1.4fr;
   gap: 30px;
   padding: 26px 0 22px;
 }
 
 .footer-brand { align-self: flex-start; }
 
-.footer-col h3,
-.footer-social h3 {
+.footer-col h3 {
   margin-bottom: 11px;
   font-family: var(--font-body);
   font-size: 11px;
@@ -1007,23 +933,6 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
 .footer-contact li { display: flex; align-items: center; gap: 9px; }
 .footer-contact .ico { color: var(--lime); }
 
-.social-row { display: flex; gap: 9px; }
-.social-row a {
-  display: grid;
-  place-items: center;
-  width: 34px; height: 34px;
-  border-radius: 50%;
-  background: #171c14;
-  border: 1px solid var(--line);
-  color: var(--text-2);
-  transition: background-color .18s, color .18s, border-color .18s, transform .18s;
-}
-.social-row a:hover {
-  background: var(--lime);
-  border-color: var(--lime);
-  color: #0a0d0a;
-  transform: translateY(-2px);
-}
 
 .footer-bottom {
   display: flex;
@@ -1060,10 +969,6 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
 
 @media (max-width: 1080px) {
   .why-grid { grid-template-columns: repeat(3, 1fr); gap: 24px 22px; }
-  .gift-banner { grid-template-columns: auto 1fr; }
-  .gift-perks { grid-column: 1 / -1; justify-content: space-between; flex-wrap: wrap; }
-  .gift-perks li { padding-inline: 0 22px; }
-  .gift-perks li + li::before { display: none; }
   .footer-top { grid-template-columns: 1fr 1fr 1fr; }
 }
 
@@ -1118,9 +1023,6 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
   .filter-field + .filter-field { border-top: 1px solid var(--line-soft); }
 
   .why-grid { grid-template-columns: 1fr 1fr; }
-  .gift-banner { grid-template-columns: 1fr; text-align: left; }
-  .gift-perks { flex-direction: column; align-items: flex-start; gap: 12px; }
-  .gift-perks li { padding: 0; }
 
   .footer-top { grid-template-columns: 1fr 1fr; }
   .footer-brand { grid-column: 1 / -1; }

@@ -49,9 +49,7 @@ Object.assign(window.UQI18N, {
   "További küldetések": { en: "More quests", de: "Weitere Missionen", fr: "Plus de missions", es: "Más misiones", it: "Altre missioni" },
 
   /* ---------- AJÁNDÉKUTALVÁNY ---------- */
-  "Ajándékozz élményt!": { en: "Give the gift of adventure!", de: "Verschenke ein Erlebnis!", fr: "Offre une aventure !", es: "¡Regala una experiencia!", it: "Regala un'esperienza!" },
   "Lepd meg szeretteidet egy felejthetetlen kalanddal!": { en: "Surprise your loved ones with an unforgettable adventure!", de: "Überrasche deine Liebsten mit einem unvergesslichen Abenteuer!", fr: "Surprends tes proches avec une aventure inoubliable !", es: "¡Sorprende a tus seres queridos con una aventura inolvidable!", it: "Sorprendi i tuoi cari con un'avventura indimenticabile!" },
-  "Ajándékutalvány vásárlása": { en: "Buy a gift voucher", de: "Gutschein kaufen", fr: "Acheter un bon cadeau", es: "Comprar un vale regalo", it: "Acquista un buono regalo" },
   "Azonnal használható": { en: "Ready to use instantly", de: "Sofort einsetzbar", fr: "Utilisable immédiatement", es: "Listo para usar al instante", it: "Subito pronto all'uso" },
   "Online utalvány, azonnali kézbesítés": { en: "Online voucher, instant delivery", de: "Online-Gutschein, sofortige Zustellung", fr: "Bon en ligne, livraison instantanée", es: "Vale online, entrega inmediata", it: "Buono online, consegna immediata" },
   "Bármely küldetésre": { en: "Valid for any quest", de: "Für jede Mission", fr: "Pour n'importe quelle mission", es: "Para cualquier misión", it: "Per qualsiasi missione" },
@@ -85,7 +83,6 @@ Object.assign(window.UQI18N, {
   "Mobil navigáció": { en: "Mobile navigation", de: "Mobile Navigation", fr: "Navigation mobile", es: "Navegación móvil", it: "Navigazione mobile" },
   "Küldetések": { en: "Quests", de: "Missionen", fr: "Missions", es: "Misiones", it: "Missioni" },
   "Sikereink": { en: "Achievements", de: "Erfolge", fr: "Succès", es: "Logros", it: "Successi" },
-  "Ajándék": { en: "Gift", de: "Geschenk", fr: "Cadeau", es: "Regalo", it: "Regalo" },
   "Belépés": { en: "Log in", de: "Anmelden", fr: "Connexion", es: "Iniciar sesión", it: "Accedi" },
   "Kapcsolat": { en: "Contact", de: "Kontakt", fr: "Contact", es: "Contacto", it: "Contatti" },
 

@@ -10,7 +10,6 @@ Object.assign(window.UQI18N, {
   "Árak": { en: "Prices", de: "Preise", fr: "Tarifs", es: "Precios", it: "Prezzi" },
   "Ranglista": { en: "Leaderboard", de: "Bestenliste", fr: "Classement", es: "Clasificación", it: "Classifica" },
   "Rólunk": { en: "About us", de: "Über uns", fr: "À propos", es: "Sobre nosotros", it: "Chi siamo" },
-  "Ajándékutalvány": { en: "Gift voucher", de: "Geschenkgutschein", fr: "Carte cadeau", es: "Tarjeta regalo", it: "Buono regalo" },
   "Kapcsolat": { en: "Contact", de: "Kontakt", fr: "Contact", es: "Contacto", it: "Contatti" },
   "Belépés": { en: "Log in", de: "Anmelden", fr: "Connexion", es: "Iniciar sesión", it: "Accedi" },
   "Regisztráció": { en: "Sign up", de: "Registrieren", fr: "Inscription", es: "Registrarse", it: "Registrati" },
@@ -35,7 +34,6 @@ Object.assign(window.UQI18N, {
   /* ---------- mobil fül-navigáció ---------- */
   "Mobil navigáció": { en: "Mobile navigation", de: "Mobile Navigation", fr: "Navigation mobile", es: "Navegación móvil", it: "Navigazione mobile" },
   "Sikereink": { en: "Achievements", de: "Erfolge", fr: "Succès", es: "Logros", it: "Successi" },
-  "Ajándék": { en: "Gift", de: "Geschenk", fr: "Cadeau", es: "Regalo", it: "Regalo" },
 
   /* ---------- uq-auth.js: regisztrációs modal ---------- */
   "Gyere, próbáld ki!": { en: "Come on, give it a try!", de: "Komm, probier's aus!", fr: "Allez, essaie !", es: "¡Anímate, pruébalo!", it: "Dai, provalo!" },
