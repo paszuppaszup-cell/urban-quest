@@ -11,7 +11,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&family=Inter:wght@400..700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="vendor/leaflet/leaflet.css">
 <link rel="stylesheet" href="styles.css?v=14">
-<link rel="stylesheet" href="admin.css?v=14">
+<link rel="stylesheet" href="admin.css?v=15">
 <style>
   /* Játék-választó a pálya fejlécben — sötét téma, lime fókusz */
   .adm-game-select{
@@ -236,6 +236,18 @@
           <h3 class="ed-group">Kapcsolt feladatok <span id="edTaskCount" class="ed-group-count"></span></h3>
           <div class="ed-station-tasks" id="edStationTasks"></div>
 
+          <!-- ELÁGAZÁS — csak döntési pontnál látszik.
+               A szerző itt adja meg, melyik válasz melyik állomásra visz.
+               Enélkül a lejátszó nem tudná, hová folytassa, és a lista
+               következő két elemét ajánlaná fel — vagyis az útvonalat a
+               sorrend döntené el, nem a pálya szerzője. -->
+          <div id="edBranchBox" hidden>
+            <h3 class="ed-group">Elágazás <span id="edBranchCount" class="ed-group-count"></span></h3>
+            <p class="ed-hint">Add meg, melyik válasz hová visz. A játékos ezeket a feliratokat látja gombként, és a választása szerint folytatódik a pálya.</p>
+            <div class="ed-branches" id="edBranches"></div>
+            <button class="est-add" type="button" id="edAddBranch"><svg class="ico ico-xs" aria-hidden="true"><use href="#a-plus"/></svg>Új válaszlehetőség</button>
+          </div>
+
           <h3 class="ed-group">Jutalmak</h3>
           <div class="ed-row"><label>Tapasztalati pont</label><div class="ed-field ed-field-grow"><input type="text" data-field="xp" value=""></div><div class="ed-field ed-select ed-field-grow"><label class="ed-inline">Kitűző</label><span class="ed-badge-ic"><svg class="ico ico-xs" aria-hidden="true"><use href="#a-star"/></svg></span><select data-field="badge"><option>Várvédő</option><option>Felfedező</option><option>Nyomozó</option></select><svg class="ico ico-xs" aria-hidden="true"><use href="#a-down"/></svg></div></div>
 
@@ -285,7 +297,7 @@
 
 <script src="vendor/leaflet/leaflet.js"></script>
 <script src="uq-api.js?v=5"></script>
-<script src="admin.js?v=10"></script>
+<script src="admin.js?v=11"></script>
 <script src="uq-admin-fejlec.js?v=1"></script>
 </body>
 </html>

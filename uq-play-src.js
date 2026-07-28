@@ -15,7 +15,7 @@
 (function () {
   'use strict';
 
-  var LEJATSZO = 'jatszas.js?v=8';
+  var LEJATSZO = 'jatszas.js?v=9';
   var CACHE_ELO = 'uq_bundle_';           // offline tartalék pályánként
 
   var DIFF_LABEL = { konnyu: 'Könnyű', kozepes: 'Közepes', nehez: 'Nehéz', extrem: 'Extrém' };
@@ -37,6 +37,11 @@
   function atalakit(bundle) {
     var st = bundle.stations || [];
     var allomasok = [], feladatok = [];
+
+    /* Az állomás UUID-ja → sorszám a pályán. A csomag az elágazásokat
+       azonosítóval hivatkozza, a lejátszó viszont indexszel dolgozik. */
+    var indexE = {};
+    st.forEach(function (s, i) { indexE[s.id] = i; });
 
     st.forEach(function (s) {
       allomasok.push({
@@ -69,6 +74,23 @@
           auto_ok: !!t.auto_ok,
           hints: t.hints || []
         });
+      });
+    });
+
+    /* ELÁGAZÁSOK. A szerző a döntési ponton megadja, melyik válasz melyik
+       állomásra visz; ezt a csomag `edges` mezője hozza. Állomásonként
+       gyűjtjük össze, mert a lejátszó ott kérdezi meg.
+
+       Ismeretlen célt (törölt állomás) kihagyunk: jobb eggyel kevesebb
+       választás, mint egy gomb, ami sehová nem visz. */
+    (bundle.edges || []).forEach(function (e) {
+      var honnan = indexE[e.from], hova = indexE[e.to];
+      if (honnan == null || hova == null) return;
+      var a = allomasok[honnan];
+      (a.branches = a.branches || []).push({
+        to: hova,
+        label: e.label || '',
+        key: e.branch_key || ''
       });
     });
 

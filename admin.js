@@ -122,6 +122,153 @@
     };
   }
 
+  /* =========================================================
+     ELÁGAZÁS (döntési pont → több folytatás)
+
+     A station_edges tábla és a befagyasztott csomag „edges" mezője régóta
+     megvolt, csak épp SEMMI nem töltötte fel: a felületen nem lehetett
+     megadni, melyik válasz hová visz. A lejátszó ezért a lista következő
+     KÉT állomását ajánlotta fel — vagyis az elágazást a sorrend döntötte
+     el, nem a pálya szerzője, és a két ág mindig visszatért ugyanoda.
+
+     A cél tárolása AZ ÁLLOMÁS-OBJEKTUMRA mutat, nem sorszámra: a listát
+     húzással át lehet rendezni, és az objektum-azonosság ezt túléli,
+     a sorszám nem. Az adatbázisba mentéskor oldjuk fel azonosítóra —
+     így olyan állomásra is lehet ágat húzni, ami még el sem volt mentve.
+     ========================================================= */
+
+  function betoltAgak(courseId, arr) {
+    arr.forEach(function (s) { s.branches = []; });
+    if (!window.UQAPI || !UQAPI.user()) return Promise.resolve();
+    return UQAPI.rest('/v_admin_edges?select=from_station,to_station,label,branch_key,sort_order' +
+                      '&course_id=eq.' + courseId + '&order=sort_order.asc')
+      .then(function (rows) {
+        var idRe = {};
+        arr.forEach(function (s) { if (s.id) idRe[s.id] = s; });
+        (rows || []).forEach(function (r) {
+          var honnan = idRe[r.from_station], hova = idRe[r.to_station];
+          if (!honnan || !hova) return;
+          honnan.branches.push({ label: r.label || '', to: hova, key: r.branch_key || '' });
+          honnan._voltAg = true;
+        });
+        renderBranches();
+      })
+      .catch(function () { /* offline: ágak nélkül is szerkeszthető a pálya */ });
+  }
+
+  function agakMentese(courseId) {
+    if (!window.UQAPI) return Promise.resolve();
+    /* Csak azokra küldünk kérést, ahol VAN vagy VOLT ág — különben minden
+       mentés annyi fölösleges hívást indítana, ahány állomás van. */
+    var erintett = state.filter(function (s) {
+      return s.id && ((s.branches && s.branches.length) || s._voltAg);
+    });
+    return erintett.reduce(function (chain, s) {
+      return chain.then(function () {
+        if (currentCourseId !== courseId) return;
+        var lista = (s.branches || [])
+          .filter(function (b) { return b.to && b.to.id; })
+          .map(function (b, i) {
+            return { to: b.to.id, label: b.label || '', branch_key: b.key || ('ag' + (i + 1)) };
+          });
+        return UQAPI.rest('/rpc/save_station_edges', {
+          method: 'POST', body: { p_station: s.id, p_edges: lista }
+        }).then(function () {
+          s._voltAg = lista.length > 0;
+        }).catch(function () { /* a következő mentés újrapróbálja */ });
+      });
+    }, Promise.resolve());
+  }
+
+  function renderBranches() {
+    var box = $('#edBranchBox');
+    if (!box) return;
+    var s = state[current];
+    var dontes = !!(s && s.type === 'Döntési pont');
+    box.hidden = !dontes;
+    if (!dontes) return;
+
+    var lista = $('#edBranches');
+    var db = $('#edBranchCount');
+    var agak = s.branches || (s.branches = []);
+    if (db) db.textContent = agak.length ? '(' + agak.length + ')' : '';
+
+    if (!agak.length) {
+      lista.innerHTML = '<div class="est-empty">Még nincs válaszlehetőség. ' +
+        'Amíg nincs, a játék egyszerűen a következő állomással folytatódik.</div>';
+      return;
+    }
+
+    /* A cél-választó MINDEN másik állomást felkínál — a döntési pont
+       visszafelé is mutathat, ha a szerző így akarja. */
+    var opciok = state.map(function (t, i) {
+      if (t === s) return '';
+      return '<option value="' + i + '">' + (i + 1) + '. ' + esc(t.name) + '</option>';
+    }).join('');
+
+    lista.innerHTML = agak.map(function (b, k) {
+      var celIdx = state.indexOf(b.to);
+      return '<div class="ed-branch" data-b="' + k + '">' +
+        '<span class="ed-branch-k">' + 'ABCDEFGH'.charAt(k) + '</span>' +
+        '<input class="ed-branch-label" type="text" data-b-label="' + k + '" ' +
+          'placeholder="A válasz szövege — ezt látja a játékos" value="' + esc(b.label || '') + '">' +
+        '<div class="ed-field ed-select ed-branch-to">' +
+          '<select data-b-to="' + k + '"><option value="">— hová visz? —</option>' + opciok + '</select>' +
+          '<svg class="ico ico-xs" aria-hidden="true"><use href="#a-down"/></svg>' +
+        '</div>' +
+        '<button class="ed-branch-x" type="button" data-b-del="' + k + '" aria-label="Ág törlése">' +
+          '<svg class="ico ico-xs" aria-hidden="true"><use href="#a-x"/></svg></button>' +
+      '</div>';
+    }).join('');
+
+    // a select értékét külön állítjuk, hogy az escape-elés ne rontsa el
+    agak.forEach(function (b, k) {
+      var sel = lista.querySelector('[data-b-to="' + k + '"]');
+      if (sel) sel.value = state.indexOf(b.to) >= 0 ? String(state.indexOf(b.to)) : '';
+    });
+  }
+
+  /* Az ág-szerkesztő eseményei — delegálva, mert a sorok újrarajzolódnak. */
+  document.addEventListener('input', function (e) {
+    var el = e.target.closest ? e.target.closest('[data-b-label]') : null;
+    if (!el) return;
+    var s = state[current]; if (!s || !s.branches) return;
+    var b = s.branches[+el.dataset.bLabel];
+    if (b) { b.label = el.value; s._voltAg = true; saveCourse(); }
+  });
+  document.addEventListener('change', function (e) {
+    var el = e.target.closest ? e.target.closest('[data-b-to]') : null;
+    if (!el) return;
+    var s = state[current]; if (!s || !s.branches) return;
+    var b = s.branches[+el.dataset.bTo];
+    if (!b) return;
+    b.to = el.value === '' ? null : state[+el.value];
+    s._voltAg = true;
+    saveCourse();
+    renderRoutes();
+  });
+  document.addEventListener('click', function (e) {
+    var del = e.target.closest ? e.target.closest('[data-b-del]') : null;
+    if (del) {
+      var s = state[current]; if (!s || !s.branches) return;
+      s.branches.splice(+del.dataset.bDel, 1);
+      s._voltAg = true;
+      renderBranches(); renderRoutes(); saveCourse();
+      return;
+    }
+    if (e.target.closest && e.target.closest('#edAddBranch')) {
+      var st = state[current]; if (!st) return;
+      st.branches = st.branches || [];
+      if (st.branches.length >= 8) { toast('Nyolcnál több ág már áttekinthetetlen', { type: 'warn' }); return; }
+      /* Alapértelmezett cél a következő állomás — a leggyakoribb eset,
+         és így egy kattintással is működő ág keletkezik. */
+      var kov = state[current + 1] || state.find(function (x) { return x !== st; }) || null;
+      st.branches.push({ label: '', to: kov, key: '' });
+      st._voltAg = true;
+      renderBranches(); renderRoutes(); saveCourse();
+    }
+  });
+
   /* ---- debounce-olt szinkron az adatbázisba ---- */
   var syncTimer = null, syncing = false, syncQueued = false;
 
@@ -179,6 +326,20 @@
         return UQAPI.rest('/rpc/reorder_stations', { method: 'POST', body: { p_course: courseId, p_ids: order } });
       })
       .then(function () {
+        /* Az ágak CSAK most menthetők: addig nincs azonosítója az újonnan
+           felvett állomásoknak, amikre mutatnak. */
+        if (megszakadt || currentCourseId !== courseId) return;
+        return agakMentese(courseId);
+      })
+      .then(function () {
+        /* A játékos a pálya BEFAGYASZTOTT verzióját játssza, nem a
+           szerkesztő tábláit. Újrafagyasztás nélkül a térképen végzett
+           munka — az elágazásokkal együtt — sosem jutna el a játékig. */
+        if (megszakadt || currentCourseId !== courseId) return;
+        return UQAPI.rest('/rpc/publish_course', { method: 'POST', body: { p_course: courseId } })
+          .catch(function () { /* a mentés ettől még sikeres volt */ });
+      })
+      .then(function () {
         try { localStorage.removeItem('uq_catalog_v1'); } catch (e) {}
       })
       .catch(function (e) {
@@ -209,6 +370,8 @@
         state.splice(0, state.length, ...arr);
         current = 0;
         initMapCoords();
+        /* Az elágazások az állomásokra épülnek, ezért csak utánuk tölthetők. */
+        betoltAgak(courseId, arr);
         /* A kapcsolt feladatok panelének is friss adat kell — enélkül a
            lista „N feladat" számlálója és a panel is üres maradna. */
         betoltFeladatok().then(function () { renderStationTasks(); renderList(); });
@@ -438,10 +601,14 @@
     if (!map || !routeLayer) return;
     routeLayer.clearLayers();
     state.forEach((s, i) => {
-      const targets = s.type === 'Döntési pont' ? [i + 1, i + 2] : [i + 1];
+      /* A megadott ágak szerint rajzolunk. Korábban a döntési pontból
+         mindig a lista következő két elemére ment vonal — olyan utakra,
+         amiket senki nem adott meg. */
+      const agak = (s.branches || []).filter(b => b && state.indexOf(b.to) >= 0);
+      const targets = agak.length ? agak.map(b => state.indexOf(b.to)) : [i + 1];
       targets.forEach((ti, bi) => {
-        if (ti >= state.length) return;
-        const branch = s.type === 'Döntési pont' && bi === 1;
+        if (ti >= state.length || ti < 0) return;
+        const branch = agak.length > 1 && bi > 0;
         L.polyline([
           [parseLoc(s.location).lat, parseLoc(s.location).lng],
           [parseLoc(state[ti].location).lat, parseLoc(state[ti].location).lng]
@@ -546,7 +713,8 @@
 
   function loadForm(i) {
     const s = state[i];
-    if (!s) return;
+    if (!s) { renderBranches(); return; }
+    renderBranches();
     fieldEls.name.value = s.name;
     fieldEls.num.value = i + 1;
     fieldEls.type.value = s.type;
@@ -623,6 +791,8 @@
     state[current].type = fieldEls.type.value;
     renderList();
     renderNodes();
+    renderBranches();      // döntési pontnál előbukkan az elágazás-szerkesztő
+    renderRoutes();
   });
   // Nehézség: pötty szín
   on(fieldEls.difficulty, 'change', () => {

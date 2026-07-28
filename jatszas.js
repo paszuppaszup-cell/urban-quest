@@ -107,6 +107,10 @@
          csomagban. NEM az s.location: az a térképszerkesztő
          koordináta-mezője, amit fentebb parseLoc olvas. */
       loc: s.loc || s.address || '',
+      /* A szerző által megadott elágazások: [{to: <állomás sorszáma>,
+         label: <a válasz szövege>}]. Enélkül a lejátszó csak találgatna,
+         hogy a döntési pont hová visz — lásd playAfterStation(). */
+      branches: Array.isArray(s.branches) ? s.branches : [],
       taskShort: s.taskShort || '',
       // pálya-szerkesztő saját feladat-mezői a fallback feladathoz:
       taskType: s.taskType || '', question: s.question || '', answer: s.answer || '',
@@ -603,14 +607,30 @@
   }
   function playAfterStation() {
     const i = playCurIdx();
-    if (COURSE[i].isDecision) {
-      const opts = [];
-      if (i + 1 < COURSE.length) opts.push(i + 1);
-      if (i + 2 < COURSE.length) opts.push(i + 2);
-      if (opts.length >= 2) { play.decOpts = opts; play.view = 'decision'; renderPlay(); return; }
-      if (opts.length === 1) return playGoto(opts[0]);
-      return playFinish();
+    const s = COURSE[i];
+
+    /* ELÁGAZÁS.
+
+       A szerző a döntési ponton megadja, melyik válasz melyik állomásra
+       visz — ezek az `s.branches` bejegyzések. Korábban ilyen adat nem
+       létezett a felületen, ezért a lejátszó a lista KÖVETKEZŐ KÉT
+       állomását ajánlotta fel: az elágazást nem a szerző döntötte el,
+       hanem a sorrend, és a két ág mindig visszatért ugyanoda.
+
+       A megadott ágak érvényes célokra mutatnak (a nem létezőket az
+       uq-play-src.js már kiszűrte). Egyetlen ág esetén nincs mit
+       választani — oda megyünk. */
+    const agak = (s.branches || []).filter(b => b && b.to >= 0 && b.to < COURSE.length);
+    if (agak.length) {
+      if (agak.length === 1) return playGoto(agak[0].to);
+      play.decOpts = agak;
+      play.view = 'decision';
+      renderPlay();
+      return;
     }
+
+    /* Nincs megadva ág. Döntési pontnál sem találunk ki útvonalat: megyünk
+       tovább a sorrendben, mint bármelyik másik állomásnál. */
     if (i + 1 < COURSE.length) return playGoto(i + 1);
     return playFinish();
   }
@@ -1157,16 +1177,43 @@
   function playDecisionHTML() {
     const i = playCurIdx(); const s = COURSE[i];
     let h = '<div class="uq-pl-card uq-pl-decision"><div class="uq-pl-dec-head"><span class="uq-pl-dec-ic"><svg class="ico" aria-hidden="true"><use href="#a-diamond"/></svg></span><div><h3>' + esc(s.name) + '</h3><p>' + esc(s.desc || 'Válaszd ki a következő útvonalat!') + '</p></div></div>';
-    h += '<div class="uq-pl-routes">' + play.decOpts.map((ti, k) => {
-      const t = COURSE[ti];
-      return '<button class="uq-pl-route" type="button" data-goto="' + ti + '"><span class="uq-pl-route-k">' + (k === 0 ? 'A' : 'B') + '</span><span class="uq-pl-route-body"><b>' + esc(t.name) + '</b><small>' + esc(typeLabel(t)) + (k === 1 ? ' · rövidebb út' : ' · a következő állomás') + '</small></span><svg class="ico ico-sm uq-pl-route-go" aria-hidden="true"><use href="#a-route"/></svg></button>';
+    /* A gombon a SZERZŐ ÁLTAL ÍRT válasz áll, alatta halványan az állomás,
+       ahová visz. Korábban itt kitalált alcím szerepelt („rövidebb út",
+       „a következő állomás"), ami semmilyen adatból nem következett — a
+       játékos hamis alapon döntött. */
+    const betuk = 'ABCDEFGH';
+    h += '<div class="uq-pl-routes">' + play.decOpts.map((ag, k) => {
+      const t = COURSE[ag.to];
+      const felirat = (ag.label || '').trim() || t.name;
+      const alcim = (ag.label || '').trim() ? t.name : typeLabel(t);
+      return '<button class="uq-pl-route" type="button" data-goto="' + ag.to + '">' +
+        '<span class="uq-pl-route-k">' + (betuk[k] || (k + 1)) + '</span>' +
+        '<span class="uq-pl-route-body"><b>' + esc(felirat) + '</b><small>' + esc(alcim) + '</small></span>' +
+        '<svg class="ico ico-sm uq-pl-route-go" aria-hidden="true"><use href="#a-route"/></svg></button>';
     }).join('') + '</div></div>';
     return h;
   }
   function wirePlayDecision() {
     $$('#uqPlayStage [data-goto]').forEach(b => b.addEventListener('click', () => {
       const ti = +b.dataset.goto;
-      toast('Útvonal választva', { type: 'info', sub: COURSE[ti].name });
+      const ag = (play.decOpts || []).find(x => x.to === ti);
+      /* A választott ág a szerveroldali menetbe is bekerül: enélkül nem
+         lehetne megmondani, melyik úton ment végig a csapat.
+
+         A sync_batch csak a NEVESÍTETT kulcsokat veszi át (station_id,
+         task_id, edge_id…), minden mást a `payload` mezőből olvas — ami
+         azon kívül van, azt némán eldobná. Az ág azonosítója a
+         (döntési pont, branch_key) pár: a station_edges épp erre a kettőre
+         egyedi. */
+      emit('branch_chosen', {
+        station_id: COURSE[playCurIdx()].id || null,
+        payload: {
+          branch_key: (ag && ag.key) || null,
+          to_station_id: COURSE[ti].id || null,
+          label: (ag && ag.label) || null
+        }
+      });
+      toast('Útvonal választva', { type: 'info', sub: (ag && ag.label) || COURSE[ti].name });
       playGoto(ti);
     }));
   }
@@ -1237,7 +1284,13 @@
     const cur = playCurIdx();
     let base = '';
     COURSE.forEach((s, i) => {
-      const tg = s.isDecision ? [i + 1, i + 2] : [i + 1];
+      /* A mini-térkép a VALÓDI útvonalat rajzolja: ahol a szerző ágakat
+         adott meg, ott azokat, különben a következő állomást. Korábban a
+         döntési pontból mindig két vonal indult a lista két következő
+         eleméhez — olyan utak, amik nem is léteztek. */
+      const tg = (s.branches && s.branches.length)
+        ? s.branches.map(b => b.to)
+        : [i + 1];
       tg.forEach(ti => { if (ti < COURSE.length) { const a = svgXY(s), b = svgXY(COURSE[ti]); base += '<line x1="' + a.x.toFixed(1) + '" y1="' + a.y.toFixed(1) + '" x2="' + b.x.toFixed(1) + '" y2="' + b.y.toFixed(1) + '" class="uq-pm-base"/>'; } });
     });
     let done = '';
