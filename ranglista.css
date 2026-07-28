@@ -318,20 +318,40 @@
   .rc-stat { flex: 1 1 40%; }
 }
 @media (max-width: 620px) {
-  /* --- DOBOGÓ egy oszlopban ---
-     A medál abszolút pozíciójú, és −20/−26 px-re kilóg a kártya tetején.
-     Három hasábban ez rendben van, egymás alatt viszont a 12 px-es réssel
-     ráült az előző kártyára. */
+  /* --- DOBOGÓ: HÁROM HASÁB telefonon is ---
+     Egy oszlopba tördelve három álló kártya lett belőle, ami 550 px-nyi
+     képernyőt vitt el, és közben a dobogó jelentése is elveszett: a magasság
+     az, ami a rangsort mutatja. Kicsinyítve viszont elfér három hasábban —
+     a győztes középen, megemelve, koronával, ahogy egy valódi dobogón.
+     A DOM-sorrend (2–1–3) épp ezt adja, tehát átrendezni nem kell. */
   .podium {
-    grid-template-columns: 1fr;
-    gap: 34px;
-    align-items: stretch;
+    grid-template-columns: 1fr 1.16fr 1fr;
+    gap: 7px;
+    align-items: end;
+    margin-top: 26px;          /* a korona és a medál fölé kilóg a kártyáknak */
   }
-  /* A DOM-sorrend 2–1–3, mert asztalon így néz ki egy valódi dobogó.
-     Egy oszlopban viszont a rangsor a helyes sorrend: az első legyen elöl. */
-  .pod-1 { order: 1; }
-  .pod-2 { order: 2; }
-  .pod-3 { order: 3; }
+  .pod { padding: 20px 5px 9px; gap: 2px; border-radius: 11px; }
+  .pod-1 { padding-top: 26px; }
+
+  .pod-medal { width: 30px; height: 30px; top: -15px; font-size: 13px; }
+  .pod-1 .pod-medal { width: 38px; height: 38px; top: -19px; font-size: 16px; }
+  .pod-crown { top: -35px; }
+  .pod-crown .ico { width: 18px; height: 18px; }
+
+  .pod-logo { width: 36px; height: 36px; border-radius: 10px; }
+  .pod-1 .pod-logo { width: 44px; height: 44px; }
+  .pod-logo .ico { width: 20px; height: 20px; }
+  .pod-1 .pod-logo .ico { width: 25px; height: 25px; }
+
+  /* A hosszú csapatnév három ponttal végződik, nem tördeli szét a hasábot. */
+  .pod-name { font-size: 11px; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .pod-1 .pod-name { font-size: 12.5px; }
+  .pod-pts { font-size: 17px; }
+  .pod-1 .pod-pts { font-size: 22px; }
+  .pod-pts small { font-size: 9px; margin-left: 2px; }
+  /* Három hasábban a város már nem fér ki — az idő marad, az a verseny tétje. */
+  .pod-meta { font-size: 9px; gap: 0; }
+  .pod-meta span:last-child { display: none; }
 
   .rank-side { grid-template-columns: 1fr; }
   .rank-filter { flex-wrap: wrap; }
