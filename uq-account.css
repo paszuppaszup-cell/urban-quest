@@ -82,11 +82,21 @@
 .uq-ps-sub a { font-size: 12.5px; color: var(--muted); text-decoration: none; }
 .uq-ps-sub a:hover { color: var(--lime); }
 
-/* kedvenc kártyák vízszintes sávban (a főoldali kártyastílust örökli) */
+/* Kedvenc kártyák vízszintes sávban (a főoldali kártyastílust örökli).
+
+   A felső korlát NEM elhagyható. Korábban `minmax(258px, 1fr)` állt itt: a
+   `grid-auto-flow: column` mellett a néhány kártya SZÉTOSZTOTTA a teljes
+   sáv szélességét, tehát két kedvencnél egy-egy kártya ~880 px-esre hízott —
+   ugyanaz a küldetés a lap tetején háromszor akkora volt, mint alatta a
+   katalógusban.
+
+   Ugyanaz a két érték, mint a főoldali rácsban (.carousel-track.is-grid) és
+   a Fiókom kedvenceinél (.fk-favs). Ha ez változik, mind a hárommal EGYÜTT
+   kell változnia — ugyanaz a kártya, ugyanaz a méret. */
 .uq-ps-track {
   display: grid;
   grid-auto-flow: column;
-  grid-auto-columns: minmax(258px, 1fr);
+  grid-auto-columns: minmax(330px, 400px);
   gap: 16px;
   overflow-x: auto;
   padding-bottom: 8px;
