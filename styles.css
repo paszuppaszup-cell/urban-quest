@@ -605,7 +605,10 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
   display: flex;
   flex-direction: column;
   background: var(--bg-card);
-  border: 1px solid var(--line);
+  /* A keret is felveszi a küldetés színének egy leheletét. A :hover szabály
+     ennél erősebb keretet ad, és a kaszkádban KÉSŐBB áll, tehát továbbra is
+     az nyer rámutatáskor. */
+  border: 1px solid color-mix(in srgb, rgb(var(--lime-rgb)) 22%, var(--line));
   border-radius: 18px;
   overflow: hidden;
   cursor: pointer;
@@ -686,6 +689,17 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
   flex-direction: column;
   flex: 1;
   padding: 16px 17px 18px;
+  /* A KÜLDETÉS SAJÁT SZÍNE adja a hátteret, nem egy közös lapos érték.
+     A --lime-rgb kártyánként felülírt token (data.js: a borítóképből
+     számolt theme_accent), ezért minden kártya a saját világát viseli:
+     a nyomozós hűvös kék, a történelmi aranyló derengést kap.
+
+     Miért a testen és nem a kártyán? A kártya tetején a borítókép ül, ami
+     kitakarná a színátmenetet — a derengés így pontosan a kép ALATT indul,
+     ahol látszik is. A kártya háttere (--bg-card) marad alatta alapnak. */
+  background:
+    radial-gradient(115% 70% at 50% 0%, rgb(var(--lime-rgb) / .13), transparent 72%),
+    linear-gradient(180deg, transparent 55%, rgb(var(--lime-rgb) / .05));
 }
 
 .quest-title {
@@ -757,8 +771,10 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
   gap: 8px;
   padding: 7px 10px;
   border-radius: 8px;
-  background: rgb(255 255 255 / .03);
-  border: 1px solid var(--line-soft);
+  /* Az adatdobozok is a küldetés színét viszik, halványan — enélkül semleges
+     szürke foltokként ülnének a színezett háttéren. */
+  background: rgb(var(--lime-rgb) / .06);
+  border: 1px solid color-mix(in srgb, rgb(var(--lime-rgb)) 18%, var(--line-soft));
   font-size: 11.5px;
   font-weight: 500;
   color: var(--text);
@@ -1540,8 +1556,11 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
   gap: 10px;
   padding: 15px 15px;
   border-radius: 12px;
-  background: rgb(255 255 255 / .04);
-  border: 1px solid var(--line-soft);
+  /* Az adatdobozok is a küldetés SAJÁT színét viszik, halványan — semleges
+     fehér foltokként ülnének a színezett háttéren. Ez a szabály erősebb a
+     fenti .quest-stat-nál, tehát a tényleges megjelenést ez dönti el. */
+  background: rgb(var(--lime-rgb) / .06);
+  border: 1px solid color-mix(in srgb, rgb(var(--lime-rgb)) 18%, var(--line-soft));
   font-size: 12.5px;
   font-weight: 600;
   color: #fff;
