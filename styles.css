@@ -668,17 +668,27 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
 
 .fav {
   position: absolute;
-  top: 6px; right: 6px;
+  top: 7px; right: 7px;
   z-index: 2;
   display: grid;
   place-items: center;
-  width: 28px; height: 28px;
+  width: 20px; height: 20px;
   border-radius: 50%;
   color: #fff;
   filter: drop-shadow(0 2px 6px rgb(0 0 0 / .6));
   transition: transform .18s, color .18s;
 }
-.fav .ico { width: 18px; height: 18px; stroke-width: 1.7; }
+.fav .ico { width: 15px; height: 15px; stroke-width: 1.8; }
+
+/* A szív SZÁNDÉKOSAN apró — a borítóképet nem takarhatja el. Az ujjnak
+   viszont ettől még kell hely: ez a láthatatlan gyűrű 38 px-esre növeli a
+   megérinthető felületet anélkül, hogy a rajz nagyobb lenne. */
+.fav::after {
+  content: "";
+  position: absolute;
+  inset: -9px;
+  border-radius: 50%;
+}
 .fav:hover { transform: scale(1.14); }
 .fav.is-on { color: var(--romantikus); }
 .fav.is-on .ico { fill: currentColor; }

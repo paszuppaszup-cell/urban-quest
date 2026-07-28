@@ -156,6 +156,35 @@
     var kulcsok = CAT_SORREND.filter(function (c) { return csoport[c]; })
       .concat(Object.keys(csoport).filter(function (c) { return CAT_SORREND.indexOf(c) < 0; }));
 
+    /* A kategóriánkénti bontás csak akkor ér valamit, ha legalább az EGYIK
+       kategóriában van mit végignézni. Amíg minden kategóriába egyetlen
+       küldetés esik, a bontás csak annyit csinál, hogy a kártyák külön-külön
+       sorba kerülnek, egymás alá — a lap üresnek és szétesőnek látszik.
+       Ilyenkor egyetlen rácsba tesszük az egészet, és a kártyák egymás
+       mellett állnak. Ahogy nő a kínálat, a bontás magától visszatér. */
+    var legnagyobb = kulcsok.reduce(function (m, c) {
+      return Math.max(m, csoport[c].length);
+    }, 0);
+
+    if (legnagyobb < 2) {
+      /* A nyílgombok ide is kellenek, akkor is, ha ritkán látszanak: a
+         script.js updateNav()-ja rájuk hivatkozik, és hiányukban null-ra
+         futna. Ha minden kártya kifér, magától elrejti őket. */
+      return '<section class="quest-row" data-cat="mind">' +
+        '<div class="carousel">' +
+          '<div class="carousel-track">' +
+            (window.QUEST_ORDER || []).filter(function (id) {
+              return window.QUESTS && window.QUESTS[id];
+            }).map(function (id) { return window.questCardHTML(id); }).join('') +
+          '</div>' +
+          '<button class="carousel-nav prev" type="button" aria-label="Előző küldetések">' +
+            '<svg class="ico ico-sm" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-chevron-left"/></svg></button>' +
+          '<button class="carousel-nav next" type="button" aria-label="További küldetések">' +
+            '<svg class="ico ico-sm" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-chevron-right"/></svg></button>' +
+        '</div>' +
+      '</section>';
+    }
+
     return kulcsok.map(function (c) {
       var lista = csoport[c];
       return '<section class="quest-row" data-cat="' + esc(c) + '">' +

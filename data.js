@@ -14,7 +14,13 @@ window.questCardHTML = function (id) {
   const q = window.QUESTS[id];
   if (!q) return '';
   const esc = (s) => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-  const ico = (i, cls) => `<svg class="${cls || 'ico'}" aria-hidden="true"><use href="#${i}"/></svg>`;
+  /* A viewBox NEM elhagyható. A sprite rajzai 24×24-es koordinátákban élnek,
+     az <svg> viszont a CSS-ből kapja a méretét — viewBox nélkül 1 egység = 1 px,
+     tehát a rajznak csak a bal felső 20/16/14 pixele látszik, a többi levágódik.
+     Középre rajzolt ikonoknál ez alig feltűnő, de a szív jobbra-lefelé nyúlik
+     (x: 5–19, y: 6–19.5), és 15 px-en már csak az ív maradt belőle.
+     A viewBox-szal a rajz SKÁLÁZÓDIK a dobozhoz, nem csonkul. */
+  const ico = (i, cls) => `<svg class="${cls || 'ico'}" viewBox="0 0 24 24" aria-hidden="true"><use href="#${i}"/></svg>`;
 
   const accKey = q.catCls === 'romantikus' ? 'romantikus' : q.diff;
   const tagIcon = q.catCls === 'romantikus' ? 'i-heart' : (q.catCls === 'termeszet' ? 'i-leaf' : 'i-compass');

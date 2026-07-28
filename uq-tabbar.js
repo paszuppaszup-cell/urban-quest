@@ -88,7 +88,7 @@
       var cel = (f.belepesKell && !be) ? 'bejelentkezes.html' : f.cel;
       return '<a href="' + cel + '" class="tab' + (f.kulcs === aktiv ? ' is-active' : '') + '"' +
              (f.kulcs === aktiv ? ' aria-current="page"' : '') + '>' +
-             '<svg class="ico" aria-hidden="true"><use href="#' + f.ikon + '"/></svg>' +
+             '<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><use href="#' + f.ikon + '"/></svg>' +
              '<span>' + f.cimke + '</span></a>';
     }).join('');
   }

@@ -84,7 +84,7 @@
         '<div class="footer-col"><h3>Kapcsolat</h3><ul class="footer-contact">' +
           KAPCSOLAT.map(function (k) {
             var belso = k[1] ? ('<a href="' + k[1] + '">' + k[2] + '</a>') : ('<span>' + k[2] + '</span>');
-            return '<li><svg class="ico ico-sm" aria-hidden="true"><use href="#' + k[0] + '"/></svg>' + belso + '</li>';
+            return '<li><svg class="ico ico-sm" viewBox="0 0 24 24" aria-hidden="true"><use href="#' + k[0] + '"/></svg>' + belso + '</li>';
           }).join('') +
         '</ul></div>' +
       '</div>' +
