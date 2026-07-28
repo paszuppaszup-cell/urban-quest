@@ -428,9 +428,15 @@
 /* =========================================================
    KEDVENCEIM (grid a globális .quest-card kártyákkal)
    ========================================================= */
+/* A rács SZÁNDÉKOSAN ugyanaz, mint a főoldalon (.carousel-track.is-grid):
+   ugyanaz a kártya, ugyanaz a méret. Korábban itt minmax(258px, 1fr) állt,
+   tehát a kedvencek között a kártya 258 px-ig összeszűkülhetett, felfelé
+   viszont korlátlanul nyúlt — így ugyanaz a küldetés két oldalon két
+   különböző méretben jelent meg. Ha ez az érték változik, a főoldalival
+   EGYÜTT kell változnia. */
 .fk-favs {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(258px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(330px, 400px));
   gap: 16px;
 }
 /* a grid-cellában a kártya töltse ki a sávot (a flex-basis itt nem érvényes) */
