@@ -449,6 +449,10 @@
               a többiek telefonjáról érkezett. */
   const SYNC = { on: false, session: null, state: null, tarsak: 0, roles: [], relayGroup: null };
 
+  /* Igaz, amíg a lánc szerepfoglalása arra vár, hogy a menet sora
+     megszülessen a szerveren (lásd syncInit és az uq:written figyelő). */
+  let relayVar = false;
+
   function uuidv4() {
     if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
     return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
@@ -492,7 +496,15 @@
       };
     }
     SYNC.on = true;
-    relayInit();
+    /* A szerepfoglalás CSAK akkor mehet, ha a menet sora már létezik a
+       szerveren — a claim_role a can_see_run()-on át pontosan ezt kéri.
+       Csapatnál a sort a váró hozta létre, tehát indulhat azonnal. Egyedül
+       játszva viszont a sort az első sync_batch írja meg, ami a playStart()
+       EZUTÁN következő emit()-jéből indul: az azonnali hívás „nincs
+       jogosultság"-ra futna, és a néma .catch miatt a lánc végleg
+       kimaradna. Ilyenkor az első nyugtázott beküldésre halasztjuk. */
+    if (window.UQTeam && UQTeam.ctx && UQTeam.ctx()) relayInit();
+    else relayVar = true;
   }
 
   /* =========================================================
@@ -611,6 +623,11 @@
     const d = ev.detail || {};
     if (d.tag !== 'sync_batch' || !SYNC.on) return;
     const r = Array.isArray(d.result) ? d.result[0] : d.result;
+
+    /* A menet sora ezzel a válasszal biztosan létezik — most már mehet a
+       szerepfoglalás. Ez az egyedül indított menet egyetlen helyes pillanata:
+       korábban a claim_role „nincs jogosultság"-ra futna. */
+    if (relayVar) { relayVar = false; relayInit(); }
     if (!r || typeof r !== 'object') return;
     if (r.session_id && SYNC.session && r.session_id !== SYNC.session.id) return;  // régi menet válasza
 
@@ -733,7 +750,7 @@
     play.active = false; play.finished = false; play.view = 'intro'; stopTimer();
     csapatKontextusUrites();
     SYNC.on = false; SYNC.session = null; SYNC.state = null; SYNC.tarsak = 0;
-    SYNC.roles = []; SYNC.relayGroup = null;
+    SYNC.roles = []; SYNC.relayGroup = null; relayVar = false;
     /* A lánc pollingja különben a kilépés után is percenként kérdezgetne. */
     if (window.UQRelay) UQRelay.leall();
     renderPlay();
