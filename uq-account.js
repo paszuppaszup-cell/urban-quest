@@ -313,6 +313,9 @@
     var mostkedvenc = i < 0;
     if (i > -1) a.splice(i, 1); else a.push(id);
     setFavs(a);              // a szív AZONNAL vált, nem várunk a hálózatra
+    try {
+      if (window.UQTrack) UQTrack.esemeny(mostkedvenc ? 'kedvenc_be' : 'kedvenc_ki', id);
+    } catch (e) { /* a mérés sosem állhat a kedvencelés útjába */ }
 
     /* A legutóbb ismert szerver-állapotot is követjük: sikeres írás után ez
        lesz az alap, amihez a következő szinkron az eltűnéseket méri. */

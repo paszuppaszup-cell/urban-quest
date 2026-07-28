@@ -149,17 +149,26 @@
       // e-mailes megerősítés kikapcsolva -> a signup rögtön munkamenetet ad
       if (data.access_token) setSession(data);
       else if (data.session && data.session.access_token) setSession(data.session);
+      merj('regisztracio');
       return user();
     });
   }
 
   function signIn(email, password) {
     return authCall('/token?grant_type=password', { email: email, password: password })
-      .then(function (data) { setSession(data); return user(); });
+      .then(function (data) { setSession(data); merj('belepes'); return user(); });
+  }
+
+  /* A látogatói mérés MELLÉKES: ha a modul nincs betöltve (admin oldal, vagy
+     a látogató letiltotta a követést), ez a hívás egyszerűen nem csinál
+     semmit. Sosem állhat egy bejelentkezés útjába. */
+  function merj(kind, label) {
+    try { if (window.UQTrack) UQTrack.esemeny(kind, label || null); } catch (e) {}
   }
 
   function signOut() {
     var tok = session && session.access_token;
+    merj('kilepes');           // MÉG a munkamenet eldobása előtt
     setSession(null);
     if (!tok) return Promise.resolve();
     return fetch(URL_BASE + '/auth/v1/logout', {

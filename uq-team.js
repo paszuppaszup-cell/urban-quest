@@ -33,6 +33,11 @@
       .then(function (r) { return Array.isArray(r) ? r[0] : r; });
   }
 
+  /* Látogatói mérés — mellékes, sosem állhat a csapatkezelés útjába. */
+  function merj(kind, label) {
+    try { if (window.UQTrack) UQTrack.esemeny(kind, label || null); } catch (e) {}
+  }
+
   /* a közös menet adatai a lejátszónak */
   function setCtx(c) { try { localStorage.setItem(CTX_KEY, JSON.stringify(c)); } catch (e) {} }
   function ctx() {
@@ -158,7 +163,7 @@
           })
         : rpc('create_my_team', { p_name: n, p_size: db });
 
-      azon.then(function (t) { openLobby(t.id, slug); })
+      azon.then(function (t) { merj('csapat_letrehozva', slug || null); openLobby(t.id, slug); })
         .catch(function (e) {
           hiba(box, String(e && e.message || 'Nem sikerült létrehozni.'));
           var b = box.querySelector('#uqTeamCreate');
@@ -190,7 +195,7 @@
         var b = box.querySelector('#uqJoinGo');
         b.disabled = true; b.textContent = 'Belépés…';
         rpc('join_team_by_code', { p_code: kod })
-          .then(function (t) { openLobby(t.id, t.course_slug); })
+          .then(function (t) { merj('csapat_csatlakozott', t.course_slug || null); openLobby(t.id, t.course_slug); })
           .catch(function (e) {
             hiba(box, String(e && e.message || 'Nem sikerült belépni.'));
             b.disabled = false; b.textContent = 'Belépek a csapatba';

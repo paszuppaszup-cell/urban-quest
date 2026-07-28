@@ -1,0 +1,160 @@
+/* =========================================================
+   URBAN QUEST — ADMIN: LÁTOGATÓK
+   ========================================================= */
+
+/* ---------- fülek ---------- */
+.lt-tabs {
+  display: flex; gap: 6px;
+  margin: 14px 0 12px;
+  border-bottom: 1px solid var(--line);
+}
+.lt-tab {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 9px 14px;
+  font-size: 12.5px; font-weight: 600;
+  color: var(--muted);
+  background: none; border: 0;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  cursor: pointer;
+}
+.lt-tab:hover { color: var(--text); }
+.lt-tab.is-active { color: var(--lime); border-bottom-color: var(--lime); }
+.lt-tab:focus-visible { outline: 2px solid var(--lime); outline-offset: -2px; border-radius: 4px; }
+
+/* A böngésző beépített [hidden] szabályát BÁRMELYIK szerzői display legyőzi,
+   tehát a `display: flex`/`grid` mellett a hidden attribútum önmagában nem rejt
+   el semmit. Minden elemet fel kell sorolni, aminek adtunk display-t, és amit
+   a JS elrejthet — különben a „Nem vagy bejelentkezve" állapotban ott maradna
+   a szűrősáv, vagy a lapozó gomb egy üres lista alatt. */
+.lt-panel[hidden],
+.lt-filter[hidden],
+.lt-more button[hidden] { display: none !important; }
+
+/* ---------- szűrősáv ---------- */
+.lt-filter {
+  display: flex; align-items: flex-end; gap: 8px; flex-wrap: wrap;
+  padding: 8px;
+  margin-bottom: 10px;
+  background: var(--bg-elev);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+.lt-f { display: flex; flex-direction: column; gap: 3px; min-width: 0; flex: 1 1 160px; cursor: pointer; }
+.lt-f-label {
+  font-size: 8.5px; font-weight: 700; letter-spacing: .12em;
+  text-transform: uppercase; color: var(--dim);
+}
+.lt-f select {
+  width: 100%; min-width: 0;
+  appearance: none; -webkit-appearance: none;
+  padding: 7px 9px;
+  font: inherit; font-size: 12.5px;
+  color: var(--text);
+  background: #0e120d;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  cursor: pointer;
+  text-overflow: ellipsis;
+}
+.lt-f select:focus-visible { outline: 2px solid var(--lime); outline-offset: 1px; }
+.lt-f select option { background: var(--bg-elev); color: var(--text); }
+.lt-filter .adm-btn { flex: none; }
+
+/* ---------- táblázat ---------- */
+.lt-table {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--bg-elev);
+  overflow: hidden;
+}
+.lt-row {
+  display: grid;
+  grid-template-columns: minmax(180px, 2fr) 118px 118px 68px 82px 92px 78px 118px;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 14px;
+  border-bottom: 1px solid var(--line-soft);
+  font-size: 12px;
+  min-width: 0;
+}
+/* Az eseménytáblának más az oszlopképe. */
+.lt-table-ev .lt-row {
+  grid-template-columns: 108px minmax(150px, 1.2fr) minmax(150px, 1.1fr) minmax(120px, 1fr) 120px;
+}
+.lt-row:last-child { border-bottom: 0; }
+.lt-head {
+  background: rgb(255 255 255 / .015);
+  padding-block: 7px;
+}
+.lt-head span {
+  font-size: 9.5px; font-weight: 700; letter-spacing: .09em;
+  text-transform: uppercase; color: var(--dim);
+}
+.lt-table > div > .lt-row:hover { background: rgb(var(--lime-rgb) / .04); }
+.lt-row.lt-admin { background: rgb(var(--lime-rgb) / .045); }
+
+/* Minden cella tördelhető és nem feszítheti szét a rácsot. */
+.lt-row > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.lt-ki { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.lt-ki b { font-size: 12.5px; font-weight: 700; color: #fff; overflow: hidden; text-overflow: ellipsis; }
+.lt-ki small { font-size: 10.5px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; }
+.lt-vendeg { color: var(--text-2) !important; font-weight: 600 !important; }
+
+.lt-dim  { color: var(--muted); }
+.lt-num  { font-variant-numeric: tabular-nums; text-align: right; color: var(--text); }
+.lt-lime { color: var(--lime); font-weight: 700; }
+.lt-label { color: var(--text-2); }
+
+.lt-badge {
+  display: inline-block; margin-left: 6px;
+  padding: 1px 6px; border-radius: 5px;
+  font-size: 9.5px; font-weight: 700; letter-spacing: .03em;
+  background: rgb(var(--lime-rgb) / .16); color: var(--lime);
+  vertical-align: 1px;
+}
+.lt-badge-warn { background: rgba(255, 201, 138, .16); color: #ffc98a; }
+
+/* ---------- lépés-címkék ---------- */
+.lt-kind { font-weight: 600; }
+.lt-k-fo      { color: var(--lime); }
+.lt-k-jo      { color: #7ddc9a; }
+.lt-k-info    { color: #7ec8e8; }
+.lt-k-rossz   { color: #ff9d8f; }
+.lt-k-oldal   { color: var(--text-2); }
+.lt-k-halvany { color: var(--muted); }
+
+/* ---------- üres állapot ---------- */
+.lt-empty { padding: 34px 18px; text-align: center; }
+.lt-empty b { display: block; font-size: 13.5px; color: var(--text); margin-bottom: 5px; }
+.lt-empty p { font-size: 12px; color: var(--muted); max-width: 44ch; margin-inline: auto; }
+
+.lt-more { display: flex; justify-content: center; padding-top: 10px; }
+
+/* ---------- adatvédelmi lábjegyzet ---------- */
+.lt-privacy {
+  display: flex; align-items: flex-start; gap: 8px;
+  margin-top: 16px; padding: 11px 13px;
+  font-size: 11.5px; line-height: 1.55; color: var(--muted);
+  background: rgb(255 255 255 / .02);
+  border: 1px solid var(--line-soft);
+  border-radius: 9px;
+}
+.lt-privacy .ico { flex: none; margin-top: 2px; color: var(--dim); }
+
+/* ---------- telefon ----------
+   A két táblázat sok oszlopos; telefonon nem szűkítjük halálra, hanem
+   vízszintesen görgethetővé tesszük — a lap maga nem csordul túl. */
+@media (max-width: 900px) {
+  .lt-table { overflow-x: auto; }
+  .lt-table > div { min-width: 760px; }
+  .lt-table-ev > div { min-width: 660px; }
+  .lt-head { min-width: 760px; }
+  .lt-table-ev .lt-head { min-width: 660px; }
+}
+@media (max-width: 760px) {
+  .lt-tabs { overflow-x: auto; }
+  .lt-tab { flex: none; }
+  .lt-f { flex-basis: 100%; }
+}

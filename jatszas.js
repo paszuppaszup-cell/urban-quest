@@ -449,6 +449,11 @@
               a többiek telefonjáról érkezett. */
   const SYNC = { on: false, session: null, state: null, tarsak: 0, roles: [], relayGroup: null };
 
+  /* Látogatói mérés — mellékes, sosem állhat a játék útjába. */
+  function merj(kind, label, meta) {
+    try { if (window.UQTrack) UQTrack.esemeny(kind, label || QUEST_ID || null, meta || {}); } catch (e) {}
+  }
+
   /* Igaz, amíg a lánc szerepfoglalása arra vár, hogy a menet sora
      megszülessen a szerveren (lásd syncInit és az uq:written figyelő). */
   let relayVar = false;
@@ -693,6 +698,7 @@
     startTimer();
     /* szerveroldali menet: új játék = új (vagy csapatnál a közös) menet */
     syncInit();
+    merj('jatek_indult');
     if (COURSE[startIdx] && uuidszeru(COURSE[startIdx].id)) {
       emit('station_visited', { station_id: COURSE[startIdx].id });
     }
@@ -746,6 +752,7 @@
          örökre „folyamatban" maradtak: a rebuild_session_state kezeli ezt az
          eseményt, csak sosem kapta meg. */
       emit('session_abandoned', {});
+      merj('jatek_elhagyva', null, { allomas: play.path.length });
     }
     play.active = false; play.finished = false; play.view = 'intro'; stopTimer();
     csapatKontextusUrites();
@@ -776,6 +783,7 @@
   function playFinish() {
     play.finished = true; play.view = 'summary'; play.finalMs = playElapsed(); stopTimer();
     emit('session_finished', {});
+    merj('jatek_kesz', null, { pont: playPoints(), allomas: play.path.length });
     /* A SYNC szándékosan él tovább: az összegzőn a játékos még látni akarja,
        hogy az eredménye megérkezett-e. Csak a csapat-kontextust engedjük el,
        hogy az „Újra” friss menetet indítson a lezárt közös helyett. */
