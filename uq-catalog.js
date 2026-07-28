@@ -132,12 +132,64 @@
     return true;
   }
 
+  /* A sorok sorrendje FIX, nem a találatok száma szerinti: a főoldal
+     így ugyanott van minden látogatásnál, és nem ugrál át egy kategória
+     csak azért, mert épp több pálya került bele. Az ismeretlen kategória
+     (pl. később felvett új érték) a végére kerül, nem vész el. */
+  var CAT_SORREND = ['varosi', 'tortenelmi', 'kaland', 'csaladi', 'ceges', 'horror'];
+
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c];
+    });
+  }
+
+  function sorokHTML() {
+    var csoport = {};
+    (window.QUEST_ORDER || []).forEach(function (id) {
+      var q = window.QUESTS && window.QUESTS[id];
+      if (!q) return;
+      var c = q.cat || 'varosi';
+      (csoport[c] = csoport[c] || []).push(id);
+    });
+
+    var kulcsok = CAT_SORREND.filter(function (c) { return csoport[c]; })
+      .concat(Object.keys(csoport).filter(function (c) { return CAT_SORREND.indexOf(c) < 0; }));
+
+    return kulcsok.map(function (c) {
+      var lista = csoport[c];
+      return '<section class="quest-row" data-cat="' + esc(c) + '">' +
+        '<div class="quest-row-head">' +
+          '<h3 class="quest-row-title">' + esc(CAT_LABEL[c] || c) + '</h3>' +
+          '<span class="quest-row-count">' + lista.length + ' küldetés</span>' +
+        '</div>' +
+        '<div class="carousel">' +
+          '<div class="carousel-track">' +
+            lista.map(function (id) { return window.questCardHTML(id); }).join('') +
+          '</div>' +
+          '<button class="carousel-nav prev" type="button" aria-label="Előző küldetések">' +
+            '<svg class="ico ico-sm" aria-hidden="true"><use href="#i-chevron-left"/></svg></button>' +
+          '<button class="carousel-nav next" type="button" aria-label="További küldetések">' +
+            '<svg class="ico ico-sm" aria-hidden="true"><use href="#i-chevron-right"/></svg></button>' +
+        '</div>' +
+      '</section>';
+    }).join('');
+  }
+
   function ujrarajzol() {
-    var track = document.getElementById('questTrack');
-    if (track && window.QUEST_ORDER && window.questCardHTML) {
-      track.innerHTML = window.QUEST_ORDER.map(function (id) {
-        return window.questCardHTML(id);
-      }).join('');
+    var rows = document.getElementById('questRows');
+    if (rows && window.QUEST_ORDER && window.questCardHTML) {
+      /* Főoldal: kategóriánként egy-egy oldalra húzható sor. */
+      rows.innerHTML = sorokHTML();
+    } else {
+      /* Régi, egysávos elrendezés — más lapok (és a visszafelé
+         kompatibilitás) továbbra is ezt használják. */
+      var track = document.getElementById('questTrack');
+      if (track && window.QUEST_ORDER && window.questCardHTML) {
+        track.innerHTML = window.QUEST_ORDER.map(function (id) {
+          return window.questCardHTML(id);
+        }).join('');
+      }
     }
     document.dispatchEvent(new CustomEvent('uq:catalog', {
       detail: { order: window.QUEST_ORDER }

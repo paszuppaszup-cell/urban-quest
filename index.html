@@ -11,7 +11,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&family=Inter:wght@400..700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css?v=14">
+<link rel="stylesheet" href="styles.css?v=15">
 <link rel="stylesheet" href="uq-auth.css?v=6">
 <link rel="stylesheet" href="uq-account.css?v=3">
 </head>
@@ -174,12 +174,19 @@
           <span class="filter-value">Összes</span>
           <svg class="ico ico-sm chev" aria-hidden="true"><use href="#i-chevron-down"/></svg>
         </button>
+        <!-- A lista a VALÓS kategóriákat sorolja (a tasks/courses category
+             mezője, amit a publish_course címkéz). Korábban „Természetjárás"
+             és „Romantikus" szerepelt itt, ami egyetlen pályára sem illett,
+             a létező Történelmi / Kaland / Családi / Horror kategóriát pedig
+             egyáltalán nem lehetett kiválasztani. -->
         <ul class="filter-menu" role="listbox">
           <li><button type="button" role="option" data-value="">Összes</button></li>
-          <li><button type="button" role="option" data-value="varosi">Városi küldetés</button></li>
-          <li><button type="button" role="option" data-value="termeszet">Természetjárás</button></li>
-          <li><button type="button" role="option" data-value="romantikus">Romantikus</button></li>
-          <li><button type="button" role="option" data-value="ceges">Céges csapatépítés</button></li>
+          <li><button type="button" role="option" data-value="varosi">Városi</button></li>
+          <li><button type="button" role="option" data-value="tortenelmi">Történelmi</button></li>
+          <li><button type="button" role="option" data-value="kaland">Kaland</button></li>
+          <li><button type="button" role="option" data-value="csaladi">Családi</button></li>
+          <li><button type="button" role="option" data-value="ceges">Céges</button></li>
+          <li><button type="button" role="option" data-value="horror">Horror</button></li>
         </ul>
       </div>
 
@@ -259,19 +266,15 @@
         </a>
       </div>
 
-      <div class="carousel">
-        <div class="carousel-track" id="questTrack">
-        </div>
+      <!-- KATEGÓRIÁNKÉNTI SOROK.
+           Korábban egyetlen sáv volt az összes küldetéssel, telefonon pedig
+           az is függőlegesre fordult, tehát a kártyák egymás alatt álltak.
+           Most kategóriánként egy-egy oldalra húzható sor van, telefonon és
+           asztalon egyaránt. A sorokat a uq-catalog.js építi az adatbázisból,
+           ezért itt szándékosan üres a konténer. -->
+      <div class="quest-rows" id="questRows"></div>
 
-        <p class="carousel-empty" id="carouselEmpty" hidden>Nincs a szűrésnek megfelelő küldetés.</p>
-
-        <button class="carousel-nav prev" id="carouselPrev" type="button" aria-label="Előző küldetések">
-          <svg class="ico ico-sm" aria-hidden="true"><use href="#i-chevron-left"/></svg>
-        </button>
-        <button class="carousel-nav next" id="carouselNext" type="button" aria-label="További küldetések">
-          <svg class="ico ico-sm" aria-hidden="true"><use href="#i-chevron-right"/></svg>
-        </button>
-      </div>
+      <p class="carousel-empty" id="carouselEmpty" hidden>Nincs a szűrésnek megfelelő küldetés.</p>
     </div>
   </section>
 
@@ -456,10 +459,11 @@
 <script src="uq-api.js?v=6"></script>
   <script src="uq-auth.js?v=7"></script>
 <script src="uq-account.js?v=7"></script>
-  <script src="uq-catalog.js?v=3"></script>
-<script src="script.js?v=10"></script>
+  <script src="uq-catalog.js?v=4"></script>
+<script src="script.js?v=11"></script>
 <script src="i18n/kozos.js?v=2"></script>
 <script src="i18n/index.js?v=2"></script>
+<script src="uq-tabbar.js?v=1"></script>
 <script src="uq-i18n.js?v=2"></script>
 </body>
 </html>

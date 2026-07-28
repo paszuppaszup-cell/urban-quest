@@ -549,6 +549,31 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
    ========================================================= */
 .carousel { position: relative; }
 
+/* --- kategória-sorok ---
+   A főoldal küldetései kategóriánként egy-egy sorban állnak, és oldalra
+   húzhatók. Korábban egyetlen sáv volt az összes küldetéssel, telefonon
+   pedig az is függőlegesre fordult, tehát a kártyák egymás alatt sorakoztak. */
+.quest-rows { display: flex; flex-direction: column; gap: 34px; }
+.quest-row[hidden] { display: none; }
+.quest-row-head {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin-bottom: 13px;
+}
+.quest-row-title {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 19px;
+  letter-spacing: -.01em;
+  margin: 0;
+}
+.quest-row-count {
+  font-size: 12px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
 .carousel-track {
   display: flex;
   gap: 16px;
@@ -1550,28 +1575,48 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
 .mobile-tabbar { display: none; }
 
 @media (max-width: 760px) {
-  /* --- kártyák: egymás alatt, vízszintes elrendezés (nem karuszel) --- */
+  /* --- kártyák: kategóriánként OLDALRA HÚZHATÓ sor ---
+     Korábban itt függőlegesre fordult a sáv (flex-direction: column), tehát
+     telefonon a küldetések egymás alatt sorakoztak. Most a sor vízszintes
+     marad, és ujjal húzható; a kategória-fejléc adja a tájékozódást. */
   .quests .carousel-track {
-    flex-direction: column;
-    overflow: visible;
-    gap: 13px;
-    scroll-snap-type: none;
+    gap: 12px;
+    scroll-snap-type: x mandatory;
+    /* A sor a konténeren TÚL fut, hogy a kártya a képernyő széléig érjen,
+       de az első kártya mégis a tartalom vonalában kezdődjön. */
+    margin: 0 calc(var(--gutter, 18px) * -1);
+    padding: 0 var(--gutter, 18px) 4px;
+    scroll-padding-left: var(--gutter, 18px);
   }
-  /* Rács-módban is EGY, teljes szélességű oszlop: a 320 px-es felső korlát
-     asztalon jó arányt ad, telefonon viszont 68 px-nyi üres sávot hagyna a
-     kártya mellett. */
-  .quests .carousel-track.is-grid { grid-template-columns: 1fr; }
+  /* Rács-módban (egyetlen kártya) nincs mit húzni: teljes szélességű oszlop. */
+  .quests .carousel-track.is-grid {
+    grid-template-columns: 1fr;
+    margin: 0;
+    padding: 0 0 4px;
+  }
   .quests .carousel-nav { display: none; }
+
+  .quest-rows { gap: 26px; }
+  .quest-row-head { margin-bottom: 10px; }
+  .quest-row-title { font-size: 17px; }
 
   /* Telefonon UGYANAZ a felépítés, mint asztalon: borító felül, alatta a
      szöveg és a kétoszlopos adatrács. Korábban itt vízszintesre fordult a
      kártya (kép balra, szöveg jobbra ~60%-on), és abban a keskeny oszlopban
      az adatrács menthetetlenül összecsúszott. */
   .quest-card {
-    flex: none;
-    width: 100%;
+    /* 84vw: a KÖVETKEZŐ kártya széle kilátszik. Ez a jelzés mondja meg a
+       játékosnak, hogy a sor húzható — teljes szélességnél (100%) semmi nem
+       árulná el, hogy jobbra van még valami. */
+    flex: 0 0 84vw;
+    width: auto;
+    max-width: 360px;
     flex-direction: column;
+    scroll-snap-align: start;
   }
+  /* Rács-módban (egyetlen kártya a kategóriában) nincs mit húzni: a kártya
+     kitölti a sort, nem hagy félrevezető üres sávot maga mellett. */
+  .quests .carousel-track.is-grid .quest-card { flex: initial; width: auto; max-width: none; }
   .quest-card .quest-body { padding: 16px 16px 18px; }
   .quest-card .quest-title { font-size: 19px; }
   .quest-card .quest-tagline { font-size: 12.5px; }
