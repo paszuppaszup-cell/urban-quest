@@ -1025,16 +1025,7 @@
     }
   }));
 
-  document.querySelectorAll('[data-user]').forEach(b => b.addEventListener('click', () => {
-    const a = b.dataset.user;
-    if (a === 'profile') window.location.href = 'fiokom.html';
-    else if (a === 'settings') window.location.href = 'beallitasok.html';
-    else if (a === 'logout') {
-      Promise.resolve(window.UQAPI && UQAPI.signOut ? UQAPI.signOut() : null)
-        .catch(() => {})
-        .then(() => { window.location.href = 'bejelentkezes.html'; });
-    }
-  }));
+  /* A Fiók legördülőt a közös uq-admin-fejlec.js kezeli. */
 
   /* =========================================================
      INDÍTÁS — az adatbázisból töltünk, ezért aszinkron

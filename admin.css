@@ -111,7 +111,13 @@
 .adm-sysstat { padding: 10px 11px; border-radius: 9px; background: rgb(255 255 255 / .03); border: 1px solid var(--line-soft); margin-bottom: 10px; }
 .adm-sysstat-label { display: block; font-size: 10px; color: var(--muted); margin-bottom: 3px; }
 .adm-sysstat-ok { display: inline-flex; align-items: center; gap: 6px; font-size: 11.5px; font-weight: 600; color: var(--ok); }
-.adm-sysstat-ok .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--ok); box-shadow: 0 0 6px var(--ok); }
+.adm-sysstat-ok .dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; box-shadow: 0 0 6px currentColor; }
+/* A rendszerállapot nem mindig „rendben": kijelentkezve, hálózat nélkül
+   vagy admin jog híján mást kell mutatnia. A pont a szöveg színét veszi
+   fel (currentColor), így elég a szülőt átszínezni. */
+.adm-sysstat-ok.is-warn { color: var(--warn); }
+.adm-sysstat-ok.is-off { color: var(--muted); }
+.adm-sysstat-ok.is-off .dot { box-shadow: none; }
 .adm-ver { font-size: 10px; color: var(--dim); line-height: 1.5; padding-left: 4px; }
 
 /* ---------- fő terület ---------- */
@@ -773,3 +779,15 @@
 .uq-szuro-sav b{color:#fff;}
 .uq-szuro-sav a{color:var(--lime);font-weight:600;text-decoration:none;white-space:nowrap;}
 .uq-szuro-sav a:hover{text-decoration:underline;}
+
+/* Letiltott hivatkozás-gomb (pl. a varázsló Végigjátszás gombja mentés
+   előtt). Az <a> nem tud disabled lenni, ezért osztállyal jelezzük — a
+   kattintást a kód fogja meg, itt csak láthatóvá tesszük. */
+.adm-btn.is-disabled {
+  opacity: .45; cursor: not-allowed; pointer-events: auto;
+}
+.adm-btn.is-disabled:hover { background: inherit; border-color: var(--line-soft); }
+
+/* Üres állomáslista a pályaszerkesztőben (nincs bejelentkezve, vagy a
+   pályának még nincs állomása). Korábban ide beégetett demó került. */
+.ed-st-empty { padding: 18px 14px; color: var(--muted); font-size: 12.5px; text-align: center; }

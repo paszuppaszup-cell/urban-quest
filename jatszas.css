@@ -525,3 +525,25 @@
   #playRoot .uq-pl-card { padding: 15px; }
   .play-brand-sub { display: none; }
 }
+
+/* =========================================================
+   NEM JÁTSZHATÓ ÁLLAPOT + ADMIN ELŐNÉZET
+
+   Korábban ilyenkor egy beégetett demó indult el, tehát ezekre a
+   képernyőkre nem is volt szükség. Most kimondjuk, mi a helyzet, és
+   megmutatjuk, hol lehet orvosolni.
+   ========================================================= */
+#playRoot .uq-pl-hiba { text-align: center; padding: 34px 22px; }
+#playRoot .uq-pl-hiba h2 { font-size: 20px; margin: 0 0 8px; }
+#playRoot .uq-pl-hiba p { color: var(--muted); margin: 0 0 18px; line-height: 1.55; }
+#playRoot .uq-pl-hiba b { color: var(--txt); }
+#playRoot .uq-pl-hiba .adm-btn { display: inline-flex; }
+/* A hero ::after dísze itt üres kártyát díszítene — nincs rá szükség. */
+#playRoot .uq-pl-hiba::after { content: none; }
+
+.uq-play-elonezet {
+  margin: 0 0 12px; padding: 9px 13px; border-radius: 9px;
+  background: rgb(224 185 58 / .12); border: 1px solid rgb(224 185 58 / .38);
+  color: var(--warn); font-size: 12.5px; line-height: 1.5;
+}
+.uq-play-elonezet b { color: var(--txt); }

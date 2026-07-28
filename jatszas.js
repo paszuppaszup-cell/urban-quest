@@ -114,110 +114,101 @@
     };
   }
 
-  /* ---------- SEED-fallback (mint a data-fájlok loadStore-ja) ---------- */
-  const GAMES_SEED = [
-    { id: 1, name: 'Városliget Felfedező' },
-    { id: 2, name: 'Budai Vár Rejtélye' },
-    { id: 3, name: 'Küldetés a Gyárban' },
-    { id: 4, name: 'Földalatti Nyomok' },
-    { id: 5, name: 'Margitsziget Kaland' },
-    { id: 6, name: 'Elveszett Örökség' }
-  ];
-  const STATIONS_SEED = [
-    { name: 'Főbejárat', route: 'Városliget Felfedező', type: 'kezdo', diff: 'Könnyű', tasks: 0,
-      loc: 'Budapest, Városliget', lat: '47.5148', lng: '19.0810', status: 'active',
-      desc: 'A pálya kiindulópontja, ahol a csapatok regisztrálnak és megkapják az első útmutatót.',
-      taskShort: 'Keresd meg a főbejárat feletti feliratot, és írd be a kódot.' },
-    { name: 'Széchenyi fürdő', route: 'Városliget Felfedező', type: 'info', diff: 'Könnyű', tasks: 1,
-      loc: 'Állatkerti krt. 9–11.', lat: '47.5186', lng: '19.0817', status: 'active',
-      desc: 'Rövid ismertető a fürdő történetéről, majd egy egyszerű megfigyeléses feladat.',
-      taskShort: 'Hány sárga kupola látszik a főhomlokzaton?' },
-    { name: 'Vajdahunyad vára', route: 'Városliget Felfedező', type: 'feladat', diff: 'Közepes', tasks: 3,
-      loc: 'Vajdahunyad stny.', lat: '47.5136', lng: '19.0826', status: 'active',
-      desc: 'Több részből álló feladatsor a vár épületstílusaihoz kapcsolódóan.',
-      taskShort: 'Párosítsd az épületrészeket a korstílusokkal.' },
-    { name: 'Hősök tere', route: 'Városliget Felfedező', type: 'dontes', diff: 'Közepes', tasks: 2,
-      loc: 'Hősök tere', lat: '47.5159', lng: '19.0776', status: 'active',
-      desc: 'Elágazási pont: a csapat dönti el, melyik útvonalon folytatja a felfedezést.',
-      taskShort: 'Válaszd ki a szoborcsoportot, amelyről bővebben tanulnátok.' },
-    { name: 'Műjégpálya', route: 'Városliget Felfedező', type: 'feladat', diff: 'Nehéz', tasks: 4,
-      loc: 'Olof Palme sétány 5.', lat: '47.5131', lng: '19.0800', status: 'draft',
-      desc: 'Összetett, több lépcsős fejtörő a városligeti tó és a jégpálya körül.',
-      taskShort: 'Fejtsd meg a tábla rejtjelezett üzenetét.' },
-    { name: 'Állatkert bejárat', route: 'Városliget Felfedező', type: 'info', diff: 'Könnyű', tasks: 1,
-      loc: 'Állatkerti krt. 6–12.', lat: '47.5183', lng: '19.0757', status: 'active',
-      desc: 'Tájékoztató állomás a nyitvatartásról és a következő pontok elhelyezkedéséről.',
-      taskShort: 'Olvasd le a nyitvatartási időt a bejárati tábláról.' },
-    { name: 'Zene Háza', route: 'Liget Projekt', type: 'feladat', diff: 'Közepes', tasks: 3,
-      loc: 'Városliget, Zene Háza', lat: '47.5145', lng: '19.0792', status: 'draft',
-      desc: 'Hangzáshoz és építészethez kapcsolódó interaktív feladatok az épület körül.',
-      taskShort: 'Számold meg a tetőszerkezet kör alakú nyílásait.' },
-    { name: 'Közlekedési Múzeum', route: 'Liget Projekt', type: 'zaro', diff: 'Nehéz', tasks: 2,
-      loc: 'Városliget', lat: '47.5121', lng: '19.0838', status: 'inactive',
-      desc: 'A pálya záró állomása: a csapatok itt adják le az összegyűjtött kódokat.',
-      taskShort: 'Add meg a végső kódot a korábbi állomások betűiből.' }
-  ];
-  const TASKS_SEED = [
-    { question: 'Melyik évben épült a Vajdahunyad vára?', station: 'Vajdahunyad vára', route: 'Városliget Felfedező', type: 'kviz', points: 50, cfg: { options: [{ text: '1896', correct: true }, { text: '1908', correct: false }, { text: '1873', correct: false }, { text: '1920', correct: false }], shuffle: true } },
-    { question: 'Készíts fotót a főbejáratról', station: 'Főbejárat', route: 'Városliget Felfedező', type: 'foto', points: 30, cfg: { instruction: 'Jól kivehető főbejárat a képen', required: true } },
-    { question: 'Rakd időrendbe a Városliget épületeit!', station: 'Vajdahunyad vára', route: 'Városliget Felfedező', type: 'puzzle', points: 55, cfg: { subtype: 'order', items: ['Vajdahunyad vára (1908)', 'Széchenyi fürdő (1913)', 'Műjégpálya (1926)', 'Zene Háza (2021)'], pairs: [], partial: true } },
-    { question: 'Fejtsd meg a széf kódját a szobor talapzatán!', station: 'Hősök tere', route: 'Városliget Felfedező', type: 'kod', points: 45, cfg: { codeType: 'num', code: '896' } },
-    { question: 'Hány kupola díszíti a Széchenyi fürdő főhomlokzatát?', station: 'Széchenyi fürdő', route: 'Városliget Felfedező', type: 'szoveg', points: 35, cfg: { accepted: ['3', 'három'], tolerant: true, keyword: false, numeric: true } },
-    { question: 'Érd el a Hősök terén a szoborcsoportot', station: 'Hősök tere', route: 'Városliget Felfedező', type: 'gps', points: 40, cfg: { lat: 47.5159, lng: 19.0776, radius: 35 } },
-    { question: 'Olvasd be a bejárat melletti QR-kódot', station: 'Zene Háza', route: 'Liget Projekt', type: 'qr', points: 25, cfg: { code: 'UQ-ZENE-2024' } },
-    { question: 'Koppints 15-öt 5 másodperc alatt!', station: 'Műjégpálya', route: 'Városliget Felfedező', type: 'gyors', points: 30, cfg: { game: 'tap', time: 5, target: 15 } },
-    { question: 'Melyik stílusban épült a Vajdahunyad vár gótikus szárnya?', station: 'Vajdahunyad vára', route: 'Városliget Felfedező', type: 'kviz', points: 60, cfg: { options: [{ text: 'Reneszánsz', correct: false }, { text: 'Gótikus', correct: true }, { text: 'Barokk', correct: false }, { text: 'Román', correct: false }], shuffle: true } }
-  ];
+  /* ---------- (a beégetett minta-pálya innen eltávolítva) ----------
+     Itt korábban három tömb állt: 6 pályanév, 8 állomás és 9 feladat egy
+     „Városliget Felfedező" nevű demóból. Ha a localStorage-kulcsok üresek
+     voltak — márpedig azok az adatbázisra állás óta halottak —, a lejátszó
+     EZEKBŐL játszott le egy pályát. Az admin Előnézet gombjai mind ide
+     futottak, tehát azt hitted, a saját pályádat teszteled, közben egy soha
+     nem létezett demót játszottál végig. Ez rosszabb az üres képernyőnél,
+     mert téves döntéshez vezet.
 
-  function readStore(key, seed) {
-    try {
-      const raw = localStorage.getItem(key);
-      if (raw) { const arr = JSON.parse(raw); if (Array.isArray(arr) && arr.length) return arr; }
-    } catch (e) {}
-    return seed;
-  }
-  let QUEST_TASKS = null; // publikus küldetés-mód: a pálya saját feladatai
-  function readTasks() { return QUEST_TASKS || readStore('uq_tasks_v1', TASKS_SEED); }
+     Innentől egyetlen adatforrás van: a pálya befagyasztott csomagja az
+     adatbázisból (uq-play-src.js tölti be). Ha az nincs meg, azt megmondjuk. */
+  let QUEST_TASKS = null;      // a pálya saját feladatai a befagyasztott csomagból
+  function readTasks() { return QUEST_TASKS || []; }
 
-  /* ---------- PÁLYA-FELOLDÁS: quest (publikus) / game / route → állomások ---------- */
+  /* ---------- PÁLYA-FELOLDÁS ----------
+     Egyetlen forrás van: a pálya befagyasztott csomagja az adatbázisból,
+     amit az uq-play-src.js tölt a window.QUEST_COURSES-be, MÉG mielőtt ez
+     a fájl lefutna.
+
+       ?quest=<slug>                — publikus végigjátszás
+       ?quest=<slug>&elonezet=1     — admin előnézet: ugyanaz az adat, de
+                                      NEM ír a fiókba és nem a szerverre,
+                                      hogy a teszt ne kerüljön a ranglistára
+
+     A régi ?game= és ?route= paraméterek localStorage-ból dolgoztak, ami
+     üres — ezért futott a lejátszó a beégetett demóra. Ezeket már nem
+     fogadjuk el némán: megmondjuk, hol a helyes hivatkozás. */
   const params = new URLSearchParams(location.search);
-  const questParam = params.get('quest');   // publikus küldetés a főoldalról (quest-courses.js)
-  const gameParam = params.get('game');      // admin játék (uq_games_v1)
-  const routeParam = params.get('route');    // közvetlen útvonalnév
+  const questParam = params.get('quest');
+  const ELONEZET = params.get('elonezet') === '1';
   let route = '', TITLE = '';
   let PUBLIC = false, QUEST_ID = '';
   let RAW_COURSE = null;
   let COVER = '';               // a pálya borítóképe — az összegzőn jelenik meg
 
-  // 1) PUBLIKUS küldetés-mód: a quest-courses.js játszható pályája
+  function hibaKepernyo(cim, szoveg, gomb) {
+    const root = document.getElementById('playRoot');
+    if (root) {
+      root.innerHTML =
+        '<section class="uq-pl-card uq-pl-hiba">' +
+          '<h2>' + esc(cim) + '</h2>' +
+          '<p>' + szoveg + '</p>' +
+          (gomb || '') +
+        '</section>';
+    }
+    const t = document.getElementById('gameTitle');
+    if (t) t.textContent = 'Nem játszható';
+  }
+
   if (questParam && window.QUEST_COURSES && window.QUEST_COURSES[questParam]) {
     const qc = window.QUEST_COURSES[questParam];
-    PUBLIC = true; QUEST_ID = questParam;
+    QUEST_ID = questParam;
+    PUBLIC = !ELONEZET;         // előnézetben nincs fiók- és szerverírás
     QUEST_TASKS = qc.tasks || [];
     const qq = window.QUESTS && window.QUESTS[questParam];
     TITLE = (qq && (qq.heroTitle || qq.title)) || qc.title || questParam;
     route = qc.title || questParam;
     RAW_COURSE = Array.isArray(qc.stations) ? qc.stations : [];
     COVER = qc.image || (qq && qq.image) || '';
+  } else if (params.get('game') || params.get('route')) {
+    /* Régi admin-előnézet hivatkozás. Eddig ilyenkor indult a demó. */
+    hibaKepernyo('Ez a hivatkozás elavult',
+      'Az előnézet mostantól a pálya azonosítójával nyílik. Nyisd meg a ' +
+      'Játékok oldalon a pályát, és ott kattints az <b>Előnézet</b> gombra.',
+      '<a class="adm-btn adm-btn-lime" href="jatekok.html">Ugrás a Játékok oldalra</a>');
+    return;
+  } else if (questParam && ELONEZET && !(window.UQAPI && UQAPI.user())) {
+    /* Az előnézet a v_admin_play_bundle nézetből olvas, amit csak
+       bejelentkezett admin lát — enélkül nem a pálya a hiányzó láncszem. */
+    hibaKepernyo('Az előnézethez be kell jelentkezned',
+      'Ez a nézet a még közzé nem tett pályát is megmutatja, ezért admin fiókot kíván.',
+      '<a class="adm-btn adm-btn-lime" href="bejelentkezes.html?next=' +
+        encodeURIComponent('jatszas.html?quest=' + questParam + '&elonezet=1') + '">Bejelentkezés</a>');
+    return;
+  } else if (questParam) {
+    /* A csomag nem jött meg: nincs befagyasztott verzió, vagy nincs hálózat. */
+    hibaKepernyo('Ez a pálya most nem játszható',
+      ELONEZET
+        ? 'Nincs befagyasztott verziója. A Játékok oldalon nyomd meg a <b>Közzététel</b> gombot, utána próbáld újra.'
+        : 'Lehet, hogy még nincs közzétéve, vagy épp nincs internetkapcsolatod.',
+      '<a class="adm-btn adm-btn-lime" href="' + (ELONEZET ? 'jatekok.html' : 'index.html') + '">' +
+        (ELONEZET ? 'Vissza a Játékokhoz' : 'Vissza a kalandokhoz') + '</a>');
+    return;
+  } else {
+    hibaKepernyo('Nincs megadva pálya',
+      'Válassz egy kalandot, és onnan indítsd a játékot.',
+      '<a class="adm-btn adm-btn-lime" href="index.html">Kalandok böngészése</a>');
+    return;
   }
 
-  // 2) ADMIN játék / útvonal (teszt-mód)
-  if (!PUBLIC) {
-    if (gameParam) {
-      const g = readStore('uq_games_v1', GAMES_SEED).find(x => String(x.id) === String(gameParam));
-      if (g) { route = g.name; TITLE = g.name; }
-    }
-    if (!route && routeParam) { route = routeParam; TITLE = routeParam; }
-    if (!route) { route = 'Városliget Felfedező'; TITLE = 'Városliget Felfedező'; }
-
-    /* PÁLYA forrás: ELSŐDLEGESEN a pálya-szerkesztő per-játék pályája
-       (uq_courses_v1[route]); különben a régi uq_stations_v1 (route szerint szűrve). */
-    try {
-      const courses = JSON.parse(localStorage.getItem('uq_courses_v1') || '{}');
-      const cc = (courses && typeof courses === 'object') ? courses[route] : null;
-      if (Array.isArray(cc) && cc.length) RAW_COURSE = cc;
-    } catch (e) {}
-    if (!RAW_COURSE) RAW_COURSE = readStore('uq_stations_v1', STATIONS_SEED).filter(s => s.route === route);
+  if (!RAW_COURSE.length) {
+    hibaKepernyo('Ennek a pályának nincs egyetlen állomása sem',
+      'Vegyél fel állomásokat, tedd közzé a pályát, és utána játszható lesz.',
+      '<a class="adm-btn adm-btn-lime" href="allomasok.html">Állomások szerkesztése</a>');
+    return;
   }
 
   const COURSE = (RAW_COURSE || []).map(normStation);
@@ -230,6 +221,23 @@
     const back = document.getElementById('playBack');
     /* csak ikon van a gombon — a szöveg helyett a címkét állítjuk */
     if (back) { back.setAttribute('href', 'kuldetes.html?id=' + encodeURIComponent(QUEST_ID)); back.setAttribute('aria-label', 'Kilépés'); back.title = 'Kilépés'; }
+  } else if (ELONEZET) {
+    /* Előnézetben tudni kell, hogy MELYIK pálya melyik verzióját nézed, és
+       hogy az eredmény nem számít bele semmibe — különben az admin azt
+       hiszi, élesben játszik. */
+    const tag = document.querySelector('.play-top-tag');
+    if (tag) tag.innerHTML = '<svg class="ico ico-sm" aria-hidden="true"><use href="#a-preview"/></svg>Előnézet';
+    const back = document.getElementById('playBack');
+    if (back) back.setAttribute('href', 'jatekok.html');
+    const brand = document.querySelector('.play-brand'); if (brand) brand.setAttribute('href', 'jatekok.html');
+    const qc = window.QUEST_COURSES[QUEST_ID] || {};
+    const sav = document.createElement('div');
+    sav.className = 'uq-play-elonezet';
+    sav.innerHTML = 'Előnézet — <b>' + esc(TITLE) + '</b>' +
+      (qc._version ? ' (v' + esc(qc._version) + ')' : '') +
+      '. Az itt szerzett pontok nem kerülnek be a ranglistába.';
+    const wrap = document.querySelector('.play-wrap');
+    if (wrap) wrap.insertBefore(sav, wrap.firstChild);
   }
 
   /* fejléc / cím */

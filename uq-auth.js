@@ -46,13 +46,21 @@
       if (u[k] !== undefined) meta[k === 'name' ? 'display_name' : (k === 'teamName' ? 'team_name' : k)] = u[k];
     });
 
-    return UQAPI.rest('/profiles?user_id=eq.' + UQAPI.user().id, {
-      method: 'PATCH',
-      body: { display_name: u.name, avatar: (u.avatar === '' ? null : u.avatar) },
-      prefer: 'return=minimal'
-    }).catch(function () { /* a profil frissítése ne blokkolja a felületet */ })
+    /* A csapatnév, a telefonszám és a nyelv korábban CSAK a memóriában lévő
+       munkamenet-objektumba került, tehát egy F5 után eltűnt — ugyanabban a
+       böngészőben is. A profiles tábla ezeket nem tárolja (ott a
+       megjelenítendő név és az avatar van, mert a ranglista onnan olvas),
+       ezért ezek a felhasználó saját metaadataiba mennek a szerveren. */
+    return UQAPI.updateMeta(meta)
+      .catch(function () { /* offline: legalább a profil frissüljön */ })
       .then(function () {
-        // a helyi munkamenet metaadata is kövesse, hogy azonnal látszódjon
+        return UQAPI.rest('/profiles?user_id=eq.' + UQAPI.user().id, {
+          method: 'PATCH',
+          body: { display_name: u.name, avatar: (u.avatar === '' ? null : u.avatar) },
+          prefer: 'return=minimal'
+        }).catch(function () { /* a profil frissítése ne blokkolja a felületet */ });
+      })
+      .then(function () {
         var s = UQAPI.session();
         if (s && s.user) {
           s.user.user_metadata = Object.assign({}, s.user.user_metadata || {}, meta);
@@ -63,8 +71,28 @@
       });
   }
 
+  /* A kedvencek gyorstárát MÉG a munkamenet eldobása előtt takarítjuk el:
+     utána már nem tudnánk, melyik fiókhoz tartozott a kulcs. Ez közös gépen
+     számít — a következő felhasználó ne találja ott az előzőét. Nem
+     adatvesztés: a lista az adatbázisban van, belépéskor visszajön.
+
+     A kulcsokat KÖZVETLENÜL töröljük, nem a UQAccount-on keresztül: a
+     fejléc kijelentkezés-gombja olyan lapokon is ott van (bejelentkezés,
+     regisztráció), ahol a uq-account.js nincs betöltve. Ha viszont be van,
+     őt is szólítjuk, hogy a felület azonnal átfesse a szíveket. */
+  function kedvencGyorstarUrit() {
+    var u = getUser();
+    if (!u || !u.id) return;
+    ['uq_favs_v1:', 'uq_favs_srv_v1:'].forEach(function (elotag) {
+      try { localStorage.removeItem(elotag + u.id); } catch (e) {}
+    });
+    if (window.UQAccount && UQAccount.kedvencGyorstarUrit) UQAccount.kedvencGyorstarUrit();
+    else document.dispatchEvent(new CustomEvent('uq:favs', { detail: { favs: [] } }));
+  }
+
   function clearUser() {
     if (!window.UQAPI) return Promise.resolve();
+    kedvencGyorstarUrit();
     return UQAPI.signOut().then(function () { mountHeader(); });
   }
 

@@ -9,8 +9,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&family=Inter:wght@400..700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css?v=7">
-<link rel="stylesheet" href="admin.css?v=9">
+<link rel="stylesheet" href="styles.css?v=14">
+<link rel="stylesheet" href="admin.css?v=14">
 <link rel="stylesheet" href="palya-varazslo.css?v=21">
 </head>
 <body class="admin-body">
@@ -146,7 +146,7 @@
       <!-- ===== KIPRÓBÁLÁS ===== -->
       <section class="pv-panel pv-step-box">
         <h2 class="pv-panel-h"><span class="pv-num">1</span>Kipróbálás</h2>
-        <p class="pv-hint pv-hint-blk">A pálya végigjátszható a böngészőben, pontosan úgy, ahogy a játékos látná — állomásról állomásra, valódi feladatokkal. Ehhez előbb be kell kerülnie az admin adatai közé.</p>
+        <p class="pv-hint pv-hint-blk">A pálya végigjátszható a böngészőben, pontosan úgy, ahogy a játékos látná — állomásról állomásra, valódi feladatokkal. Előbb mentsd el: a mentés az adatbázisba írja a pályát, és rögtön készít belőle egy kipróbálható verziót.</p>
         <div class="pv-copyrow">
           <button class="adm-btn adm-btn-lime" type="button" id="pvPublishAdmin"><svg class="ico ico-sm" aria-hidden="true"><use href="#a-folder"/></svg>Mentés az adminba</button>
           <a class="adm-btn" id="pvPlay" href="#" target="_blank" rel="noopener"><svg class="ico ico-sm" aria-hidden="true"><use href="#a-play"/></svg>Végigjátszás</a>
@@ -154,31 +154,22 @@
         </div>
       </section>
 
-      <!-- ===== PUBLIKÁLÁS ===== -->
+      <!-- ===== PUBLIKÁLÁS =====
+           Itt korábban két kódrészlet állt azzal az utasítással, hogy másold
+           be őket a quest-courses.js-be és a data.js-be. Ez az adatbázisra
+           állás óta valótlan: a pályák nem fájlokban élnek. Ráadásul a
+           kimásolt részlet a feladatok NYERS megoldásait is tartalmazta,
+           amiket így egy publikus fájlba tett volna a felhasználó. -->
       <section class="pv-panel pv-step-box">
-        <h2 class="pv-panel-h"><span class="pv-num">2</span>Publikálás a nyilvános oldalra</h2>
+        <h2 class="pv-panel-h"><span class="pv-num">2</span>Megjelenítés a nyilvános oldalon</h2>
         <p class="pv-hint pv-hint-blk">
-          Az admin mentés csak ebben a böngészőben él. Ahhoz, hogy a pálya a főoldalon
-          bárkinek megjelenjen, két fájlba kell bemásolni egy-egy kódrészletet.
+          A mentés a <b>Játékok</b> listába teszi a pályát, <b>piszkozatként</b> — így már
+          végig tudod játszani az Előnézettel, de a látogatók még nem látják.
+          Amikor készen állsz, a Játékok oldalon nyomd meg a <b>Közzététel</b> gombot:
+          onnantól megjelenik a főoldalon, és bárki játszhat vele.
         </p>
-
-        <div class="pv-pubfile">
-          <div class="pv-pubfile-h">
-            <b>1. <code>quest-courses.js</code></b>
-            <span>— maga a játszható pálya. Illeszd be a <code>window.QUEST_COURSES = {</code> sor alá.</span>
-            <button class="adm-btn pv-btn-sm" type="button" data-copy="course"><svg class="ico ico-sm" aria-hidden="true"><use href="#a-copy"/></svg>Másolás</button>
-          </div>
-          <pre class="pv-code" id="pvCodeCourse"></pre>
-        </div>
-
-        <div class="pv-pubfile">
-          <div class="pv-pubfile-h">
-            <b>2. <code>data.js</code></b>
-            <span>— a kártya a főoldalon. Illeszd be a <code>window.QUESTS = {</code> sor alá.</span>
-            <button class="adm-btn pv-btn-sm" type="button" data-copy="card"><svg class="ico ico-sm" aria-hidden="true"><use href="#a-copy"/></svg>Másolás</button>
-          </div>
-          <pre class="pv-code" id="pvCodeCard"></pre>
-          <p class="pv-hint">A <b>TÖLTSD KI</b> jelöléssel ellátott mezőket (alcím, borítókép, ár) érdemes kézzel átírnod — ezeket a varázsló nem tudja kitalálni.</p>
+        <div class="pv-copyrow">
+          <a class="adm-btn adm-btn-lime" id="pvGoGames" href="jatekok.html"><svg class="ico ico-sm" aria-hidden="true"><use href="#a-game"/></svg>Ugrás a Játékok oldalra</a>
         </div>
       </section>
 
@@ -196,10 +187,12 @@
 
 <div class="pv-toast" id="pvToast" role="status" aria-live="polite" hidden></div>
 
-<script src="admin.js?v=9"></script>
+<script src="uq-api.js?v=5"></script>
+<script src="admin.js?v=10"></script>
 <script src="pv-common.js?v=5"></script>
 <script src="pv-story.js?v=5"></script>
-<script src="pv-publish.js?v=4"></script>
-<script src="palya-varazslo-ellenorzes.js?v=3"></script>
+<script src="pv-publish.js?v=5"></script>
+<script src="palya-varazslo-ellenorzes.js?v=4"></script>
+<script src="uq-admin-fejlec.js?v=1"></script>
 </body>
 </html>

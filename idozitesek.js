@@ -217,6 +217,7 @@
       id: r.id,
       courseId: r.course_id,
       route: r.course_name || '',
+      courseSlug: r.course_slug || '',
       days: isoToMask(r.weekdays),
       start: hhmm(r.start_time),
       end: hhmm(r.end_time),
@@ -234,7 +235,7 @@
     if (!window.UQAPI) return Promise.reject(new Error('Hiányzik az adatréteg.'));
     return Promise.all([
       UQAPI.rest('/v_admin_schedules?select=*&order=course_name.asc,start_time.asc'),
-      UQAPI.rest('/v_admin_courses?select=id,name&order=sort_order.asc,name.asc')
+      UQAPI.rest('/v_admin_courses?select=id,name,slug&order=sort_order.asc,name.asc')
     ]).then(([sorok, palyak]) => {
       COURSES = palyak || [];
       SCHEDULES.splice(0, SCHEDULES.length, ...(sorok || []).map(dbSor));
@@ -684,23 +685,17 @@
   document.getElementById('btnNewSchedule').addEventListener('click', newSchedule);
 
   /* felső sáv: Mentés / Közzététel */
-  document.getElementById('btnSave').addEventListener('click', () => { saveStore(); toast('Módosítások mentve', { sub: 'A piszkozat elmentve' }); });
-  document.getElementById('btnPublish').addEventListener('click', () => { saveStore(); toast('Időzítések közzétéve', { sub: 'Élő a nyilvános foglalási naptárban' }); });
+  /* A fejléc Mentése korábban csak üzenetet írt (a saveStore() szándékosan
+     üres, soronként mentünk RPC-vel). Most a nyitott fiókot menti. */
+  document.getElementById('btnSave').addEventListener('click', () => {
+    if (!state.selectedId) { toast('Nincs nyitott időzítés', { type: 'warn', sub: 'Válassz egyet a listából.' }); return; }
+    saveDrawer();
+  });
 
-  document.querySelectorAll('[data-pub]').forEach(b => b.addEventListener('click', () => {
-    const a = b.dataset.pub;
-    saveStore();
-    if (a === 'now') toast('Időzítések közzétéve', { sub: 'Élő a nyilvános foglalási naptárban' });
-    else if (a === 'schedule') toast('Közzététel ütemezve', { type: 'info', sub: 'Időzített megjelenés beállítva' });
-    else if (a === 'draft') toast('Piszkozatként mentve', { type: 'info', sub: 'Nem jelenik meg nyilvánosan' });
-  }));
+  /* A Közzététel legördülő három pontja (most / ütemezés / piszkozat)
+     nem létező műveleteket ígért, csak visszajelzést adott — kikerült. */
 
-  document.querySelectorAll('[data-user]').forEach(b => b.addEventListener('click', () => {
-    const a = b.dataset.user;
-    if (a === 'profile') toast('Profil', { type: 'info', sub: 'Profil megnyitása' });
-    else if (a === 'settings') toast('Beállítások', { type: 'info', sub: 'Fiókbeállítások megnyitása' });
-    else if (a === 'logout') toast('Kijelentkezés', { type: 'info', sub: 'Munkamenet lezárása' });
-  }));
+  /* A Fiók legördülőt a közös uq-admin-fejlec.js kezeli. */
 
   /* fiók: nap-pillek kapcsolása (delegálás) */
   fDays.addEventListener('click', e => {
@@ -719,7 +714,16 @@
 
   /* fiók: mentés / előnézet / bezárás */
   document.querySelector('.jtk-save').addEventListener('click', saveDrawer);
-  document.querySelector('.jtk-prev').addEventListener('click', () => { const sc = byId(state.selectedId); const url = 'jatszas.html?route=' + encodeURIComponent(sc ? sc.route : ''); const w = window.open(url, '_blank'); if (w) { toast('Végigjátszás indul', { type: 'info', sub: 'Új lapon nyílik' }); } else { location.href = url; } });
+  /* Előnézet: az időzítéshez tartozó pálya befagyasztott verziója. */
+  document.querySelector('.jtk-prev').addEventListener('click', () => {
+    const sc = byId(state.selectedId);
+    if (!sc) { toast('Nincs kijelölt időzítés', { type: 'warn', sub: 'Válassz egyet a listából.' }); return; }
+    if (!sc.courseSlug) { toast('Ez az időzítés nincs pályához rendelve', { type: 'warn', sub: 'Válassz pályát a fiókban.' }); return; }
+    const url = 'jatszas.html?quest=' + encodeURIComponent(sc.courseSlug) + '&elonezet=1';
+    const w = window.open(url, '_blank');
+    if (w) toast('Előnézet indul', { type: 'info', sub: sc.route + ' — új lapon nyílik' });
+    else location.href = url;
+  });
   document.querySelector('.jtk-drawer-x').addEventListener('click', () => drawer.classList.add('is-hidden'));
 
   /* =========================================================

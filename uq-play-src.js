@@ -15,7 +15,7 @@
 (function () {
   'use strict';
 
-  var LEJATSZO = 'jatszas.js?v=7';
+  var LEJATSZO = 'jatszas.js?v=8';
   var CACHE_ELO = 'uq_bundle_';           // offline tartalék pályánként
 
   var DIFF_LABEL = { konnyu: 'Könnyű', kozepes: 'Közepes', nehez: 'Nehéz', extrem: 'Extrém' };
@@ -107,14 +107,19 @@
 
   var params = new URLSearchParams(location.search);
   var slug = params.get('quest');
+  /* Admin előnézet: a még KÖZZÉ NEM TETT pálya befagyasztott verzióját is
+     be kell tudni tölteni. A v_play_bundle szándékosan csak a publikált
+     pályákat adja (azt anon is olvashatja), ezért az előnézet a
+     v_admin_play_bundle nézetet kéri — annak láthatóságát az RLS dönti el,
+     tehát nem admin ezen keresztül sem lát többet. */
+  var elonezet = params.get('elonezet') === '1';
 
-  /* Csak a publikus küldetés-módnak van adatbázis-forrása. Az admin
-     teszt-mód (?game= / ?route=) marad a helyi adaton. */
   if (!slug || !window.UQAPI) { betoltLejatszo(); return; }
 
   /* Offline: a legutóbb letöltött csomag azonnal érvénybe lép, hogy a
-     terepen net nélkül is indulhasson a játék. */
-  var gyors = cacheOlvas(slug);
+     terepen net nélkül is indulhasson a játék. Előnézetben NEM: ott épp
+     azt akarod látni, ami most van az adatbázisban, nem a tegnapit. */
+  var gyors = elonezet ? null : cacheOlvas(slug);
   if (gyors) {
     window.QUEST_COURSES = window.QUEST_COURSES || {};
     window.QUEST_COURSES[slug] = atalakit(gyors);
@@ -128,21 +133,24 @@
      (vagy a beégetett adattal) indulunk. */
   var idozito = setTimeout(tovabb, 6000);
 
-  UQAPI.rest('/v_play_bundle?select=bundle,version,version_id,course_id&slug=eq.' + encodeURIComponent(slug), { anon: !UQAPI.user() })
+  var nezet = elonezet ? '/v_admin_play_bundle' : '/v_play_bundle';
+  UQAPI.rest(nezet + '?select=bundle,version,version_id,course_id&slug=eq.' + encodeURIComponent(slug),
+             { anon: !elonezet && !UQAPI.user() })
     .then(function (rows) {
       var b = rows && rows[0] && rows[0].bundle;
       if (!b || !(b.stations || []).length) throw new Error('nincs publikált csomag');
       /* a verzió UUID-ját a csomagba tesszük, hogy OFFLINE (gyorstárból
          indulva) is meglegyen a szerveroldali menethez */
       if (b.course) b.course.version_uuid = rows[0].version_id;
-      cacheIr(slug, b);
+      if (!elonezet) cacheIr(slug, b);
       window.QUEST_COURSES = window.QUEST_COURSES || {};
       window.QUEST_COURSES[slug] = atalakit(b);
       temaAlkalmaz(b);
     })
     .catch(function () {
-      /* Marad a gyorstár, illetve a beégetett quest-courses.js — a játék
-         így offline és hiba esetén is elindul. */
+      /* Marad a gyorstár, ha van. Ha nincs, a lejátszó NEM talál pályát —
+         és ezt ki is írja. Korábban ilyenkor a beégetett demó indult el,
+         ami rosszabb a hibaüzenetnél: úgy nézett ki, mintha működne. */
     })
     .then(function () { clearTimeout(idozito); tovabb(); });
 })();

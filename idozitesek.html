@@ -9,8 +9,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&family=Inter:wght@400..700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css?v=7">
-<link rel="stylesheet" href="admin.css?v=9">
+<link rel="stylesheet" href="styles.css?v=14">
+<link rel="stylesheet" href="admin.css?v=14">
 <link rel="stylesheet" href="idozitesek.css?v=5">
 </head>
 <body class="admin-body">
@@ -83,17 +83,8 @@
   <div class="adm-top-right">
     <button class="adm-btn" type="button" id="btnSave"><svg class="ico ico-sm" aria-hidden="true"><use href="#a-folder"/></svg>Mentés</button>
 
-    <div class="uq-dd adm-split" data-dd>
-      <button class="adm-btn adm-btn-lime" type="button" id="btnPublish"><svg class="ico ico-sm" aria-hidden="true"><use href="#a-send"/></svg>Közzététel</button>
-      <button class="adm-btn adm-btn-lime adm-split-caret" type="button" data-dd-toggle aria-label="Közzétételi lehetőségek"><svg class="ico ico-xs" aria-hidden="true"><use href="#a-down"/></svg></button>
-      <div class="uq-dd-menu">
-        <div class="uq-dd-label">Közzététel</div>
-        <button class="uq-dd-item" type="button" data-pub="now"><svg class="ico" aria-hidden="true"><use href="#a-send"/></svg>Közzététel most</button>
-        <button class="uq-dd-item" type="button" data-pub="schedule"><svg class="ico" aria-hidden="true"><use href="#a-clock"/></svg>Ütemezés</button>
-        <div class="uq-dd-sep"></div>
-        <button class="uq-dd-item" type="button" data-pub="draft"><svg class="ico" aria-hidden="true"><use href="#a-folder"/></svg>Piszkozatként mentés</button>
-      </div>
-    </div>
+    <!-- A Közzététel legördülő kikerült: ezen az oldalon nincs
+         külön publikálható állapot, a mentés azonnal él. -->
 
     <div class="uq-dd" data-dd>
       <button class="adm-user" type="button" data-dd-toggle>
@@ -281,7 +272,8 @@
 <!-- ===================== TOAST KONTÉNER ===================== -->
 <div class="uq-toast-wrap" id="uqToasts"></div>
 
-<script src="uq-api.js?v=3"></script>
-<script src="idozitesek.js?v=8"></script>
+<script src="uq-api.js?v=5"></script>
+<script src="idozitesek.js?v=6"></script>
+<script src="uq-admin-fejlec.js?v=1"></script>
 </body>
 </html>

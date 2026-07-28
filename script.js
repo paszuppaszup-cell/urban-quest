@@ -142,7 +142,8 @@
   });
 
   /* ---------- kedvencek: a szív-kattintást a uq-account.js delegált kezelője
-     intézi és localStorage-ba menti; itt csak a kezdőállapotot szinkronizáljuk ---------- */
+     intézi (helyi gyorstár + adatbázis); itt csak a kezdőállapotot festjük
+     rá a kártyákra. A szerverről érkező lista az 'uq:favs' eseménnyel jön. ---------- */
   if (window.UQAccount) window.UQAccount.syncFavs();
 
   /* ---------- karuszel ---------- */
@@ -157,7 +158,21 @@
     return (card.getBoundingClientRect().width + gap) * 2;
   }
 
+  /* Ha minden kártya kifér, ez nem karuszel: rácsra váltunk, és a nyilakat
+     elrejtjük. Korábban két nyíl állt a sáv mellett akkor is, ha egyetlen
+     kártya volt — letiltva, de láthatóan, tehát a felület olyasmit kínált,
+     ami nem létezik.
+
+     A mérést rács-mód nélkül kell végezni, különben körbe-körbe járnánk:
+     rácsban sosem lóg túl a tartalom, tehát mindig „kifér"-t mérnénk. */
   function updateNav() {
+    track.classList.remove('is-grid');
+    const kifer = track.scrollWidth <= track.clientWidth + 4;
+    track.classList.toggle('is-grid', kifer);
+
+    [prev, next].forEach((b) => { if (b) b.hidden = kifer; });
+    if (kifer) return;
+
     const max = track.scrollWidth - track.clientWidth;
     prev.disabled = track.scrollLeft <= 4;
     next.disabled = track.scrollLeft >= max - 4;

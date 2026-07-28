@@ -8,7 +8,6 @@
   function $(id) { return document.getElementById(id); }
 
   var W = null;
-  var snippets = { course: '', card: '' };
 
   function load() {
     W = P.getWizard();
@@ -81,11 +80,8 @@
         }).join('')
       : '';
 
-    /* kódrészletek */
-    var c = X.questCourseSnippet(W), k = X.questCardSnippet(W);
-    snippets.course = c.code; snippets.card = k.code;
-    $('pvCodeCourse').textContent = c.code;
-    $('pvCodeCard').textContent = k.code;
+    /* A kódrészlet-dobozok megszűntek: a pályák az adatbázisban élnek, nem
+       fájlokban, és a részlet a feladatok nyers megoldásait is kiírta volna. */
 
     /* hiányzó vagy elszakadt sztori-szövegek — célzott pótlás egy gombbal,
        hogy ne kelljen az egész 4. lépést újrafuttatni */
@@ -97,12 +93,36 @@
         'Illeszd be egy MI-beszélgetésbe, a választ pedig a 4. lépés Beolvasztás mezőjébe.';
     }
 
-    $('pvPlay').href = 'jatszas.html?route=' + encodeURIComponent(sum.route);
+    /* A Végigjátszás csak mentés UTÁN vezet valahová: a lejátszó a pálya
+       befagyasztott verzióját játssza le, ami a mentéskor készül el. Amíg
+       nincs mentve, nem adunk félrevezető hivatkozást. */
+    frissitJatszasLink();
     $('pvBarName').textContent = sum.route;
     $('pvBarMeta').textContent = sum.stations + ' állomás · ' + sum.tasks + ' feladat · ' +
       P.fmtDist(sum.distance) + ' · ' + sum.points + ' pont';
 
     return { errs: errs, warns: warns };
+  }
+
+  /* ---------------- Végigjátszás gomb állapota ----------------
+     Az őrfeltétel korábban a HALOTT uq_stations_v1 kulcsot olvasta, ezért
+     mentés után is azt írta ki, hogy „Előbb mentsd az adminba" — közvetlenül
+     a saját, zöld „✓ Mentve… és végigjátszható" üzenete alatt. Most a
+     varázsló saját, mentéskor kapott azonosítója (W._slug) dönt. */
+  function frissitJatszasLink() {
+    var a = $('pvPlay');
+    if (!a) return;
+    if (W._slug) {
+      a.href = 'jatszas.html?quest=' + encodeURIComponent(W._slug) + '&elonezet=1';
+      a.classList.remove('is-disabled');
+      a.removeAttribute('aria-disabled');
+      a.title = 'A mentett pálya végigjátszása';
+    } else {
+      a.href = '#';
+      a.classList.add('is-disabled');
+      a.setAttribute('aria-disabled', 'true');
+      a.title = 'Előbb mentsd el a pályát';
+    }
   }
 
   /* ---------------- admin mentés ---------------- */
@@ -114,30 +134,40 @@
           'Mentheted így is (kipróbálásra jó), de a játékos hibás pályát kapna.\n\nFolytatod?')) return;
     }
 
-    /* ütközés: már van ilyen nevű pálya, amit nem most csináltunk */
-    if (X.nameConflict(W) && !W._published) {
-      if (!window.confirm('Már létezik „' + (W.course && W.course.route) + '” nevű pálya.\n\n' +
-          'A mentés FELÜLÍRJA annak állomásait és feladatait.\n\nFolytatod?')) return;
-    }
-
-    /* A mentés mostantól az ADATBÁZISBA megy (import_course + publish_course),
-       tehát hálózati művelet — a gomb várakozó állapotot mutat közben. */
-    st.textContent = 'Mentés az adatbázisba…';
+    /* A mentés az ADATBÁZISBA megy (import_course + publish_course), tehát
+       hálózati művelet — a gomb várakozó állapotot mutat közben. Az ütközés-
+       vizsgálat is szerverkérdés, ezért előbb azt várjuk meg. */
+    st.textContent = 'Ellenőrzés…';
     st.className = 'pv-status';
-    Promise.resolve(X.publishToAdmin(W)).then(function (r) {
-      if (!r.ok) { st.textContent = r.err; st.className = 'pv-status is-err'; P.toast(r.err, true); return; }
 
-      W._published = true;
-      W._slug = r.slug;
-      P.setWizard(W);
-      st.innerHTML = '✓ ' + (r.replaced ? 'Frissítve' : 'Mentve') + ' — ' + r.stations +
-        ' állomás és ' + r.tasks + ' feladat. Megjelent a Játékok listában (piszkozatként), és végigjátszható.';
-      st.className = 'pv-status is-ok';
-      /* a Végigjátszás link a valódi, adatbázisból játszó módra mutasson */
-      var play = $('pvPlay');
-      if (play && r.slug) play.href = 'jatszas.html?quest=' + encodeURIComponent(r.slug);
-      P.toast('Mentve a Játékok közé — próbáld ki a Végigjátszás gombbal.');
+    X.slugUtkozes(W).then(function (u) {
+      if (u.utkozik && !W._published) {
+        if (!window.confirm('Már létezik „' + (u.nev || (W.course && W.course.route)) + '” néven pálya ' +
+            'ugyanezzel az azonosítóval.\n\nA mentés FELÜLÍRJA annak állomásait és feladatait.\n\nFolytatod?')) {
+          st.textContent = ''; st.className = 'pv-status';
+          return;
+        }
+      }
+      mentesFut(u.sajat || u.utkozik);
     });
+
+    function mentesFut(mar) {
+      st.textContent = 'Mentés az adatbázisba…';
+      st.className = 'pv-status';
+      Promise.resolve(X.publishToAdmin(W, mar)).then(function (r) {
+        if (!r.ok) { st.textContent = r.err; st.className = 'pv-status is-err'; P.toast(r.err, true); return; }
+
+        W._published = true;
+        W._slug = r.slug;
+        P.setWizard(W);
+        st.innerHTML = '✓ ' + (r.replaced ? 'Frissítve' : 'Mentve') + ' — ' + r.stations +
+          ' állomás és ' + r.tasks + ' feladat. Megjelent a Játékok listában piszkozatként, ' +
+          'és a Végigjátszás gombbal már ki tudod próbálni.';
+        st.className = 'pv-status is-ok';
+        frissitJatszasLink();
+        P.toast('Mentve a Játékok közé — próbáld ki a Végigjátszás gombbal.');
+      });
+    }
   }
 
   /* ---------------- új pálya ---------------- */
@@ -170,23 +200,11 @@
     });
     $('pvNewCourse').addEventListener('click', newCourse);
 
-    document.addEventListener('click', function (e) {
-      var b = e.target.closest('[data-copy]');
-      if (!b) return;
-      var which = b.getAttribute('data-copy');
-      copyText(snippets[which] || '',
-        which === 'course' ? 'A quest-courses.js kódrészlet a vágólapon.'
-                           : 'A data.js kódrészlet a vágólapon.');
-    });
-
-    /* ha még nem mentettük, a Végigjátszás link félrevezető lenne */
+    /* Amíg nincs mentve, a Végigjátszás nem visz sehová. */
     $('pvPlay').addEventListener('click', function (e) {
-      var cur = P.lsGet('uq_stations_v1', []);
-      var route = (W.course && W.course.route) || '';
-      var van = Array.isArray(cur) && cur.some(function (s) { return s.route === route; });
-      if (!van) {
+      if (!W._slug) {
         e.preventDefault();
-        P.toast('Előbb mentsd az adminba — onnan tudja betölteni a játékmotor.', true);
+        P.toast('Előbb mentsd el a pályát — a mentés készíti el a kipróbálható verziót.', true);
       }
     });
   }

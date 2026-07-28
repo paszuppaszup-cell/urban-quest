@@ -2,10 +2,15 @@
    URBAN QUEST — bejelentkezett felület adatrétege
    localStorage-demó (backend nélkül). Publikus API: window.UQAccount
 
+   A kedvencek az ADATBÁZISBAN élnek (urban_quest.favorites); a lenti kulcsok
+   közülük gyorstárak, nem források — lásd a „kedvencek" szakaszt.
+
    Kulcsok:
-     uq_user_v1      -> profil {name,email,since,phone,avatar,lang,teamName,audience}
-     uq_favs_v1      -> kedvencek [questId, ...]  (kijelentkezve is működik)
-     uq_bookings_v1  -> foglalás-igények [{id,code,questId,questTitle,date,time,teamSize,teamName,status,created}]
+     uq_user_v1      -> a demó-korszak maradéka, csak takarítjuk
+     uq_favs_v1[:uid]     -> kedvenc-gyorstár (vendégként ez az egyetlen tár)
+     uq_favs_srv_v1:uid   -> a legutóbb ismert SZERVER-állapot, ehhez mérjük,
+                             mit vettek le egy másik eszközön
+     uq_plays_v1     -> végigjátszások
 
    Kedvencek:  getFavs / isFav / toggleFav / favCount / syncFavs
    Foglalás:   getBookings / addBooking / cancelBooking / openBooking
@@ -17,6 +22,7 @@
   'use strict';
 
   var FAVS = 'uq_favs_v1';
+  var SRV = 'uq_favs_srv_v1';   // a legutóbb ismert szerver-állapot
   var PLAYS = 'uq_plays_v1';
   var USER = 'uq_user_v1';
 
@@ -93,9 +99,23 @@
   }
 
   /* ---------- kedvencek ----------
-     FELHASZNÁLÓNKÉNT külön kulcson. Korábban egyetlen közös listán éltek,
-     ezért kijelentkezés után is piroslottak a szívek és látszott a kedvenc-
-     sor — a vendég ugyanazt a listát látta, mint a kijelentkezett fiók. */
+
+     A kedvencek az ADATBÁZISBAN élnek (urban_quest.favorites), de az olvasás
+     továbbra is szinkron: a fogyasztók (főoldal szívei, küldetés-oldal,
+     Fiókom) rendereléskor, helyben várnak tömböt — egy Promise-alapú API
+     mindet megtörné.
+
+     Ezért a helyi tár GYORSTÁR, nem forrás:
+       • getFavs()  a gyorstárból ad azonnal (offline is működik)
+       • toggleFav() előbb a gyorstárat írja (a szív azonnal vált), utána a
+         szervert; hálózati hiba esetén a kimenő sorba kerül
+       • szerverSzinkron() letölti a fiók listáját, és HOZZÁADÓ módon fésüli
+         össze a helyivel — így sem a vendégként gyűjtött kedvencek, sem a
+         másik gépen felvettek nem vesznek el
+     Minden változás után 'uq:favs' megy ki, amire a felület már figyel.
+
+     Kijelentkezve marad a régi viselkedés: a vendég listája a böngészőben
+     él, és bejelentkezéskor felkerül a fiókhoz. */
   function favsKey() {
     var u = (window.UQAuth && UQAuth.getUser) ? UQAuth.getUser() : null;
     return u && u.id ? FAVS + ':' + u.id : FAVS;
@@ -118,13 +138,196 @@
   }
   function isFav(id) { return getFavs().indexOf(id) > -1; }
   function favCount() { return getFavs().length; }
-  function setFavs(a) { write(favsKey(), a); fire('uq:favs', { favs: a }); }
+  function setFavs(a) { favSzink.valtozat++; write(favsKey(), a); fire('uq:favs', { favs: a }); }
+
+  function beleptE() { return !!(window.UQAPI && UQAPI.user()); }
+
+  /* A legutóbb ismert SZERVER-állapot, fiókonként. Enélkül nem lehet
+     megkülönböztetni azt, amit itt vettem fel (fel kell vinni), attól,
+     amit máshol vettem le (itt is le kell venni) — a gyorstár mindkettőt
+     ugyanúgy „helyben megvan, szerveren nincs" alakban mutatja. */
+  function srvKulcs() {
+    var u = (window.UQAuth && UQAuth.getUser) ? UQAuth.getUser() : null;
+    return u && u.id ? SRV + ':' + u.id : null;
+  }
+
+  /* `valtozat` = a gyorstár módosításainak számlálója. A szinkron egy
+     pillanatképpel dolgozik, közben viszont a felhasználó kattinthat —
+     ilyenkor a pillanatkép elavul, és nem szabad visszaírni. */
+  var favSzink = { fut: false, ujra: false, iras: 0, valtozat: 0, sorbanVolt: false };
+
+  function aktUid() {
+    var u = (window.UQAuth && UQAuth.getUser) ? UQAuth.getUser() : null;
+    return u && u.id ? u.id : null;
+  }
+
+  /* Egyetlen kedvenc állapotának átvezetése a szerverre.
+
+     Nem várunk rá: a felület már a gyorstár írásakor átváltott.
+
+     Sorba CSAK hálózati hibánál és szerverhibánál tesszük. Egy 4xx-et hiába
+     küldenénk újra; olyankor viszont a gyorstárat vissza kell állítani,
+     különben a felület olyan állapotot mutatna, ami sehol nem létezik. */
+  function szerverIr(slug, felvesz) {
+    if (!beleptE() || !slug) return Promise.resolve(true);
+    var utvonal = '/rpc/' + (felvesz ? 'add_my_favorite' : 'remove_my_favorite');
+    var test = { p_slug: slug };
+
+    function visszaAllit() {
+      var a = getFavs(), i = a.indexOf(slug);
+      if (felvesz && i > -1) { a.splice(i, 1); setFavs(a); }
+      if (!felvesz && i < 0) { a.push(slug); setFavs(a); }
+    }
+
+    favSzink.iras++;
+    return UQAPI.rest(utvonal, { method: 'POST', body: test })
+      .then(function (v) {
+        favSzink.iras--;
+        /* A függvény false-t ad, ha a pálya nem létezik vagy nem közzétett.
+           Felvételnél ez azt jelenti, hogy nem mentődött el — a szív ne
+           maradjon pirosan. Levételnél a false csak annyit tesz, hogy nem
+           is volt ott: az eredmény akkor is helyes. */
+        var sikerult = (v === true || (Array.isArray(v) && v[0] === true));
+        if (felvesz && !sikerult) visszaAllit();
+        return felvesz ? sikerult : true;
+      })
+      .catch(function (e) {
+        favSzink.iras--;
+        var halozati = (e instanceof TypeError) || !e.status || e.status >= 500;
+        if (halozati) {
+          UQAPI.queue({ path: utvonal, method: 'POST', body: test, prefer: 'return=minimal' });
+          favSzink.sorbanVolt = true;
+          UQAPI.flush();
+          /* A gyorstárat NEM állítjuk vissza — a művelet érvényes, csak még
+             úton van. De false-szal térünk vissza, mert a hívó ebből vezeti
+             a „mi van tényleg a szerveren" nyilvántartást: egy sorban álló
+             írás még nincs fent. Ha ezt megerősítettként könyvelnénk el és a
+             sorból mégsem menne el (kvóta, holtlevél), a következő szinkron
+             „máshol levették"-nek hinné, és letörölné. Így viszont a
+             következő szinkron egyszerűen újra felküldi — a művelet
+             idempotens, tehát ez ártalmatlan. */
+          return false;
+        }
+        visszaAllit();           // 4xx: sosem fog sikerülni, ne hazudjunk róla
+        return false;
+      });
+  }
+
+  /* A fiók listájának letöltése és összefésülése a helyivel.
+
+     A szabály: a végleges lista = (ami a szerveren van) + (amit ITT vettem
+     fel azóta, hogy utoljára szinkronizáltam). Ami korábban a szerveren is
+     ott volt, most viszont nincs, azt MÁSHOL vették le — tehát itt is
+     eltűnik. Egy pusztán hozzáadó egyesítés ezt visszatolná: amit a
+     telefonodon leveszel, az a gépeden feltámadna, és a következő
+     szinkronnal újra fel is kerülne a szerverre.
+
+     Az első szinkron ezen a gépen kivétel: ilyenkor nincs mihez képest
+     „eltűnt", tehát a teljes helyi lista felkerül — ez a vendégként
+     gyűjtött kedvencek átvétele a fiókba.
+
+     Három dolog buktathatja meg, ezért mindhárom ellen véd:
+       • közben a felhasználó kattint  → a pillanatkép elavul, újrafutunk
+       • közben kijelentkezik          → az eredményt eldobjuk, nehogy az
+                                         előző fiók listája a vendég-kulcsba
+                                         kerüljön, ahonnan a következő fiók
+                                         átvenné
+       • a feltöltés elbukik           → a „legutóbb ismert szerver-állapot"
+                                         CSAK a ténylegesen sikeres
+                                         feltöltéseket rögzíti; különben a
+                                         következő szinkron eltűntnek hinné
+                                         és letörölné őket */
+  function szerverSzinkron() {
+    if (!beleptE()) return Promise.resolve(getFavs());
+    if (favSzink.fut) { favSzink.ujra = true; return Promise.resolve(getFavs()); }
+    if (favSzink.iras > 0) return Promise.resolve(getFavs());
+    /* Csak a SAJÁT függő írásaink blokkolnak. Korábban a sor bármely eleme
+       (például egy beragadt játékesemény) végleg megállította a kedvencek
+       letöltését. */
+    if (UQAPI.pending && UQAPI.pending('my_favorite') > 0) {
+      UQAPI.flush();
+      return Promise.resolve(getFavs());
+    }
+
+    favSzink.fut = true;
+    var uidKor = aktUid();
+    var valtozatKor = favSzink.valtozat;
+    var helyi = getFavs();
+    var kulcs = srvKulcs();
+    var regiSzerver = kulcs ? read(kulcs, null) : null;
+
+    return UQAPI.rest('/v_my_favorites?select=slug&order=created_at.asc')
+      .then(function (sorok) {
+        if (aktUid() !== uidKor) return helyi;              // közben fiókot váltottunk
+        if (favSzink.valtozat !== valtozatKor) {            // közben kattintott
+          favSzink.ujra = true;
+          return getFavs();
+        }
+
+        var szerveren = (sorok || []).map(function (r) { return r.slug; });
+
+        var ittUj = helyi.filter(function (x) {
+          if (szerveren.indexOf(x) > -1) return false;                 // már fent van
+          if (regiSzerver == null) return true;                        // első szinkron
+          return regiSzerver.indexOf(x) < 0;                           // itt keletkezett
+        });
+
+        var vegso = szerveren.concat(ittUj);
+        var valtozott = vegso.length !== helyi.length ||
+                        vegso.some(function (x) { return helyi.indexOf(x) < 0; });
+        if (valtozott) setFavs(vegso);
+        valtozatKor = favSzink.valtozat;    // a saját írásunk ne számítson idegen kattintásnak
+
+        return Promise.all(ittUj.map(function (x) {
+          return szerverIr(x, true).then(function (ok) { return ok ? x : null; });
+        })).then(function (eredmeny) {
+          var sikeres = eredmeny.filter(Boolean);
+          /* A szerver-állapot CSAK azt tartalmazza, ami tényleg fent van. */
+          if (kulcs && aktUid() === uidKor) write(kulcs, szerveren.concat(sikeres));
+          return vegso;
+        });
+      })
+      .catch(function () { return helyi; })   // offline: marad a gyorstár
+      .then(function (v) {
+        favSzink.fut = false;
+        if (favSzink.ujra) { favSzink.ujra = false; return szerverSzinkron(); }
+        return v;
+      });
+  }
+
+  /* Kijelentkezéskor hívja a uq-auth.js, MÉG a munkamenet eldobása előtt.
+     Csak a helyi másolatot dobja el — a lista az adatbázisban marad, és a
+     következő belépéskor visszajön. Közös gépen ez az, ami megakadályozza,
+     hogy a következő felhasználó az előző ízlését lássa a tárolóban. */
+  function kedvencGyorstarUrit() {
+    var kulcs = favsKey(), srv = srvKulcs();
+    if (kulcs === FAVS) return;          // vendég-lista: az marad
+    try { localStorage.removeItem(kulcs); } catch (e) {}
+    if (srv) { try { localStorage.removeItem(srv); } catch (e) {} }
+    fire('uq:favs', { favs: [] });
+  }
+
   function toggleFav(id) {
     if (!id) return false;
     var a = getFavs(), i = a.indexOf(id);
+    var mostkedvenc = i < 0;
     if (i > -1) a.splice(i, 1); else a.push(id);
-    setFavs(a);
-    return i < 0; // true = most már kedvenc
+    setFavs(a);              // a szív AZONNAL vált, nem várunk a hálózatra
+
+    /* A legutóbb ismert szerver-állapotot is követjük: sikeres írás után ez
+       lesz az alap, amihez a következő szinkron az eltűnéseket méri. */
+    var kulcs = srvKulcs();
+    szerverIr(id, mostkedvenc).then(function (sikerult) {
+      if (!sikerult || !kulcs) return;
+      var srv = read(kulcs, null);
+      if (!Array.isArray(srv)) return;
+      var j = srv.indexOf(id);
+      if (mostkedvenc && j < 0) srv.push(id);
+      else if (!mostkedvenc && j > -1) srv.splice(j, 1);
+      write(kulcs, srv);
+    });
+
+    return mostkedvenc;      // true = most már kedvenc
   }
 
   function syncFavs(root) {
@@ -164,6 +367,35 @@
        felhasználónként élnek, tehát az összes látható kártyát újra kell
        színezni az aktuális (fiókos vagy vendég-) lista szerint. */
     document.addEventListener('uq:auth', function () {
+      syncFavs(document);
+      fire('uq:favs', { favs: getFavs() });
+      /* Belépéskor jöjjön le a fiók listája, és fésülődjön össze azzal,
+         amit vendégként gyűjtött. */
+      szerverSzinkron().then(function () { syncFavs(document); });
+    });
+
+    /* A kimenő sor kiürült. Csak akkor töltünk le, ha a MI írásunk is benne
+       volt — a játék közbeni esemény-ürítések (másodpercenként) különben
+       fölösleges kedvenc-lekérdezéseket húznának maguk után. */
+    document.addEventListener('uq:synced', function () {
+      if (!favSzink.sorbanVolt) return;
+      favSzink.sorbanVolt = false;
+      szerverSzinkron().then(function () { syncFavs(document); });
+    });
+
+    /* Betöltéskor is: ha már be vagy jelentkezve, a másik gépen felvett
+       kedvencek is jelenjenek meg. */
+    if (beleptE()) {
+      /* Egy korábbi munkamenetből ottmaradt beküldés magától nem indul el
+         (a sor csak az 'online' eseményre ürül), és a kapunkat blokkolná. */
+      if (UQAPI.flush) UQAPI.flush();
+      szerverSzinkron().then(function () { syncFavs(document); });
+    }
+
+    /* Két megnyitott lap: amit az egyikben kedvencelsz, a másik is mutassa.
+       A storage esemény csak a TÖBBI lapon sül el, tehát nincs körhurok. */
+    window.addEventListener('storage', function (e) {
+      if (!e.key || e.key.indexOf(FAVS) !== 0) return;
       syncFavs(document);
       fire('uq:favs', { favs: getFavs() });
     });
@@ -239,18 +471,76 @@
     writePlays(list);
   }
 
-  /* ---------- GDPR ---------- */
+  /* ---------- GDPR ----------
+     Mindkét művelet adatvédelmi ígéret, tehát nem lehet látszat. A letöltés
+     korábban csak a böngésző tárolóját írta ki (a szerveren lévő menetek,
+     csapattagságok nélkül), a törlés pedig ténylegesen csak kijelentkeztetett:
+     visszalépve minden ott volt, pedig azt írta, hogy „nem vonható vissza". */
+
   function exportData() {
-    return { exportedAt: new Date().toISOString(), profile: getProfile(), favorites: getFavs(), plays: getPlays() };
+    var helyi = {
+      exportedAt: new Date().toISOString(),
+      profile: getProfile(),
+      favorites: getFavs(),
+      plays: getPlays()
+    };
+    if (!window.UQAPI || !UQAPI.user()) return Promise.resolve(helyi);
+
+    var uid = UQAPI.user().id;
+    /* A szerveren lévő saját adatok is bekerülnek — enélkül a letöltött
+       fájl hiányos, tehát a GDPR-igényt nem elégíti ki. */
+    return Promise.all([
+      UQAPI.rest('/profiles?select=*&user_id=eq.' + uid).catch(function () { return null; }),
+      UQAPI.rest('/game_sessions?select=*&user_id=eq.' + uid).catch(function () { return null; }),
+      UQAPI.rest('/team_members?select=*&user_id=eq.' + uid).catch(function () { return null; }),
+      UQAPI.rest('/v_my_favorites?select=slug,name,created_at').catch(function () { return null; })
+    ]).then(function (r) {
+      helyi.szerver = {
+        auth: { id: uid, email: UQAPI.user().email, created_at: UQAPI.user().created_at,
+                metadata: UQAPI.user().user_metadata || {} },
+        profile: r[0] && r[0][0] ? r[0][0] : null,
+        game_sessions: r[1] || [],
+        team_memberships: r[2] || [],
+        favorites: r[3] || []
+      };
+      return helyi;
+    });
   }
-  function deleteAccount() {
-    // profil + kedvencek + játékok törlődnek
+
+  /* A helyi nyomok eltakarítása — a fiókonkénti kedvenc-kulcsot és a
+     legutóbb ismert szerver-állapotot is, nem csak a régi közöset. */
+  function helyiNyomokTorlese() {
+    var kulcs = favsKey(), srv = srvKulcs();
     try { localStorage.removeItem(PLAYS); } catch (e) {}
     fire('uq:plays', { plays: [] });
-    try { localStorage.removeItem(FAVS); } catch (e) {}
+    try { localStorage.removeItem(kulcs); } catch (e) {}
+    if (kulcs !== FAVS) { try { localStorage.removeItem(FAVS); } catch (e) {} }
+    if (srv) { try { localStorage.removeItem(srv); } catch (e) {} }
     fire('uq:favs', { favs: [] });
-    if (window.UQAuth && window.UQAuth.clearUser) window.UQAuth.clearUser();
-    else { try { localStorage.removeItem(USER); } catch (e) {} fire('uq:auth', null); }
+  }
+
+  function deleteAccount() {
+    if (!window.UQAPI || !UQAPI.user()) {
+      helyiNyomokTorlese();
+      if (window.UQAuth && window.UQAuth.clearUser) return window.UQAuth.clearUser();
+      try { localStorage.removeItem(USER); } catch (e) {}
+      fire('uq:auth', null);
+      return Promise.resolve();
+    }
+
+    /* ELŐSZÖR a szerver, UTÁNA a helyi takarítás. Fordítva egy elbukó
+       kéréstől a felhasználó elveszítette volna a helyi listáját is,
+       miközben a fiókja megmarad — vagyis a hibaüzenet mellé kapott volna
+       egy csendes adatvesztést.
+
+       A szerveroldali törlés az auth.users sorát szünteti meg; a profil, a
+       csapattagság, a kedvencek és az admin jog CASCADE-del megy vele. */
+    return UQAPI.rest('/rpc/delete_my_account', { method: 'POST', body: {} })
+      .then(function () {
+        helyiNyomokTorlese();
+        return UQAPI.signOut();
+      })
+      .then(function () { fire('uq:auth', null); });
   }
 
   /* =========================================================
@@ -279,8 +569,13 @@
     if (!u) { mount.innerHTML = ''; mount.hidden = true; return; }
     mount.hidden = false;
 
-    var favs = getFavs().filter(function (id) { return window.QUESTS && window.QUESTS[id]; });
-    var resume = inProgressPlays()[0]; // folytatható játék
+    var letezik = function (id) { return !!(window.QUESTS && window.QUESTS[id]); };
+    var favs = getFavs().filter(letezik);
+    /* A folytatható játékot is szűrni kell. Enélkül egy régen törölt pálya
+       félbehagyott menete tovább kínálta magát a főoldalon („Várnegyed
+       Nyomában · 1/6 állomás"), és a Folytatás gomb egy nem létező
+       küldetésre vitt. */
+    var resume = inProgressPlays().filter(function (p) { return letezik(p.questId); })[0];
     var first = (u.name || '').split(/[.\s@]/)[0];
     first = first ? first.charAt(0).toUpperCase() + first.slice(1) : 'kalandor';
 
@@ -321,7 +616,10 @@
 
   window.UQAccount = {
     // kedvencek
-    getFavs: getFavs, isFav: isFav, toggleFav: toggleFav, favCount: favCount, syncFavs: syncFavs,
+    getFavs: getFavs,
+    szerverSzinkron: szerverSzinkron,
+    kedvencGyorstarUrit: kedvencGyorstarUrit,
+    isFav: isFav, toggleFav: toggleFav, favCount: favCount, syncFavs: syncFavs,
     // játékaim (végigjátszások)
     getPlays: getPlays, activePlay: activePlay, inProgressPlays: inProgressPlays, donePlays: donePlays,
     saveProgress: saveProgress, finishPlay: finishPlay, removePlay: removePlay, clearProgress: clearProgress,

@@ -560,15 +560,28 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
 }
 .carousel-track::-webkit-scrollbar { display: none; }
 
+/* Ha az összes kártya kifér, a sáv NEM karuszel, hanem rács.
+
+   Egyetlen 274 px-es kártya egy 1339 px-es sávban elveszve állt, mellette
+   nyilakkal, amik nem görgettek sehová. Rács-módban a kártyák kényelmesebb
+   szélességet kapnak, és a sor rendezetten kezdődik. */
+.carousel-track.is-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(330px, 400px));
+  overflow: visible;
+  scroll-snap-type: none;
+}
+.carousel-track.is-grid .quest-card { flex: initial; width: auto; }
+
 .quest-card {
   --card-accent: var(--lime);
-  flex: 0 0 274px;
+  flex: 0 0 340px;
   scroll-snap-align: start;
   display: flex;
   flex-direction: column;
   background: var(--bg-card);
   border: 1px solid var(--line);
-  border-radius: 14px;
+  border-radius: 18px;
   overflow: hidden;
   cursor: pointer;
   transition: transform .22s, border-color .22s, box-shadow .22s;
@@ -586,9 +599,9 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
 
 .quest-media {
   position: relative;
-  margin: 10px 10px 0;
+  margin: 12px 12px 0;
   aspect-ratio: 3 / 2;
-  border-radius: 10px;
+  border-radius: 14px;
   overflow: hidden;
   background: #0e120d;
 }
@@ -647,12 +660,12 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
   display: flex;
   flex-direction: column;
   flex: 1;
-  padding: 12px 13px 13px;
+  padding: 16px 17px 18px;
 }
 
 .quest-title {
   font-family: var(--font-body);
-  font-size: 16px;
+  font-size: 20px;
   font-weight: 700;
   color: #fff;
   line-height: 1.15;
@@ -773,6 +786,10 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
 .carousel-nav.prev { left: -14px; }
 .carousel-nav.next { right: -14px; }
 .carousel-nav[disabled] { opacity: 0; visibility: hidden; pointer-events: none; }
+/* A `display: grid` erősebb a böngésző beépített [hidden] szabályánál, ezért
+   a rejtett nyíl mégis kirajzolódott. Rács-módban nincs mit görgetni —
+   ilyenkor a gomb nem elhalványul, hanem eltűnik. */
+.carousel-nav[hidden] { display: none; }
 
 .carousel-empty {
   padding: 40px 0;
@@ -1437,20 +1454,76 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
 /* =========================================================
    MOBIL — főoldal újratervezés
    ========================================================= */
-/* Asztalon is látszanak a kártya adatai (időtartam, táv, csapat, nehézség,
-   korosztály, nyelv) — korábban el voltak rejtve, és a kártya ránézésre
-   semmit nem árult el a küldetésről. Csak az alcím marad rejtve, az a
-   címmel mondana ugyanazt. */
-.quest-card .quest-tagline { display: none; }
+/* =========================================================
+   KÜLDETÉS-KÁRTYA — a megrendelt elrendezés
+
+     borító → cím → színes alcím ikonnal → elválasztó → leírás
+     → értékelés (ha van) → KÉT hasábos, dobozos adatrács
+
+   A dobozok visszatértek, de KÉT hasábban. Háromban minden cella 72 px-re
+   szorult, amiben a „90–120 perc" és a „12 éves kortól" nem fért ki —
+   pont az az adat vágódott le, amiért a doboz ott van. A nyelv egész sort
+   kap, mert egyedül maradna az utolsó sorban.
+   ========================================================= */
+.quest-card .quest-tagline {
+  display: flex;
+  gap: 9px;
+  margin-top: 7px;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.35;
+  color: var(--card-accent);
+}
+.quest-card .quest-tagline .ico { margin-top: 1px; }
+
+.quest-card .quest-divider {
+  height: 1px;
+  margin: 13px 0;
+  background: linear-gradient(90deg,
+              color-mix(in srgb, var(--card-accent) 60%, transparent), transparent);
+}
+
+.quest-card .quest-desc {
+  margin-top: 0;
+  font-size: 13px;
+  line-height: 1.52;
+  -webkit-line-clamp: 3;
+}
+
+/* Értékelés: teljes szélességű doboz, a darabszám jobbra zárva.
+   Csak akkor jelenik meg, ha TÉNYLEG van értékelés — üres csillagsor
+   „(0)"-val rosszabb, mint semmi. */
+.quest-card .quest-rating {
+  margin-top: 15px;
+  padding: 12px 15px;
+  border-radius: 11px;
+  background: rgb(255 255 255 / .04);
+  border: 1px solid var(--line-soft);
+}
+.quest-card .stars { gap: 5px; }
+.quest-card .star { width: 18px; height: 18px; }
+
 .quest-card .quest-stats {
   display: grid;
-  grid-template-columns: repeat(3, auto);
-  justify-content: start;
-  gap: 6px 14px;
-  margin-top: 11px;
-  padding-top: 11px;
-  border-top: 1px solid var(--line-soft);
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 13px;
+  padding-top: 0;
+  border-top: 0;
 }
+.quest-card .quest-stat {
+  gap: 10px;
+  padding: 15px 15px;
+  border-radius: 12px;
+  background: rgb(255 255 255 / .04);
+  border: 1px solid var(--line-soft);
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #fff;
+}
+.quest-card .quest-stat .ico { color: var(--card-accent); }
+/* A nyelv egész sort kap. */
+.quest-card .quest-stat-wide { grid-column: 1 / -1; }
 
 /* indulási helyszín a kártyán */
 .quest-start {
@@ -1458,9 +1531,20 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
   margin-top: 9px;
   font-size: 11.5px; color: var(--text-2);
 }
-.quest-start .ico { color: var(--lime); flex: none; }
+.quest-start { align-items: flex-start; }
+.quest-start .ico { color: var(--lime); flex: none; margin-top: 2px; }
 .quest-start b { color: #fff; font-weight: 600; }
-.quest-start span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* Az indulási hely TÖRDEL, nem vágódik. Egy sorba szorítva keskeny kártyán
+   pont a városrész maradt le („Vigadó tér · Budape…"), pedig a találkozó
+   helye az egyik dolog, ami alapján a látogató dönt. Két sor a felső határ,
+   hogy a kártyák magassága ne szaladjon el. */
+.quest-start span {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  line-height: 1.35;
+}
 
 /* lenti fül-navigáció (csak mobilon) */
 .mobile-tabbar { display: none; }
@@ -1473,50 +1557,26 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
     gap: 13px;
     scroll-snap-type: none;
   }
+  /* Rács-módban is EGY, teljes szélességű oszlop: a 320 px-es felső korlát
+     asztalon jó arányt ad, telefonon viszont 68 px-nyi üres sávot hagyna a
+     kártya mellett. */
+  .quests .carousel-track.is-grid { grid-template-columns: 1fr; }
   .quests .carousel-nav { display: none; }
 
+  /* Telefonon UGYANAZ a felépítés, mint asztalon: borító felül, alatta a
+     szöveg és a kétoszlopos adatrács. Korábban itt vízszintesre fordult a
+     kártya (kép balra, szöveg jobbra ~60%-on), és abban a keskeny oszlopban
+     az adatrács menthetetlenül összecsúszott. */
   .quest-card {
     flex: none;
     width: 100%;
-    flex-direction: row;
-    border-radius: 14px;
+    flex-direction: column;
   }
-  .quest-card .quest-media {
-    width: 40%;
-    max-width: 168px;
-    min-width: 128px;
-    margin: 0;
-    border-radius: 0;
-    aspect-ratio: auto;
-    align-self: stretch;
-  }
-  .quest-card .quest-body { width: 60%; padding: 12px 13px 13px; }
-  .quest-card .quest-title { font-size: 15px; }
-  .quest-card .quest-tagline { display: flex; margin-top: 3px; font-size: 11px; }
-  .quest-card .quest-desc {
-    margin-top: 7px;
-    -webkit-line-clamp: 2;
-    font-size: 11px;
-    line-height: 1.4;
-  }
-  .quest-card .quest-rating { display: none; }
-  .quest-card .quest-stats {
-    display: grid;
-    grid-template-columns: repeat(3, auto);
-    justify-content: start;
-    gap: 6px 12px;
-    margin-top: 10px;
-  }
-  .quest-card .quest-stat {
-    padding: 0;
-    border: 0;
-    background: none;
-    border-radius: 0;
-    font-size: 10px;
-    color: var(--muted);
-  }
-  .quest-card .quest-stat .ico { color: var(--card-accent); }
-  .quest-card .quest-stat-lang { gap: 4px; }
+  .quest-card .quest-body { padding: 16px 16px 18px; }
+  .quest-card .quest-title { font-size: 19px; }
+  .quest-card .quest-tagline { font-size: 12.5px; }
+  .quest-card .quest-desc { font-size: 12.5px; -webkit-line-clamp: 3; }
+  .quest-card .quest-stat { padding: 12px 13px; font-size: 12px; }
   .quest-card .quest-stat-lang .flag { width: 15px; height: 10px; }
   .quest-card:hover { transform: none; }
 

@@ -925,20 +925,8 @@
     else if (a === 'draft') { setSelectedStatus('draft'); }
   }));
 
-  /* Felhasználói legördülő */
-  document.querySelectorAll('[data-user]').forEach(b => b.addEventListener('click', () => {
-    /* Mindhárom pont csak egy visszajelzést írt ki és nem csinált semmit —
-       a Kijelentkezés sem jelentkeztetett ki. Most tényleg oda visznek,
-       ahová a nevük ígéri. */
-    const a = b.dataset.user;
-    if (a === 'profile') window.location.href = 'fiokom.html';
-    else if (a === 'settings') window.location.href = 'beallitasok.html';
-    else if (a === 'logout') {
-      Promise.resolve(window.UQAPI && UQAPI.signOut ? UQAPI.signOut() : null)
-        .catch(() => {})
-        .then(() => { window.location.href = 'bejelentkezes.html'; });
-    }
-  }));
+  /* A Fiók legördülőt a közös uq-admin-fejlec.js kezeli mind a 14 admin
+     oldalon — itt szándékosan nincs saját másolat belőle. */
 
   /* fiók: élő karakterszámlálók */
   fName.addEventListener('input', () => { cName.textContent = fName.value.length; });
@@ -1034,7 +1022,19 @@
 
   /* fiók: mentés / előnézet / bezárás */
   document.querySelector('.jtk-save').addEventListener('click', saveDrawer);
-  document.querySelector('.jtk-prev').addEventListener('click', () => { const url = 'jatszas.html?game=' + encodeURIComponent(state.selectedId); const w = window.open(url, '_blank'); if (w) { toast('Végigjátszás indul', { type: 'info', sub: 'Új lapon nyílik' }); } else { location.href = url; } });
+  /* Előnézet. A ?game= paraméter a halott localStorage-ból dolgozott, ezért
+     a lejátszó a beégetett demót indította el — más pályát, mint amit
+     kijelöltél. A ?quest=<slug>&elonezet=1 a pálya befagyasztott verzióját
+     játssza le az adatbázisból, és nem ír a ranglistába. */
+  document.querySelector('.jtk-prev').addEventListener('click', () => {
+    const g = byId(state.selectedId);
+    if (!g) { toast('Nincs kijelölt játék', { type: 'warn', sub: 'Válassz egy pályát a listából.' }); return; }
+    if (!g._slug) { toast('Ennek a pályának nincs azonosítója', { type: 'warn', sub: 'Mentsd el a pályát, utána próbáld újra.' }); return; }
+    const url = 'jatszas.html?quest=' + encodeURIComponent(g._slug) + '&elonezet=1';
+    const w = window.open(url, '_blank');
+    if (w) toast('Előnézet indul', { type: 'info', sub: 'Új lapon nyílik' });
+    else location.href = url;
+  });
   document.querySelector('.jtk-drawer-x').addEventListener('click', () => drawer.classList.add('is-hidden'));
 
   /* =========================================================

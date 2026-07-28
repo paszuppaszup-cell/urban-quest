@@ -818,27 +818,14 @@
   });
 
   /* felső sáv: Mentés / Közzététel */
-  document.getElementById('btnSave').addEventListener('click', function () { saveStore(); toast('Módosítások mentve', { sub: 'A médiatár elmentve' }); });
-  document.getElementById('btnPublish').addEventListener('click', function () { saveStore(); toast('Médiatár közzétéve', { sub: 'Élő a nyilvános oldalon' }); });
+  /* A médiatárban nincs mit külön menteni vagy közzétenni: a feltöltés és
+     az átnevezés azonnal az adatbázisba megy. A két fejléc-gomb ezért
+     kikerült az oldalról — korábban csak zöld visszajelzést adtak. */
 
-  document.querySelectorAll('[data-pub]').forEach(function (b) {
-    b.addEventListener('click', function () {
-      var a = b.dataset.pub;
-      saveStore();
-      if (a === 'now') toast('Médiatár közzétéve', { sub: 'Élő a nyilvános oldalon' });
-      else if (a === 'schedule') toast('Közzététel ütemezve', { type: 'info', sub: 'Időzített megjelenés beállítva' });
-      else if (a === 'draft') toast('Piszkozatként mentve', { type: 'info', sub: 'Nem jelenik meg nyilvánosan' });
-    });
-  });
+  /* A Közzététel legördülő három pontja (most / ütemezés / piszkozat)
+     nem létező műveleteket ígért, csak visszajelzést adott — kikerült. */
 
-  document.querySelectorAll('[data-user]').forEach(function (b) {
-    b.addEventListener('click', function () {
-      var a = b.dataset.user;
-      if (a === 'profile') toast('Profil', { type: 'info', sub: 'Profil megnyitása' });
-      else if (a === 'settings') toast('Beállítások', { type: 'info', sub: 'Fiókbeállítások megnyitása' });
-      else if (a === 'logout') toast('Kijelentkezés', { type: 'info', sub: 'Munkamenet lezárása' });
-    });
-  });
+  /* A Fiók legördülőt a közös uq-admin-fejlec.js kezeli. */
 
   /* =========================================================
      INDÍTÁS — az adatbázisból töltünk, ezért aszinkron

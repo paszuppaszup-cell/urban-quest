@@ -16,10 +16,10 @@ window.questCardHTML = function (id) {
   const esc = (s) => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const ico = (i, cls) => `<svg class="${cls || 'ico'}" aria-hidden="true"><use href="#${i}"/></svg>`;
 
-  const accKey     = q.catCls === 'romantikus' ? 'romantikus' : q.diff;
-  const badgeCls   = q.catCls === 'romantikus' ? 'romantikus' : q.diff;
-  const badgeLabel = q.catCls === 'romantikus' ? 'Romantikus' : q.diffLabel;
-  const tagIcon    = q.catCls === 'romantikus' ? 'i-heart' : (q.catCls === 'termeszet' ? 'i-leaf' : 'i-compass');
+  const accKey = q.catCls === 'romantikus' ? 'romantikus' : q.diff;
+  const tagIcon = q.catCls === 'romantikus' ? 'i-heart' : (q.catCls === 'termeszet' ? 'i-leaf' : 'i-compass');
+  /* A képre égetett nehézség-címke kikerült: a nehézség az adatrácsban áll
+     („Közepes"), és ugyanaz kétszer nem információ, csak zaj a borítón. */
 
   /* Értékelés csak akkor, ha VAN. Üres csillagsor „(0)"-val rosszabb,
      mint semmi — és a korábbi kitalált 4.8/64 értékek félrevezetők voltak. */
@@ -34,6 +34,33 @@ window.questCardHTML = function (id) {
   const langStr = q.langs.map(l => l.toUpperCase()).join('/');
   const f = q.filters || {};
   const favCls = q.fav ? ' is-on' : '';
+
+  /* „8+" helyett „8 éves kortól" — a kártyán van hely a teljes mondatra,
+     és így nem kell fejben feloldani egy rövidítést. */
+  const korM = String(q.age || '').match(/^(\d+)\s*\+?$/);
+  const korText = korM ? korM[1] + ' éves kortól' : (q.age || '');
+
+  /* Az adatok TÖMBKÉNT állnak össze, nem kézzel felsorolva.
+
+     Így a hiányzó mező (nincs megadva táv, nincs korhatár) nem hagy üres
+     dobozt a rácsban, és — ami fontosabb — a páratlanul maradó UTOLSÓ adat
+     megkapja az egész sort, ahelyett hogy félig üresen árválkodna. A hatos
+     alapkészlet épp két teljes hasábot ad ki:
+
+        [időtartam] [táv]  /  [nehézség] [csapat]  /  [korhatár] [nyelv]  */
+  const adatok = [];
+  if (q.duration)  adatok.push({ i: 'i-clock', v: esc(q.duration) });
+  if (q.distance && q.distance !== '—') adatok.push({ i: 'i-pin', v: esc(q.distance) });
+  if (q.diffLabel) adatok.push({ i: 'i-level', v: esc(q.diffLabel) });
+  if (q.team)      adatok.push({ i: 'i-users', v: esc(q.team) });
+  if (korText)     adatok.push({ i: 'i-age',   v: esc(korText) });
+  if (langStr)     adatok.push({ i: 'i-globe', v: langStr, cls: ' quest-stat-lang' });
+
+  const statsHTML = adatok.map(function (a, idx) {
+    // páratlan darabszám esetén az utolsó doboz kitölti a sort
+    const wide = (adatok.length % 2 === 1 && idx === adatok.length - 1) ? ' quest-stat-wide' : '';
+    return `<span class="quest-stat${wide}${a.cls || ''}">${ico(a.i, 'ico ico-sm')}<span>${a.v}</span></span>`;
+  }).join('');
 
   /* A kártya a küldetés SAJÁT színét viseli: a --lime tokent csak ezen az
      egy elemen írjuk felül, így a rács minden kártyája más világot mutat,
@@ -52,23 +79,21 @@ window.questCardHTML = function (id) {
     role="link" tabindex="0" aria-label="${esc(q.title)}">
     <div class="quest-media">
       <img src="${q.image || 'assets/hero-mountain.svg'}" alt="${esc(q.title)}" loading="lazy">
-      <span class="badge badge-${badgeCls}">${badgeLabel}</span>
       <button class="fav${favCls}" type="button" aria-label="Kedvencekhez adás" aria-pressed="${q.fav ? 'true' : 'false'}">${ico('i-heart', 'ico ico-sm')}</button>
     </div>
     <div class="quest-body">
       <h3 class="quest-title">${esc(q.title)}</h3>
-      <p class="quest-tagline">${ico(tagIcon, 'ico ico-xs')}<span>${esc(q.subtitle)}</span></p>
+      <p class="quest-tagline">${ico(tagIcon, 'ico ico-sm')}<span>${esc(q.subtitle)}</span></p>
+      <div class="quest-divider"></div>
       <p class="quest-desc">${esc(q.desc)}</p>
       ${ratingHTML}
+
+      <!-- Adatrács: KÉT hasáb. Háromban a „90–120 perc" és a
+           „12 éves kortól" nem fér ki, és pont az az adat vágódik le,
+           amiért a doboz ott van. -->
+      <div class="quest-stats">${statsHTML}</div>
+
       ${q.startPoint ? `<p class="quest-start">${ico('i-pin', 'ico ico-xs')}<span>Indulás: <b>${esc(q.startPoint)}</b>${q.locCity ? ' · ' + esc(q.locCity) : ''}</span></p>` : ''}
-      <div class="quest-stats">
-        <span class="quest-stat">${ico('i-clock', 'ico ico-xs')}<span>${esc(q.duration)}</span></span>
-        <span class="quest-stat">${ico('i-pin', 'ico ico-xs')}<span>${esc(q.distance)}</span></span>
-        <span class="quest-stat">${ico('i-users', 'ico ico-xs')}<span>${esc(q.team)}</span></span>
-        <span class="quest-stat">${ico('i-level', 'ico ico-xs')}<span>${esc(q.diffScore)}</span></span>
-        <span class="quest-stat">${ico('i-age', 'ico ico-xs')}<span>${esc(q.age)}</span></span>
-        <span class="quest-stat quest-stat-lang">${q.langs.map(l => `<svg class="flag" aria-hidden="true"><use href="#f-${l}"/></svg>`).join('')}<span>${langStr}</span></span>
-      </div>
     </div>
   </article>`;
 };

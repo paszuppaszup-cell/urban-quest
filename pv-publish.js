@@ -418,7 +418,7 @@ window.PVP = (function () {
     return cfg;
   }
 
-  function publishToAdmin(W) {
+  function publishToAdmin(W, mar) {
     var route = (W.course && W.course.route) || '';
     if (!route) return Promise.resolve({ ok: false, err: 'A pályának nincs neve.' });
     if (!window.UQAPI || !UQAPI.user()) {
@@ -489,7 +489,6 @@ window.PVP = (function () {
       })
     };
 
-    var hadBefore = typeof nameConflict === 'function' ? !!nameConflict(W) : false;
 
     return UQAPI.rest('/rpc/import_course', { method: 'POST', body: { p: payload } })
       .then(function (r) {
@@ -501,94 +500,41 @@ window.PVP = (function () {
       })
       .then(function (v) {
         try { localStorage.removeItem('uq_catalog_v1'); } catch (e) {}
-        return { ok: true, replaced: hadBefore, stations: v.stations, tasks: v.tasks, route: route, slug: sSlug };
+        return { ok: true, replaced: !!mar, stations: v.stations, tasks: v.tasks, route: route, slug: sSlug };
       })
       .catch(function (e) {
         return { ok: false, err: String(e && e.message || 'A mentés nem sikerült.') };
       });
   }
 
-  /* van-e már ilyen nevű pálya, amit NEM ez a varázsló csinált */
-  function nameConflict(W) {
+  /* Van-e már ilyen azonosítójú pálya, amit NEM ez a varázsló csinált?
+
+     A régi változat a halott uq_games_v1 kulcsot olvasta, ezért soha nem
+     jelzett — pedig épp ez az a figyelmeztetés, ami megvéd attól, hogy egy
+     meglévő pályát felülírj. Az import a legacy_key-ből származtatja a
+     pálya azonosítóját ('varazslo:<slug>'), tehát a saját korábbi mentésünket
+     frissíti; a bajt az okozza, ha ugyanezt a slugot MÁS pálya foglalja. */
+  function slugUtkozes(W) {
     var route = (W.course && W.course.route) || '';
-    var games = P.lsGet('uq_games_v1', []);
-    if (!Array.isArray(games)) return false;
-    return games.some(function (g) {
-      return (typeof g === 'string' ? g : g && g.name) === route;
-    });
+    var sSlug = slug(route);
+    if (!sSlug || !window.UQAPI || !UQAPI.user()) {
+      return Promise.resolve({ utkozik: false, sajat: false });
+    }
+    return UQAPI.rest('/v_admin_courses?select=id,name,legacy_key&slug=eq.' + encodeURIComponent(sSlug))
+      .then(function (rows) {
+        var r = rows && rows[0];
+        if (!r) return { utkozik: false, sajat: false };
+        var sajat = r.legacy_key === ('varazslo:' + sSlug);
+        return { utkozik: !sajat, sajat: sajat, nev: r.name };
+      })
+      .catch(function () { return { utkozik: false, sajat: false }; });
   }
 
-  /* ===========================================================
-     KÓDRÉSZLET A PUBLIKUS FÁJLOKHOZ
-     =========================================================== */
-  function jsStr(s) {
-    return "'" + String(s == null ? '' : s).replace(/\\/g, '\\\\').replace(/'/g, "\\'")
-      .replace(/\n/g, ' ').replace(/\s+/g, ' ').trim() + "'";
-  }
-
-  function questCourseSnippet(W) {
-    var course = W.course || {};
-    var id = slug(W.heroTitle || course.route);
-    var L = [];
-    L.push('  /* ---- ' + (course.route || '') + ' — a varázsló generálta ---- */');
-    L.push('  ' + id + ': {');
-    L.push('    title: ' + jsStr(W.heroTitle || course.route) + ',');
-    L.push('    stations: [');
-    toStations(W).forEach(function (s, i, arr) {
-      L.push('      { name: ' + jsStr(s.name) + ', route: ' + jsStr(s.route) +
-             ', type: ' + jsStr(s.type) + ', diff: ' + jsStr(s.diff) + ',');
-      L.push('        loc: ' + jsStr(s.loc) + ', lat: ' + jsStr(s.lat) + ', lng: ' + jsStr(s.lng) + ',');
-      L.push('        desc: ' + jsStr(s.desc) + ',');
-      L.push('        taskShort: ' + jsStr(s.taskShort) + ' }' + (i < arr.length - 1 ? ',' : ''));
-    });
-    L.push('    ],');
-    L.push('    tasks: [');
-    toTasks(W).forEach(function (t, i, arr) {
-      L.push('      { question: ' + jsStr(t.question) + ', station: ' + jsStr(t.station) +
-             ', route: ' + jsStr(t.route) + ', type: ' + jsStr(t.type) + ', points: ' + t.points + ',');
-      L.push('        cfg: ' + JSON.stringify(t.cfg) + ' }' + (i < arr.length - 1 ? ',' : ''));
-    });
-    L.push('    ]');
-    L.push('  }');
-    return { id: id, code: L.join('\n') };
-  }
-
-  /* a publikus kártya (data.js → window.QUESTS) */
-  function questCardSnippet(W) {
-    var course = W.course || {};
-    var id = slug(W.heroTitle || course.route);
-    var sk = W.skeleton || [];
-    var st = P.routeStats(sk, !!course.loop);
-    var mins = st.walkMin + P.solveMinutes(sk);
-    var diffKey = { 'Könnyű': 'konnyu', 'Közepes': 'kozepes', 'Nehéz': 'nehez' }[course.level] || 'kozepes';
-    var first = sk[0] || {};
-
-    var L = [];
-    L.push('  /* ---- ' + (course.route || '') + ' — a varázsló generálta ---- */');
-    L.push('  ' + id + ': {');
-    L.push('    id: ' + jsStr(id) + ',');
-    L.push("    cat: 'Városi', catCls: 'varosi',");
-    L.push('    diff: ' + jsStr(diffKey) + ', diffLabel: ' + jsStr(course.level || 'Közepes') +
-           ', diffScore: ' + jsStr((diffKey === 'konnyu' ? '2/5 könnyű' : diffKey === 'nehez' ? '4/5 nehéz' : '3/5 közepes')) + ',');
-    L.push("    audience: 'Csapatoknak',");
-    L.push('    title: ' + jsStr(W.heroTitle || course.route) + ',');
-    L.push('    heroTitle: ' + jsStr(W.heroTitle || course.route) + ',');
-    L.push("    subtitle: 'TÖLTSD KI — rövid, hívogató alcím',");
-    L.push('    desc: ' + jsStr(W.intro || '') + ',');
-    L.push('    duration: ' + jsStr(P.fmtMin(mins)) + ', distance: ' + jsStr((st.total / 1000).toFixed(1).replace('.', ',') + ' km') +
-           ", team: '2–6 fő', age: '8+ év',");
-    L.push("    langs: ['hu'], price: 'INGYENES', rating: 5, reviews: 0,");
-    L.push("    image: 'assets/quest-varnegyed.svg',   /* cseréld sajátra */");
-    L.push('    filters: { nehezseg: ' + jsStr(diffKey) + ", kategoria: 'varosi', helyszin: 'buda', csoport: '2-6', idotartam: 'kozep' },");
-    L.push('    about: ' + jsStr(W.arc || W.intro || '') + ',');
-    L.push("    doList: ['Rejtvények megfejtése a helyszínen', 'Fotófeladatok', 'Nyomok felkutatása'],");
-    L.push("    knowList: ['Kényelmes sétával teljesíthető', 'Bármikor megállhattok', 'Családbarát útvonal'],");
-    L.push('    locCity: ' + jsStr((W.area && W.area.n) || 'Budapest') + ', startPoint: ' + jsStr(first.name || '') +
-           ', startAddr: ' + jsStr(first.loc || '') + ',');
-    L.push("    teamText: 'Kiválóan alkalmas családoknak és baráti társaságoknak.', teamPill: '2–6 fő (ideális)'");
-    L.push('  }');
-    return { id: id, code: L.join('\n') };
-  }
+  /* A publikus fájlokba szánt kódrészlet-generátorok innen eltávolítva.
+     A pályák az adatbázisban élnek, nem a quest-courses.js-ben és a
+     data.js-ben, tehát az utasítás valótlan volt — a kiírt részlet ráadásul
+     a feladatok NYERS megoldásait is tartalmazta, amiket így a felhasználó
+     egy nyilvánosan letölthető fájlba másolt volna. */
 
   /* ===========================================================
      ÖSSZEFOGLALÓ ADATOK
@@ -613,8 +559,7 @@ window.PVP = (function () {
   return {
     fullLint: fullLint, summary: summary,
     toStations: toStations, toTasks: toTasks,
-    publishToAdmin: publishToAdmin, nameConflict: nameConflict,
-    questCourseSnippet: questCourseSnippet, questCardSnippet: questCardSnippet,
+    publishToAdmin: publishToAdmin, slugUtkozes: slugUtkozes,
     slug: slug
   };
 })();

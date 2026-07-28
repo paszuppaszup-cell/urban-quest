@@ -424,28 +424,37 @@
       showMsg(msg, 'Adatok elmentve!');
     });
 
-    // adatletöltés (JSON Blob)
+    // adatletöltés (JSON Blob) — a szerveren lévő adatok is bekerülnek,
+    // ezért hálózati művelet: a gomb közben letiltva
     var exportBtn = document.getElementById('exportBtn');
     if (exportBtn) exportBtn.addEventListener('click', function () {
-      var data = AC.exportData();
-      var blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-      var url = URL.createObjectURL(blob);
-      var a = document.createElement('a');
-      a.href = url;
-      a.download = 'urban-quest-adataim.json';
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+      exportBtn.disabled = true;
+      Promise.resolve(AC.exportData()).then(function (data) {
+        var blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement('a');
+        a.href = url;
+        a.download = 'urban-quest-adataim.json';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+      }).then(function () { exportBtn.disabled = false; },
+              function () { exportBtn.disabled = false; alert('Az adatok letöltése nem sikerült.'); });
     });
 
-    // fiók törlése
+    // fiók törlése — mostantól tényleg töröl (auth.users + kaszkád)
     var deleteBtn = document.getElementById('deleteBtn');
     if (deleteBtn) deleteBtn.addEventListener('click', function () {
-      if (confirm('Biztosan törlöd a fiókod? A profil és a kedvencek törlődnek, ez a művelet nem vonható vissza.')) {
-        AC.deleteAccount();
-        location.href = 'index.html';
-      }
+      if (!confirm('Biztosan törlöd a fiókod?\n\nA profilod, a csapattagságaid, a kedvenceid és a\njátékelőzményeid véglegesen törlődnek. Ez nem vonható vissza.')) return;
+      deleteBtn.disabled = true;
+      Promise.resolve(AC.deleteAccount())
+        .then(function () { location.href = 'index.html'; })
+        .catch(function (e) {
+          deleteBtn.disabled = false;
+          alert('A fiók törlése nem sikerült: ' + (e && e.message ? e.message : 'ismeretlen hiba') +
+                '\n\nA fiókod megmaradt, próbáld újra később.');
+        });
     });
   }
 
@@ -511,6 +520,11 @@
   }
 
   // adatréteg-események: az érintett fület újrarendereljük
+  /* A katalógus az adatbázisból jön, tehát a kedvencek feloldásához szükséges
+     window.QUESTS később készül el, mint az első kirajzolás. Enélkül a
+     Kedvenceim fül üresen villanna fel, és úgy is maradna. */
+  document.addEventListener('uq:catalog', function () { render(); });
+
   document.addEventListener('uq:plays', function () {
     var t = currentTab();
     if (t === 'jatekok' || t === 'attekintes') render();

@@ -242,6 +242,7 @@
       courseId: r.course_id,
       name: r.name || '',
       route: r.course_name || '',
+      courseSlug: r.course_slug || '',
       position: r.position,
       type: KIND_DB[r.kind] || 'feladat',
       diff: DIFF_LBL[r.difficulty] || 'Közepes',
@@ -267,7 +268,7 @@
     if (!window.UQAPI) return Promise.reject(new Error('Hiányzik az adatréteg.'));
     return Promise.all([
       UQAPI.rest('/v_admin_stations?select=*&order=course_name.asc,position.asc'),
-      UQAPI.rest('/v_admin_courses?select=id,name&order=sort_order.asc,name.asc')
+      UQAPI.rest('/v_admin_courses?select=id,name,slug&order=sort_order.asc,name.asc')
     ]).then(([sorok, palyak]) => {
       COURSES = palyak || [];
       STATIONS.splice(0, STATIONS.length, ...(sorok || []).map(dbSor));
@@ -547,13 +548,34 @@
 
   function perc(s) { const m = String(s || '').match(/\d+/); return m ? Number(m[0]) * 60 : null; }
 
+  /* A játékos NEM a szerkesztő tábláiból játszik, hanem a pálya befagyasztott
+     verziójából. Ezért egy állomás mentése önmagában nem jut el a játékig —
+     újra kell fagyasztani a pályát. A feladatok oldala ezt már így csinálja;
+     az állomásoké eddig nem, ezért egy átnevezett vagy áthelyezett állomás
+     változatlanul jelent meg a végigjátszásban. */
+  function frissenTartPalyat(courseId) {
+    if (!courseId) return Promise.resolve();
+    return UQAPI.rest('/rpc/publish_course', { method: 'POST', body: { p_course: courseId } })
+      .then(r => {
+        const v = Array.isArray(r) ? r[0] : r;
+        if (v && v.warnings && v.warnings.length) {
+          toast('Figyelmeztetés a pályán', { type: 'info', sub: v.warnings.join('; ') });
+        }
+      })
+      .catch(e => {
+        toast('A játék frissítése nem sikerült', { type: 'error',
+          sub: String(e && e.message || '') + ' — az állomás elmentődött, a Közzététel gombbal frissítheted.' });
+      });
+  }
+
   function saveDrawer() {
     const st = byId(state.selectedId);
     if (!st) { toast('Nincs kiválasztott állomás', { type: 'error' }); return; }
     const idoBe = fTimeToggle.classList.contains('is-on');
+    const celPalya = palyaIdNevbol(fRoute.value) || st.courseId;
     UQAPI.rest('/rpc/save_station', { method: 'POST', body: { p: {
       id: st.id,
-      course_id: palyaIdNevbol(fRoute.value) || st.courseId,
+      course_id: celPalya,
       name: fName.value.trim() || 'Névtelen állomás',
       kind: fType.value || 'feladat',
       difficulty: DIFF_DB[fDiff.value] || 'kozepes',
@@ -564,6 +586,10 @@
       lat: fLat.value, lng: fLng.value,
       time_limit_s: idoBe ? perc(fTime.value) : null
     } } })
+      /* Ha a pályát átállítottad, MINDKETTŐT frissíteni kell: a régiből
+         kikerült az állomás, az újba bekerült. */
+      .then(() => frissenTartPalyat(celPalya))
+      .then(() => (st.courseId && st.courseId !== celPalya) ? frissenTartPalyat(st.courseId) : null)
       .then(() => ujratolt('Állomás elmentve', fName.value.trim()))
       .catch(hibaToast);
   }
@@ -597,6 +623,7 @@
     if (!window.confirm(uzenet)) return;
 
     UQAPI.rest('/rpc/delete_station', { method: 'POST', body: { p_station: id } })
+      .then(() => frissenTartPalyat(st.courseId))
       .then(() => {
         state.selected.delete(id);
         if (state.selectedId === id) { state.selectedId = null; drawer.classList.add('is-hidden'); }
@@ -740,23 +767,25 @@
   document.getElementById('btnNewStation').addEventListener('click', newStation);
 
   /* felső sáv: Mentés / Közzététel */
-  document.getElementById('btnSave').addEventListener('click', () => { saveStore(); toast('Módosítások mentve', { sub: 'A piszkozat elmentve' }); });
-  document.getElementById('btnPublish').addEventListener('click', () => { saveStore(); toast('Állomások közzétéve', { sub: 'Élő a nyilvános pályákon' }); });
+  /* Ez a két gomb korábban csak zöld visszajelzést adott: a saveStore()
+     szándékosan üres (soronként mentünk RPC-vel), a „Közzététel" pedig
+     semmit nem tett közzé. Most a Mentés a nyitott fiókot menti, a
+     Közzététel a kijelölt állomás pályáját fagyasztja újra. */
+  document.getElementById('btnSave').addEventListener('click', () => {
+    if (!state.selectedId) { toast('Nincs nyitott állomás', { type: 'warn', sub: 'Válassz egyet a listából.' }); return; }
+    saveDrawer();
+  });
+  document.getElementById('btnPublish').addEventListener('click', () => {
+    const st = byId(state.selectedId);
+    if (!st || !st.courseId) { toast('Nincs kijelölt állomás', { type: 'warn', sub: 'Válassz egyet, hogy tudjam, melyik pályát tegyem közzé.' }); return; }
+    toast('Pálya frissítése…', { type: 'info', sub: st.route });
+    frissenTartPalyat(st.courseId).then(() => toast('Pálya közzétéve', { sub: st.route + ' — a játékosok az új változatot kapják' }));
+  });
 
-  document.querySelectorAll('[data-pub]').forEach(b => b.addEventListener('click', () => {
-    const a = b.dataset.pub;
-    saveStore();
-    if (a === 'now') toast('Állomások közzétéve', { sub: 'Élő a nyilvános pályákon' });
-    else if (a === 'schedule') toast('Közzététel ütemezve', { type: 'info', sub: 'Időzített megjelenés beállítva' });
-    else if (a === 'draft') toast('Piszkozatként mentve', { type: 'info', sub: 'Nem jelenik meg nyilvánosan' });
-  }));
+  /* A Közzététel legördülő három pontja (most / ütemezés / piszkozat)
+     nem létező műveleteket ígért, csak visszajelzést adott — kikerült. */
 
-  document.querySelectorAll('[data-user]').forEach(b => b.addEventListener('click', () => {
-    const a = b.dataset.user;
-    if (a === 'profile') toast('Profil', { type: 'info', sub: 'Profil megnyitása' });
-    else if (a === 'settings') toast('Beállítások', { type: 'info', sub: 'Fiókbeállítások megnyitása' });
-    else if (a === 'logout') toast('Kijelentkezés', { type: 'info', sub: 'Munkamenet lezárása' });
-  }));
+  /* A Fiók legördülőt a közös uq-admin-fejlec.js kezeli. */
 
   /* fiók: élő karakterszámlálók */
   fName.addEventListener('input', () => { cName.textContent = fName.value.length; });
@@ -797,7 +826,18 @@
 
   /* fiók: mentés / előnézet / bezárás */
   document.querySelector('.jtk-save').addEventListener('click', saveDrawer);
-  document.querySelector('.jtk-prev').addEventListener('click', () => { const s = byId(state.selectedId); const url = 'jatszas.html?route=' + encodeURIComponent(s ? s.route : ''); const w = window.open(url, '_blank'); if (w) { toast('Végigjátszás indul', { type: 'info', sub: 'Új lapon nyílik' }); } else { location.href = url; } });
+  /* Előnézet: a kijelölt állomás PÁLYÁJÁT játssza le, a befagyasztott
+     verzióból. A ?route= név szerint keresett a halott localStorage-ban,
+     ezért a beégetett demót indította. */
+  document.querySelector('.jtk-prev').addEventListener('click', () => {
+    const s = byId(state.selectedId);
+    if (!s) { toast('Nincs kijelölt állomás', { type: 'warn', sub: 'Válassz egyet a listából.' }); return; }
+    if (!s.courseSlug) { toast('Ez az állomás nincs pályához rendelve', { type: 'warn', sub: 'Válassz pályát a fiókban.' }); return; }
+    const url = 'jatszas.html?quest=' + encodeURIComponent(s.courseSlug) + '&elonezet=1';
+    const w = window.open(url, '_blank');
+    if (w) toast('Előnézet indul', { type: 'info', sub: s.route + ' — új lapon nyílik' });
+    else location.href = url;
+  });
   document.querySelector('.jtk-drawer-x').addEventListener('click', () => drawer.classList.add('is-hidden'));
 
   /* =========================================================

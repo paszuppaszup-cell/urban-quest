@@ -121,9 +121,18 @@
 
 
 /* =========================================================
-   URBAN QUEST — IRÁNYÍTÓPULT (valós, tárból számolt statisztikák)
-   Olvassa: uq_teams_v1 / uq_stations_v1 / uq_tasks_v1 /
-            uq_media_v1 / uq_schedules_v1 (üres tár esetén seed).
+   URBAN QUEST — IRÁNYÍTÓPULT
+
+   Ez a lap korábban öt HALOTT localStorage-kulcsot olvasott, és ha azok
+   üresek voltak — márpedig mindig azok, mert az adatok rég az
+   adatbázisban vannak —, akkor beégetett minta-tömbökből számolt.
+   Így 8 pályát, 10 csapatot, 9 feladatot és 58%-os befejezési arányt
+   közölt élő időbélyeggel, miközben a valóság egészen más. Nyilvános
+   URL-en bárki megnyithatta, és kitalált üzleti számokat látott.
+
+   Innentől kizárólag a v_admin_* nézetekből dolgozik. Ha nincs
+   bejelentkezve vagy nincs jogosultsága, azt megmondja — nem tölti ki
+   a helyet kitalált adattal.
    ========================================================= */
 (function () {
   'use strict';
@@ -132,83 +141,30 @@
   var esc = function (s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); };
   var ico = function (id, cls) { return '<svg class="ico ' + (cls || '') + '" aria-hidden="true"><use href="#' + id + '"/></svg>'; };
 
-  /* ---------- tartalék-seedek (a többi oldal magadatával egyezők) ---------- */
-  var SEED_TEAMS = [
-    { name: 'Trail Blazers', route: 'Városliget Felfedező', status: 'playing', members: 4, score: 2340, progress: 64 },
-    { name: 'Városi Nyomozók', route: 'Budai Vár Rejtélye', status: 'done', members: 5, score: 3120, progress: 100 },
-    { name: 'Kaland Expressz', route: 'Liget Projekt', status: 'playing', members: 3, score: 1780, progress: 42 },
-    { name: 'Kód Vadászok', route: 'Belváros Kódvadászat', status: 'waiting', members: 4, score: 0, progress: 0 },
-    { name: 'Rejtély Rangerek', route: 'Budai Vár Rejtélye', status: 'playing', members: 6, score: 2560, progress: 78 },
-    { name: 'Iránytű Brigád', route: 'Városliget Felfedező', status: 'done', members: 2, score: 2890, progress: 100 },
-    { name: 'Csillag Felderítők', route: 'Liget Projekt', status: 'playing', members: 5, score: 1420, progress: 35 },
-    { name: 'Labirintus Mesterek', route: 'Belváros Kódvadászat', status: 'waiting', members: 3, score: 0, progress: 0 },
-    { name: 'Turul Csapat', route: 'Budai Vár Rejtélye', status: 'playing', members: 4, score: 2075, progress: 58 },
-    { name: 'Zöld Ösvény', route: 'Városliget Felfedező', status: 'done', members: 6, score: 3340, progress: 100 }
-  ];
-  var SEED_STATIONS = [
-    { name: 'Főbejárat', route: 'Városliget Felfedező', type: 'kezdo', diff: 'Könnyű', tasks: 0, status: 'active', time: false, timeVal: '5 perc' },
-    { name: 'Széchenyi fürdő', route: 'Városliget Felfedező', type: 'info', diff: 'Könnyű', tasks: 1, status: 'active', time: true, timeVal: '5 perc' },
-    { name: 'Vajdahunyad vára', route: 'Városliget Felfedező', type: 'feladat', diff: 'Közepes', tasks: 3, status: 'active', time: true, timeVal: '10 perc' },
-    { name: 'Hősök tere', route: 'Városliget Felfedező', type: 'dontes', diff: 'Közepes', tasks: 2, status: 'active', time: false, timeVal: '8 perc' },
-    { name: 'Műjégpálya', route: 'Városliget Felfedező', type: 'feladat', diff: 'Nehéz', tasks: 4, status: 'draft', time: true, timeVal: '15 perc' },
-    { name: 'Állatkert bejárat', route: 'Városliget Felfedező', type: 'info', diff: 'Könnyű', tasks: 1, status: 'active', time: false, timeVal: '5 perc' },
-    { name: 'Zene Háza', route: 'Liget Projekt', type: 'feladat', diff: 'Közepes', tasks: 3, status: 'draft', time: true, timeVal: '10 perc' },
-    { name: 'Közlekedési Múzeum', route: 'Liget Projekt', type: 'zaro', diff: 'Nehéz', tasks: 2, status: 'inactive', time: true, timeVal: '8 perc' }
-  ];
-  var SEED_TASKS = [
-    { question: 'Melyik évben épült a Vajdahunyad vára?', route: 'Városliget Felfedező', station: 'Vajdahunyad vára', type: 'kviz', diff: 'Közepes', status: 'active', points: 50 },
-    { question: 'Készíts fotót a főbejáratról', route: 'Városliget Felfedező', station: 'Főbejárat', type: 'foto', diff: 'Könnyű', status: 'active', points: 30 },
-    { question: 'Rakd időrendbe a Városliget épületeit!', route: 'Városliget Felfedező', station: 'Vajdahunyad vára', type: 'puzzle', diff: 'Közepes', status: 'active', points: 55 },
-    { question: 'Fejtsd meg a széf kódját a szobor talapzatán!', route: 'Városliget Felfedező', station: 'Hősök tere', type: 'kod', diff: 'Nehéz', status: 'active', points: 45 },
-    { question: 'Hány kupola díszíti a Széchenyi fürdő főhomlokzatát?', route: 'Városliget Felfedező', station: 'Széchenyi fürdő', type: 'szoveg', diff: 'Könnyű', status: 'active', points: 35 },
-    { question: 'Érd el a Hősök terén a szoborcsoportot', route: 'Városliget Felfedező', station: 'Hősök tere', type: 'gps', diff: 'Könnyű', status: 'active', points: 40 },
-    { question: 'Olvasd be a bejárat melletti QR-kódot', route: 'Liget Projekt', station: 'Zene Háza', type: 'qr', diff: 'Könnyű', status: 'draft', points: 25 },
-    { question: 'Koppints 15-öt 5 másodperc alatt!', route: 'Városliget Felfedező', station: 'Műjégpálya', type: 'gyors', diff: 'Könnyű', status: 'active', points: 30 },
-    { question: 'Melyik stílusban épült a Vajdahunyad vár gótikus szárnya?', route: 'Városliget Felfedező', station: 'Vajdahunyad vára', type: 'kviz', diff: 'Nehéz', status: 'active', points: 60 }
-  ];
-  var SEED_MEDIA = [
-    { name: 'varosliget-fooldal.jpg', type: 'image', size: '2.4 MB' },
-    { name: 'budai-var-intro.mp4', type: 'video', size: '18.6 MB' },
-    { name: 'narracio-allomas-1.mp3', type: 'audio', size: '3.1 MB' },
-    { name: 'gyar-kuldetes-terkep.png', type: 'image', size: '1.2 MB' },
-    { name: 'margitsziget-panorama.jpg', type: 'image', size: '3.8 MB' },
-    { name: 'foldalatti-nyomok-trailer.mp4', type: 'video', size: '42.3 MB' },
-    { name: 'siker-hangeffekt.mp3', type: 'audio', size: '412 KB' },
-    { name: 'elveszett-orokseg-borito.jpg', type: 'image', size: '2.1 MB' },
-    { name: 'kod-fejtoro-ikon.png', type: 'image', size: '86 KB' },
-    { name: 'hatterzene-kaland.mp3', type: 'audio', size: '5.7 MB' }
-  ];
-  var SEED_SCHEDULES = [
-    { route: 'Városliget Felfedező', status: 'active', cap: 24, days: [1, 1, 1, 1, 1, 0, 0] },
-    { route: 'Budai Vár Rejtélye', status: 'active', cap: 16, days: [0, 0, 0, 0, 0, 1, 1] },
-    { route: 'Liget Projekt', status: 'paused', cap: 20, days: [1, 0, 1, 0, 1, 0, 0] },
-    { route: 'Gellérthegy Titkai', status: 'active', cap: 30, days: [1, 1, 1, 1, 1, 1, 1] },
-    { route: 'Belváros Nyomában', status: 'active', cap: 12, days: [0, 0, 0, 0, 1, 1, 0] },
-    { route: 'Óbuda Öröksége', status: 'paused', cap: 18, days: [0, 1, 0, 1, 0, 0, 0] },
-    { route: 'Margitsziget Kaland', status: 'active', cap: 40, days: [0, 0, 0, 0, 0, 1, 0] }
-  ];
-
-  function readStore(key, seed) {
-    try { var raw = localStorage.getItem(key); if (raw) { var a = JSON.parse(raw); if (Array.isArray(a) && a.length) return a; } } catch (e) {}
-    return seed.slice();
-  }
-
   /* ---------- címke/szín térképek ---------- */
+  /* A feladattípusok az adatbázis tasks_kind_check megszorításából
+     jönnek — pontosan ez a kilenc létezik. A korábbi lista tartalmazott
+     egy 'gyors' típust, ami sosem volt felvehető, és hiányzott belőle
+     az 'info' meg a 'dontes'. */
   var TASK_TYPE = {
-    kviz:   { label: 'Kvíz',     color: '#5b9de0' },
-    szoveg: { label: 'Szöveges', color: '#e0b93a' },
-    puzzle: { label: 'Puzzle',   color: '#8fb04f' },
-    kod:    { label: 'Kód',      color: '#e8813a' },
-    foto:   { label: 'Fotó',     color: '#9d7ce0' },
-    gps:    { label: 'GPS',      color: '#4fb84f' },
-    qr:     { label: 'QR',       color: '#39c0c8' },
-    gyors:  { label: 'Gyors',    color: '#e05b9d' }
+    kviz:   { label: 'Kvíz',    color: '#5b9de0' },
+    szoveg: { label: 'Szöveg',  color: '#e0b93a' },
+    foto:   { label: 'Fotó',    color: '#9d7ce0' },
+    kod:    { label: 'Kód',     color: '#e8813a' },
+    puzzle: { label: 'Puzzle',  color: '#8fb04f' },
+    gps:    { label: 'GPS',     color: '#4fb84f' },
+    qr:     { label: 'QR',      color: '#39c0c8' },
+    info:   { label: 'Infó',    color: '#8a97a8' },
+    dontes: { label: 'Döntés',  color: '#e05b9d' }
   };
+  /* A nehézség az ÁLLOMÁSON él, nem a feladaton (stations_difficulty_check).
+     A feladat nehézségét ezért az állomásáról olvassuk le — a panel
+     alcíme ezt ki is mondja, hogy ne tűnjön saját mezőnek. */
   var DIFFS = [
-    { key: 'Könnyű', color: '#4fb84f' },
-    { key: 'Közepes', color: '#e0b93a' },
-    { key: 'Nehéz', color: '#e8813a' },
-    { key: 'Extrém', color: '#e03a2f' }
+    { key: 'konnyu',  label: 'Könnyű',  color: '#4fb84f' },
+    { key: 'kozepes', label: 'Közepes', color: '#e0b93a' },
+    { key: 'nehez',   label: 'Nehéz',   color: '#e8813a' },
+    { key: 'extrem',  label: 'Extrém',  color: '#e03a2f' }
   ];
   var TEAM_STATUS = {
     playing: { label: 'Játékban', color: '#4fb84f' },
@@ -225,56 +181,107 @@
   var popEl = document.getElementById('popularList');
   var recentEl = document.getElementById('recentList');
 
-  var state = { metric: 'type', teams: [], stations: [], tasks: [], media: [], schedules: [] };
+  var state = {
+    metric: 'type',
+    courses: [], teams: [], stations: [], tasks: [], media: [], schedules: [],
+    betoltve: false, hiba: ''
+  };
+
+  /* ---------------------------------------------------------
+     betöltés — kizárólag az adatbázisból
+     --------------------------------------------------------- */
 
   function load() {
-    state.teams = readStore('uq_teams_v1', SEED_TEAMS);
-    state.stations = readStore('uq_stations_v1', SEED_STATIONS);
-    state.tasks = readStore('uq_tasks_v1', SEED_TASKS);
-    state.media = readStore('uq_media_v1', SEED_MEDIA);
-    state.schedules = readStore('uq_schedules_v1', SEED_SCHEDULES);
+    if (!window.UQAPI) return Promise.reject(new Error('Hiányzik az adatréteg (uq-api.js).'));
+    if (!UQAPI.user()) return Promise.reject(new Error('__nincs_belepes__'));
+
+    return Promise.all([
+      UQAPI.rest('/v_admin_courses?select=id,name,slug,status,allomas_db,feladat_db,menet_db,created_at,cover_image'),
+      UQAPI.rest('/v_admin_teams?select=id,name,course_id,course_name,play_status,progress,points,tagok_db,created_at'),
+      UQAPI.rest('/v_admin_stations?select=id,course_id,name,difficulty,status,created_at'),
+      UQAPI.rest('/v_admin_tasks?select=id,course_id,station_id,question,title,kind,status,points,created_at'),
+      UQAPI.rest('/v_admin_media?select=id,title,kind,bytes,created_at'),
+      UQAPI.rest('/v_admin_schedules?select=id,course_id,status,capacity')
+    ]).then(function (r) {
+      state.courses = r[0] || [];
+      state.teams = r[1] || [];
+      state.stations = r[2] || [];
+      state.tasks = r[3] || [];
+      state.media = r[4] || [];
+      state.schedules = r[5] || [];
+      state.betoltve = true;
+      state.hiba = '';
+    });
   }
 
   /* ---------- aggregáció-segédek ---------- */
-  function allRoutes() {
-    var set = {};
-    [state.teams, state.stations, state.tasks, state.schedules].forEach(function (arr) {
-      arr.forEach(function (x) { if (x && x.route) set[x.route] = 1; });
-    });
-    return Object.keys(set);
-  }
   function countBy(arr, keyFn) {
     var m = {};
     arr.forEach(function (x) { var k = keyFn(x); if (k == null) return; m[k] = (m[k] || 0) + 1; });
     return m;
   }
   function avgProgress(teams) {
-    return teams.length ? Math.round(teams.reduce(function (a, t) { return a + (t.progress || 0); }, 0) / teams.length) : 0;
+    if (!teams.length) return 0;
+    var sum = teams.reduce(function (a, t) { return a + (Number(t.progress) || 0); }, 0);
+    return Math.round(sum / teams.length);
+  }
+  /* állomás-id → nehézség, a feladatok nehézség-bontásához */
+  function allomasNehezseg() {
+    var m = {};
+    state.stations.forEach(function (s) { m[s.id] = s.difficulty; });
+    return m;
+  }
+  function ures(el, szoveg) {
+    if (el) el.innerHTML = '<div class="dash-empty">' + esc(szoveg) + '</div>';
   }
 
   /* ---------- stat kártyák ---------- */
   function renderStats() {
     var set = function (id, v) { var e = document.getElementById(id); if (e) e.textContent = v; };
-    set('statRoutes', allRoutes().length);
+    var pub = state.courses.filter(function (c) { return c.status === 'pub'; }).length;
+    var jatszik = state.teams.filter(function (t) { return t.play_status === 'playing'; }).length;
+    var aktiv = state.tasks.filter(function (t) { return t.status === 'active'; }).length;
+    var kesz = state.teams.filter(function (t) { return t.play_status === 'done'; }).length;
+
+    set('statRoutes', state.courses.length);
+    set('statRoutesSub', pub + ' közzétéve');
     set('statTeams', state.teams.length);
-    set('statTeamsSub', state.teams.filter(function (t) { return t.status === 'playing'; }).length + ' játékban');
+    set('statTeamsSub', jatszik + ' játékban');
     set('statTasks', state.tasks.length);
-    set('statTasksSub', state.tasks.filter(function (t) { return t.status === 'active'; }).length + ' aktív');
+    set('statTasksSub', aktiv + ' aktív');
     set('statCompletion', avgProgress(state.teams) + '%');
-    set('statCompletionSub', state.teams.filter(function (t) { return t.status === 'done'; }).length + ' csapat befejezte');
+    set('statCompletionSub', kesz + ' csapat fejezte be');
+  }
+
+  function statsUres(jel) {
+    ['statRoutes', 'statTeams', 'statTasks', 'statCompletion'].forEach(function (id) {
+      var e = document.getElementById(id); if (e) e.textContent = jel;
+    });
+    ['statRoutesSub', 'statTeamsSub', 'statTasksSub', 'statCompletionSub'].forEach(function (id) {
+      var e = document.getElementById(id); if (e) e.textContent = '';
+    });
   }
 
   /* ---------- fő diagram (típus / nehézség) ---------- */
   function renderChart() {
+    if (!chartEl) return;
+    if (!state.tasks.length) {
+      if (chartSub) chartSub.textContent = state.metric === 'type' ? 'Feladatok típus szerint' : 'Feladatok nehézség szerint';
+      ures(chartEl, 'Még nincs egyetlen feladat sem.');
+      return;
+    }
     var items;
     if (state.metric === 'type') {
-      var cm = countBy(state.tasks, function (t) { return t.type; });
-      items = Object.keys(TASK_TYPE).map(function (k) { return { label: TASK_TYPE[k].label, value: cm[k] || 0, color: TASK_TYPE[k].color }; });
+      var cm = countBy(state.tasks, function (t) { return t.kind; });
+      items = Object.keys(TASK_TYPE).map(function (k) {
+        return { label: TASK_TYPE[k].label, value: cm[k] || 0, color: TASK_TYPE[k].color };
+      });
       if (chartSub) chartSub.textContent = 'Feladatok típus szerint';
     } else {
-      var dm = countBy(state.tasks, function (t) { return t.diff; });
-      items = DIFFS.map(function (d) { return { label: d.key, value: dm[d.key] || 0, color: d.color }; });
-      if (chartSub) chartSub.textContent = 'Feladatok nehézség szerint';
+      var nehez = allomasNehezseg();
+      var dm = countBy(state.tasks, function (t) { return nehez[t.station_id]; });
+      items = DIFFS.map(function (d) { return { label: d.label, value: dm[d.key] || 0, color: d.color }; });
+      if (chartSub) chartSub.textContent = 'Feladatok az állomásuk nehézsége szerint';
     }
     var max = Math.max.apply(null, items.map(function (i) { return i.value; }).concat([1]));
     chartEl.innerHTML = items.map(function (it) {
@@ -289,10 +296,12 @@
 
   /* ---------- második diagram (csapat-státusz) ---------- */
   function renderStatus() {
-    var total = state.teams.length || 1;
+    if (!statusEl) return;
+    if (!state.teams.length) { ures(statusEl, 'Még nincs egyetlen csapat sem.'); return; }
+    var total = state.teams.length;
     statusEl.innerHTML = Object.keys(TEAM_STATUS).map(function (k) {
       var st = TEAM_STATUS[k];
-      var n = state.teams.filter(function (t) { return t.status === k; }).length;
+      var n = state.teams.filter(function (t) { return t.play_status === k; }).length;
       var pct = Math.round(n / total * 100);
       return '<div class="dash-st-row">' +
         '<span class="dash-st-label"><span class="dash-st-dot" style="background:' + st.color + '"></span>' + st.label + '</span>' +
@@ -303,17 +312,19 @@
 
   /* ---------- pálya-bontás táblázat ---------- */
   function renderRouteTable() {
-    var rows = allRoutes().map(function (r) {
-      var teams = state.teams.filter(function (x) { return x.route === r; });
+    if (!routeEl) return;
+    if (!state.courses.length) { ures(routeEl, 'Még nincs egyetlen pálya sem.'); return; }
+    var rows = state.courses.map(function (c) {
+      var teams = state.teams.filter(function (t) { return t.course_id === c.id; });
       return {
-        route: r,
-        stations: state.stations.filter(function (x) { return x.route === r; }).length,
-        tasks: state.tasks.filter(function (x) { return x.route === r; }).length,
+        route: c.name,
+        stations: Number(c.allomas_db) || 0,
+        tasks: Number(c.feladat_db) || 0,
         teams: teams.length,
         prog: teams.length ? avgProgress(teams) : null
       };
     });
-    rows.sort(function (a, b) { return b.teams - a.teams || b.stations - a.stations || a.route.localeCompare(b.route, 'hu'); });
+    rows.sort(function (a, b) { return b.teams - a.teams || b.stations - a.stations || String(a.route).localeCompare(String(b.route), 'hu'); });
     var head = '<div class="dash-rt-head"><span>Pálya</span><span>Áll.</span><span>Fel.</span><span>Csap.</span><span>Haladás</span></div>';
     var body = rows.map(function (x) {
       var prog = x.prog == null
@@ -329,12 +340,13 @@
 
   /* ---------- legnépszerűbb pályák (csapatszám szerint) ---------- */
   function renderPopular() {
-    var list = allRoutes().map(function (r) {
-      var teams = state.teams.filter(function (x) { return x.route === r; });
-      return { name: r, teams: teams.length, prog: avgProgress(teams) };
+    if (!popEl) return;
+    var list = state.courses.map(function (c) {
+      var teams = state.teams.filter(function (t) { return t.course_id === c.id; });
+      return { name: c.name, teams: teams.length, prog: avgProgress(teams) };
     }).filter(function (x) { return x.teams > 0; });
     list.sort(function (a, b) { return b.teams - a.teams || b.prog - a.prog; });
-    if (!list.length) { popEl.innerHTML = '<div class="dash-empty">Még nincs csapat egyetlen pályához sem.</div>'; return; }
+    if (!list.length) { ures(popEl, 'Még nincs csapat egyetlen pályához sem.'); return; }
     var max = Math.max.apply(null, list.map(function (x) { return x.teams; }).concat([1]));
     popEl.innerHTML = list.slice(0, 5).map(function (p, i) {
       var w = Math.round(p.teams / max * 100);
@@ -346,32 +358,66 @@
     }).join('');
   }
 
-  /* ---------- legutóbb hozzáadott (a tárak elejéről, vegyesen) ---------- */
+  /* ---------- legutóbb hozzáadott ----------
+     Korábban a tárak ELEJÉRŐL vett néhány elemet, tehát a sorrendnek
+     semmi köze nem volt a létrehozás idejéhez. Most a created_at szerint
+     rendez, és ki is írja, mikor volt. */
+  function ido(iso) {
+    if (!iso) return '';
+    var d = new Date(iso);
+    if (isNaN(d)) return '';
+    var most = new Date();
+    var perc = Math.round((most - d) / 60000);
+    if (perc < 1) return 'most';
+    if (perc < 60) return perc + ' perce';
+    var ora = Math.round(perc / 60);
+    if (ora < 24) return ora + ' órája';
+    var nap = Math.round(ora / 24);
+    if (nap < 31) return nap + ' napja';
+    return d.toLocaleDateString('hu-HU');
+  }
+
   function renderRecent() {
-    var a = state.teams.slice(0, 3).map(function (t) { return { icon: 'a-users', title: t.name, sub: t.route || '—', tag: 'Csapat' }; });
-    var b = state.tasks.slice(0, 3).map(function (t) { return { icon: 'a-task', title: t.question, sub: t.station || t.route || '—', tag: 'Feladat' }; });
-    var c = state.media.slice(0, 2).map(function (m) { return { icon: 'a-image', title: m.name, sub: m.size || '', tag: 'Média' }; });
-    var mixed = [];
-    var maxLen = Math.max(a.length, b.length, c.length);
-    for (var i = 0; i < maxLen; i++) { if (a[i]) mixed.push(a[i]); if (b[i]) mixed.push(b[i]); if (c[i]) mixed.push(c[i]); }
-    recentEl.innerHTML = mixed.slice(0, 6).map(function (f) {
+    if (!recentEl) return;
+    var mind = []
+      .concat(state.courses.map(function (c) { return { icon: 'a-route', title: c.name, sub: c.status === 'pub' ? 'közzétéve' : 'piszkozat', tag: 'Pálya', at: c.created_at }; }))
+      .concat(state.teams.map(function (t) { return { icon: 'a-users', title: t.name, sub: t.course_name || 'nincs pályához rendelve', tag: 'Csapat', at: t.created_at }; }))
+      .concat(state.stations.map(function (s) { return { icon: 'a-pin', title: s.name, sub: '', tag: 'Állomás', at: s.created_at }; }))
+      .concat(state.tasks.map(function (t) { return { icon: 'a-task', title: t.title || t.question, sub: '', tag: 'Feladat', at: t.created_at }; }))
+      .concat(state.media.map(function (m) { return { icon: 'a-image', title: m.title, sub: '', tag: 'Média', at: m.created_at }; }));
+
+    if (!mind.length) { ures(recentEl, 'Még nincs egyetlen elem sem.'); return; }
+    mind.sort(function (a, b) { return String(b.at || '').localeCompare(String(a.at || '')); });
+
+    recentEl.innerHTML = mind.slice(0, 6).map(function (f) {
+      var mikor = ido(f.at);
+      var sub = [f.sub, mikor].filter(Boolean).join(' · ');
       return '<div class="dash-tl-item"><span class="dash-tl-ic">' + ico(f.icon) + '</span>' +
-        '<div class="dash-tl-body"><b>' + esc(f.title) + '</b><small>' + esc(f.sub) + '</small></div>' +
+        '<div class="dash-tl-body"><b>' + esc(f.title) + '</b><small>' + esc(sub) + '</small></div>' +
         '<span class="dash-tl-tag">' + esc(f.tag) + '</span></div>';
     }).join('');
   }
 
-  /* ---------- „frissítve” időbélyeg ---------- */
+  /* ---------- köszöntés + „frissítve" időbélyeg ---------- */
+  function koszontes() {
+    var el = document.getElementById('dashHello');
+    if (!el) return;
+    var u = window.UQAPI && UQAPI.user();
+    var meta = (u && u.user_metadata) || {};
+    var nev = meta.display_name || (u && u.email ? String(u.email).split('@')[0] : '');
+    var ma = new Date().toLocaleDateString('hu-HU', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' });
+    el.textContent = (nev ? 'Üdvözlünk újra, ' + nev + '! ' : '') + 'Ma ' + ma + ' van.';
+  }
+
   function stamp() {
     var el = document.getElementById('dashUpdated');
     if (!el) return;
     var d = new Date();
-    el.textContent = 'Frissítve: ' + ('0' + d.getHours()).slice(-2) + ':' + ('0' + d.getMinutes()).slice(-2);
+    el.textContent = 'Betöltve: ' + ('0' + d.getHours()).slice(-2) + ':' + ('0' + d.getMinutes()).slice(-2);
   }
 
   /* ---------- teljes újraszámolás ---------- */
-  function refreshAll(announce) {
-    load();
+  function renderAll() {
     renderStats();
     renderChart();
     renderStatus();
@@ -379,7 +425,45 @@
     renderPopular();
     renderRecent();
     stamp();
-    if (announce) toast('Adatok frissítve', { sub: 'Valós adat a tárakból' });
+  }
+
+  function hibaKijelzes(uzenet, teendo) {
+    statsUres('–');
+    [chartEl, statusEl, routeEl, popEl, recentEl].forEach(function (el) {
+      if (el) el.innerHTML = '<div class="dash-empty"><b>' + esc(uzenet) + '</b>' +
+        (teendo ? '<br>' + teendo : '') + '</div>';
+    });
+    var el = document.getElementById('dashUpdated');
+    if (el) el.textContent = '';
+  }
+
+  function refreshAll(announce) {
+    return load()
+      .then(function () {
+        koszontes();
+        renderAll();
+        if (announce) {
+          toast('Adatok frissítve', {
+            sub: state.courses.length + ' pálya · ' + state.teams.length + ' csapat · ' + state.tasks.length + ' feladat'
+          });
+        }
+      })
+      .catch(function (err) {
+        var m = String(err && err.message || '');
+        if (m === '__nincs_belepes__') {
+          hibaKijelzes('Nem vagy bejelentkezve.',
+            '<a class="adm-btn adm-btn-lime" href="bejelentkezes.html?next=iranyitopult.html">Bejelentkezés</a>');
+        } else if (err && err.status === 401) {
+          hibaKijelzes('Lejárt a munkameneted.',
+            '<a class="adm-btn adm-btn-lime" href="bejelentkezes.html?next=iranyitopult.html">Bejelentkezés újra</a>');
+        } else if (err && (err.status === 403 || err.status === 404)) {
+          hibaKijelzes('Nincs jogosultságod az admin adatokhoz.',
+            'Ez a nézet admin fiókot kíván.');
+        } else {
+          hibaKijelzes('Az adatok nem tölthetők be.', esc(m));
+        }
+        if (announce) toast('A frissítés nem sikerült', { type: 'warn', sub: m === '__nincs_belepes__' ? 'Nem vagy bejelentkezve.' : m });
+      });
   }
 
   /* ---------- metrika váltó (típus / nehézség) ---------- */
@@ -393,47 +477,36 @@
         b.classList.toggle('is-on', on);
         b.setAttribute('aria-selected', on ? 'true' : 'false');
       });
-      renderChart();
+      if (state.betoltve) renderChart();
     });
   }
 
-  /* ---------- frissítés: gomb + auto (fókusz / láthatóság) ---------- */
+  /* ---------- frissítés ----------
+     Az automatikus újratöltés fókuszra és lapváltásra korábban is futott,
+     de mivel halott tárakból olvasott, sosem változott tőle semmi. Most
+     tényleg új adatot hoz, ezért megmarad. */
   var btnRefresh = document.getElementById('btnRefresh');
   if (btnRefresh) btnRefresh.addEventListener('click', function () { refreshAll(true); });
-  window.addEventListener('focus', function () { refreshAll(false); });
-  document.addEventListener('visibilitychange', function () { if (!document.hidden) refreshAll(false); });
+  window.addEventListener('focus', function () { if (state.betoltve) refreshAll(false); });
+  document.addEventListener('visibilitychange', function () { if (!document.hidden && state.betoltve) refreshAll(false); });
 
-  /* ---------- felső sáv gombok (toast visszajelzés) ---------- */
-  var btnSave = document.getElementById('btnSave');
-  if (btnSave) btnSave.addEventListener('click', function () { toast('Nézet elmentve', { sub: 'Az irányítópult beállítása elmentve' }); });
-  var btnPublish = document.getElementById('btnPublish');
-  if (btnPublish) btnPublish.addEventListener('click', function () { toast('Közzétéve', { sub: 'A módosítások élőek a nyilvános oldalon' }); });
-  document.querySelectorAll('[data-pub]').forEach(function (b) {
-    b.addEventListener('click', function () {
-      var a = b.dataset.pub;
-      if (a === 'now') toast('Közzétéve', { sub: 'Élő a nyilvános oldalon' });
-      else if (a === 'schedule') toast('Közzététel ütemezve', { type: 'info', sub: 'Időzített megjelenés beállítva' });
-      else if (a === 'draft') toast('Piszkozatként mentve', { type: 'info', sub: 'Nem jelenik meg nyilvánosan' });
-    });
-  });
-  document.querySelectorAll('[data-user]').forEach(function (b) {
-    b.addEventListener('click', function () {
-      var a = b.dataset.user;
-      if (a === 'profile') toast('Profil', { type: 'info', sub: 'Profil megnyitása' });
-      else if (a === 'settings') toast('Beállítások', { type: 'info', sub: 'Fiókbeállítások megnyitása' });
-      else if (a === 'logout') toast('Kijelentkezés', { type: 'info', sub: 'Munkamenet lezárása' });
-    });
-  });
-
-  /* ---------- kereső ---------- */
+  /* ---------- kereső ----------
+     A globális kereső nem szűrt semmit, csak kiírta, mit gépeltél be.
+     Amíg nincs valódi kereső, oda visz, ahol tényleg lehet keresni. */
   var topSearch = document.getElementById('topSearch');
-  if (topSearch) topSearch.addEventListener('keydown', function (e) {
-    if (e.key === 'Enter' && topSearch.value.trim()) toast('Keresés: ' + topSearch.value.trim(), { type: 'info', sub: 'Találatok szűrése' });
-  });
+  if (topSearch) {
+    topSearch.setAttribute('placeholder', 'Keresés a játékok között…');
+    topSearch.addEventListener('keydown', function (e) {
+      var q = topSearch.value.trim();
+      if (e.key === 'Enter' && q) location.href = 'jatekok.html?q=' + encodeURIComponent(q);
+    });
+  }
   document.addEventListener('keydown', function (e) {
     if ((e.metaKey || e.ctrlKey) && (e.key === 'k' || e.key === 'K')) { e.preventDefault(); if (topSearch) topSearch.focus(); }
   });
 
   /* ---------- indítás ---------- */
+  koszontes();
   refreshAll(false);
+  if (window.UQAPI) UQAPI.onAuth(function () { refreshAll(false); });
 })();

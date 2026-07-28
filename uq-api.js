@@ -212,6 +212,31 @@
   }
   fogadOAuthVisszairanyitast();
 
+  /* A felhasználó saját metaadatai (megjelenítendő név, csapatnév, telefon,
+     nyelv). Ezek eddig CSAK a helyi munkamenet-objektumba kerültek, ezért
+     egy F5 vagy egy másik gép után eltűntek. A GoTrue user-végpontja a
+     szerveren tárolja őket, tehát a következő bejelentkezésnél is megvannak. */
+  function updateMeta(meta) {
+    if (!session || !session.access_token) return Promise.reject(new Error('nincs munkamenet'));
+    return fetch(URL_BASE + '/auth/v1/user', {
+      method: 'PUT',
+      headers: {
+        'apikey': ANON_KEY,
+        'Authorization': 'Bearer ' + session.access_token,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ data: meta })
+    }).then(function (res) {
+      return res.json().catch(function () { return {}; }).then(function (u) {
+        if (!res.ok) throw new Error(u.msg || u.message || ('HTTP ' + res.status));
+        markNetOk();
+        if (session && u && u.id) { session.user = u; writeJSON(SESSION_KEY, session); }
+        notifyAuth();
+        return u;
+      });
+    });
+  }
+
   /* Egyszerre csak egy frissítés fusson, különben párhuzamos 401-ek
      egymás elől használnák el a refresh tokent. */
   var refreshing = null;
@@ -341,14 +366,31 @@
     return keys.sort();
   }
 
+  /* A bejegyzés megjegyzi, KI tette a sorba. Enélkül egy közös gépen ez
+     történhet: A felhasználó offline beküld valamit, kijelentkezik, B
+     belép — és az ürítés B tokenjével küldi el A beküldését, tehát az
+     B fiókjában landol. A flush ezért idegen tulajdonost nem küld el. */
   function queue(entry) {
     entry.qid = entry.qid || uuid();
     entry.ts = entry.ts || new Date().toISOString();
+    if (entry.uid === undefined) { var u = user(); entry.uid = u ? u.id : null; }
     writeJSON(obKey(Date.now(), entry.qid), entry);
     return entry.qid;
   }
 
-  function pending() { return obKeys(OUTBOX_PREFIX).length; }
+  /* Hány beküldés vár a sorban. Megadható egy útvonal-részlet: így egy
+     funkció megkérdezheti, hogy a SAJÁT írásai közül vár-e még valami — a
+     szomszéd funkció beragadt bejegyzése ne blokkolja őt is. */
+  function pending(utvonalReszlet) {
+    var keys = obKeys(OUTBOX_PREFIX);
+    if (!utvonalReszlet) return keys.length;
+    var n = 0;
+    keys.forEach(function (k) {
+      var e = readJSON(k, null);
+      if (e && String(e.path || '').indexOf(utvonalReszlet) > -1) n++;
+    });
+    return n;
+  }
 
   var flushing = false;
 
@@ -369,6 +411,19 @@
       var key = keys[i];
       var entry = readJSON(key, null);
       if (!entry) { i++; return step(); }   // másik lap már elvitte
+
+      /* Más fiók beküldése: NEM küldjük el a mostani tokennel — az idegen
+         fiókba írna. Nem is dobjuk el némán: a holtlevél-tárba tesszük,
+         hátha a tulajdonos visszatér, és mert a néma adatvesztés rosszabb. */
+      var most = user();
+      if (entry.uid && (!most || most.id !== entry.uid)) {
+        entry.error = 'másik fiók beküldése — a mostani munkamenettel nem küldhető el';
+        entry.failedAt = new Date().toISOString();
+        writeJSON(DEAD_PREFIX + entry.qid, entry);
+        try { localStorage.removeItem(key); } catch (e) {}
+        i++;
+        return step();
+      }
 
       /* ignore-duplicates, NEM merge-duplicates: egy újraküldött beküldésnek
          nincs-mit-tenni eredménye kell legyen. A merge felülírná a szerveren
@@ -527,6 +582,7 @@
     signIn: signIn,
     signInWithGoogle: signInWithGoogle,
     signOut: signOut,
+    updateMeta: updateMeta,
     session: function () { return session; },
     user: user,
     isAdmin: isAdmin,
