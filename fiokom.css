@@ -591,7 +591,11 @@
   .fiok-layout { grid-template-columns: minmax(0, 1fr); gap: 18px; }
   .fiok-side { position: static; top: auto; }
 
-  /* füles nav: vízszintes, görgethető pill-sor */
+  /* Füles nav: vízszintes, görgethető pill-sor.
+     EZ AZ EGYETLEN hely, ahol a fülsáv reszponzív viselkedése el van döntve.
+     Korábban ugyanez a blokk egy 860 px-es töréspontban is szerepelt, majdnem
+     azonos tartalommal — a két definíció felülírta egymást, és a szűkebb
+     változat elhagyott néhány tulajdonságot. */
   .fiok-tabs {
     flex-direction: row;
     gap: 6px;
@@ -599,13 +603,22 @@
     overflow-x: auto;
     scrollbar-width: none;
     -webkit-overflow-scrolling: touch;
+    scroll-snap-type: x proximity;
+    /* A sáv tartalma 624 px egy 358 px-es sávban: két fül a képernyőn kívül
+       marad. A jobb széli elhalványodás az EGYETLEN jelzés, ami elárulja,
+       hogy van még — enélkül a „Kedvenceim" félbevágva ér véget, és úgy
+       néz ki, mintha eltört volna a felület. */
+    -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 34px), transparent);
+            mask-image: linear-gradient(90deg, #000 calc(100% - 34px), transparent);
   }
   .fiok-tabs::-webkit-scrollbar { display: none; }
   .fiok-tab {
     flex: none;
     padding: 9px 14px;
+    font-size: 12.5px;
     white-space: nowrap;
     border-radius: 99px;
+    scroll-snap-align: start;
   }
   .fiok-tab.is-active::before { display: none; }
 }
@@ -662,19 +675,11 @@
     gap: 16px;
   }
 
-  /* fülek: vízszintes, görgethető sáv */
   .fiok-side { position: static; }
-  .fiok-tabs {
-    flex-direction: row;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
-    gap: 6px;
-    padding: 6px;
-  }
-  .fiok-tabs::-webkit-scrollbar { display: none; }
-  .fiok-tab { flex: none; padding: 9px 13px; font-size: 12.5px; white-space: nowrap; }
-  .fiok-tab.is-active::before { display: none; }
+  /* A fülsáv szabályai SZÁNDÉKOSAN nincsenek itt: a 900 px-es töréspont
+     (ez a szűkebb tartomány annak a része) már eldönti őket. A korábbi,
+     itteni másolat majdnem azonos volt, de elhagyta a pill-formát adó
+     border-radius-t — két helyen karbantartva a fülsáv némán szétesett. */
 
   /* statisztikák: 3 kis oszlop marad, de tömörebben */
   .fk-stats { gap: 8px; }   /* a hasábszámot a szűkebb töréspont dönti el */

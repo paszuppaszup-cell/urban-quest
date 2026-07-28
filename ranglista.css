@@ -318,13 +318,48 @@
   .rc-stat { flex: 1 1 40%; }
 }
 @media (max-width: 620px) {
-  .podium { grid-template-columns: 1fr; }
+  /* --- DOBOGÓ egy oszlopban ---
+     A medál abszolút pozíciójú, és −20/−26 px-re kilóg a kártya tetején.
+     Három hasábban ez rendben van, egymás alatt viszont a 12 px-es réssel
+     ráült az előző kártyára. */
+  .podium {
+    grid-template-columns: 1fr;
+    gap: 34px;
+    align-items: stretch;
+  }
+  /* A DOM-sorrend 2–1–3, mert asztalon így néz ki egy valódi dobogó.
+     Egy oszlopban viszont a rangsor a helyes sorrend: az első legyen elöl. */
+  .pod-1 { order: 1; }
+  .pod-2 { order: 2; }
+  .pod-3 { order: 3; }
+
   .rank-side { grid-template-columns: 1fr; }
   .rank-filter { flex-wrap: wrap; }
   .rank-filter .rf { flex: 1 1 45%; }
   .rank-filter .rf + .rf::before { display: none; }
-  .rank-row { grid-template-columns: 44px 1.4fr 76px; }
-  .rr-track, .rank-head span:nth-child(3), .rank-head span:nth-child(5) { display: none; }
+
+  /* --- TÁBLÁZAT: NÉGY hasáb, mert négy cella marad látható ---
+     Eddig három hasáb volt (44px 1.4fr 76px), miközben a sorból négy cella
+     látszott (helyezés, csapat, pont, idő) — a negyedik ezért új sorba tört,
+     és a fejléc feliratai sem a saját oszlopuk fölött álltak. A fejlécből
+     csak a „Teljesített pálya" tűnik el, mert csak a .rr-track van elrejtve. */
+  .rank-row {
+    grid-template-columns: 46px minmax(0, 1fr) 58px 74px;
+    gap: 6px;
+    padding: 0 10px;
+  }
+  .rr-track, .rank-head span:nth-child(3) { display: none; }
+  /* A „Helyezés" felirat 55 px-t kért egy 44 px-es hasábban, tehát levágódott. */
+  .rank-head { font-size: 9px; letter-spacing: 0; }
+  .rr-team, .rr-team-name { min-width: 0; }
+
+  /* --- KÖZÖSSÉGI STATISZTIKÁK ---
+     A hasábok nem tudtak összehúzódni (a flex-elem alapértelmezett
+     min-width: auto miatt), ezért a hosszú feliratok — „Teljesített pálya",
+     „Összes pontszám" — levágódtak a jobb szélen. */
+  .rc-stat { flex: 1 1 42%; min-width: 0; }
+  .rc-stat > div { min-width: 0; }
+  .rc-stat span { white-space: normal; line-height: 1.25; }
 }
 
 /* ---- üres / betöltés / hiba állapot a valós adat mellé ---- */
