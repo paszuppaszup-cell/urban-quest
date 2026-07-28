@@ -344,7 +344,15 @@
       answer_hashes: t.answer_hashes || null, salt: t.salt || '', auto_ok: !!t.auto_ok,
       /* A tippek átvitele nem elhagyható: enélkül a tipp-felület sosem
          jelenik meg, és a levonás sem történik meg. */
-      hints: t.hints || []
+      hints: t.hints || [],
+      /* A CSAPATLÁNC beállítása ugyanígy nem elhagyható. A csomag hozza
+         (uq-play-src.js), de ez a függvény ÚJ objektumot épít a feladatból,
+         és ami itt kimarad, az a lejátszó számára nem létezik. A lánc minden
+         döntése ezen az objektumon fut (UQRelay.aktiv → task.relay.on), tehát
+         e nélkül a sor a váltó némán ki volt kapcsolva: se közös tábla, se
+         kapuzás, se lánc-beküldés — a láncszemek közönséges feladatként
+         jelentek meg, tetszőleges sorrendben megoldhatóan. */
+      relay: t.relay || null
     }));
     // fallback #1: pálya-szerkesztő állomás saját feladat-mezőiből (taskType/question/answer)
     if (s.taskType || s.question || s.answer) {
