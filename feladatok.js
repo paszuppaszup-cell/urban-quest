@@ -185,7 +185,9 @@
          sornál ugyanazt mutatta, a videó és a kitűző pedig sosem tért vissza. */
       diff: (r.config && r.config.difficulty) || 'Közepes',
       image: r.image || '', media: r.image || '',
-      video: (r.config && r.config.video) || '',
+      /* A videó SAJÁT oszlop lett; a config-ból csak azért olvasunk még,
+         hogy egy régebbi, még át nem költöztetett sor se veszítse el. */
+      video: r.video || (r.config && r.config.video) || '',
       badge: (r.config && r.config.badge) || '',
       hints: (r.hints || []).map(h => ({ text: h.text, cost: h.cost })),
       cfg: cfgMegoldassal(r.kind, r.config, r.solution)
@@ -624,10 +626,11 @@
       points: String(cur.points || 0),
       status: cur.status || 'active',
       image: cur.image || cur.media || '',
-      /* A nehézség, a videó és a kitűző nem külön oszlop a tasks táblában,
-         ezért a config-ban utaznak — eddig mentés után nyomtalanul eltűntek. */
+      /* A videó saját oszlopba megy. A nehézség és a kitűző továbbra is a
+         config-ban utazik — azoknak nincs külön oszlopuk. */
+      video: cur.video || '',
       config: Object.assign(cfgMegoldasNelkul(cur.type, cur.cfg), {
-        difficulty: cur.diff || '', video: cur.video || '', badge: cur.badge || ''
+        difficulty: cur.diff || '', badge: cur.badge || ''
       }),
       solution: megoldasCfgbol(cur.type, cur.cfg),
       hints: (cur.hints || []).filter(h => h && h.text)
@@ -957,6 +960,7 @@
     UQAPI.rest('/rpc/save_task', { method: 'POST', body: { p: {
       station_id: src.stationId,
       kind: src.type,
+      video: src.video || '',
       question: src.question + ' (másolat)',
       points: String(src.points || 0),
       status: 'draft',
