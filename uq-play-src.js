@@ -67,6 +67,12 @@
           type: t.kind,
           points: t.points || 0,
           image: t.image || '',
+          /* A VIDEÓ a config-ban utazik, mert a tasks táblának nincs saját
+             video oszlopa (a szerkesztő is oda menti). A lejátszó viszont
+             a feladat TETEJÉN keresi (task.video) — ez a kiemelés hiányzott,
+             ezért a feladathoz feltöltött videó sosem jelent meg a
+             játékban, pedig végig ott volt a csomagban. */
+          video: (t.config && t.config.video) || '',
           cfg: t.config || {},
           /* a kiértékeléshez — nyers megoldás nincs a csomagban */
           answer_hashes: t.answer_hashes || [],

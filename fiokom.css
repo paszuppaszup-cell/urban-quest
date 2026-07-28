@@ -20,13 +20,25 @@
 /* =========================================================
    BAL: füles navigáció
    ========================================================= */
-.fiok-side { position: sticky; top: calc(var(--header-h) + 16px); }
+/* A `min-width: 0` NEM kozmetika, hanem ez tartja egyben a mobil nezetet.
+
+   Racs-elemnek alapbol `min-width: auto` a szabalya, azaz nem zsugorodhat a
+   tartalma ala. A fules sav vizszintes modban szelesebb, mint a kepernyo,
+   ezert a „1fr" oszlop 626 px-re nott egy 358 px-es dobozban — es innen az
+   EGESZ oldal 642 px szeles lett, vagyis a telefon a desktop elrendezest
+   mutatta szethuzva. Asztalon artalmatlan: ott a sav oszlopa fix 236 px. */
+.fiok-side {
+  position: sticky;
+  top: calc(var(--header-h) + 16px);
+  min-width: 0;
+}
 
 .fiok-tabs {
   display: flex;
   flex-direction: column;
   gap: 4px;
   padding: 8px;
+  min-width: 0;
   background: var(--bg-card);
   border: 1px solid var(--line);
   border-radius: 14px;
@@ -576,7 +588,7 @@
    RESZPONZÍV — 900px alatt egy oszlop, felül vízszintes fülek
    ========================================================= */
 @media (max-width: 900px) {
-  .fiok-layout { grid-template-columns: 1fr; gap: 18px; }
+  .fiok-layout { grid-template-columns: minmax(0, 1fr); gap: 18px; }
   .fiok-side { position: static; top: auto; }
 
   /* füles nav: vízszintes, görgethető pill-sor */
@@ -605,7 +617,11 @@
 }
 
 @media (max-width: 620px) {
-  .fk-stats { grid-template-columns: 1fr; }
+  /* KETTŐ hasáb, nem három: 390 px-en a három kártya 114 px-esre szorult,
+     amiben a „BEFEJEZETT JÁTÉK" két sorba tört, a csapatnév pedig
+     betűnként. A páratlanul maradó utolsó kártya egész sort kap. */
+  .fk-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .fk-stats > :last-child:nth-child(odd) { grid-column: 1 / -1; }
   .fk-quick { grid-template-columns: 1fr; }
 
   .fk-booking { flex-direction: column; gap: 14px; }
@@ -642,7 +658,7 @@
    ===================================================================== */
 @media (max-width: 860px) {
   .fiok-layout {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
     gap: 16px;
   }
 
@@ -661,7 +677,7 @@
   .fiok-tab.is-active::before { display: none; }
 
   /* statisztikák: 3 kis oszlop marad, de tömörebben */
-  .fk-stats { grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .fk-stats { gap: 8px; }   /* a hasábszámot a szűkebb töréspont dönti el */
 
   /* gyorsmenü: egy oszlop, nagy érintőfelület */
   .fk-quick { grid-template-columns: 1fr; gap: 9px; }
@@ -676,7 +692,6 @@
 
 @media (max-width: 480px) {
   .fiok-wrap, .fiok-layout { padding-left: 0; padding-right: 0; }
-  .fk-stats { grid-template-columns: repeat(3, 1fr); }
   .fk-stats b { font-size: 17px; }
   .fk-greet h1, .fk-head h1 { font-size: 21px; }
 }
