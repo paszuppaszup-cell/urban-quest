@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex">
 <title>Adatátköltöztetés – Urban Quest</title>
-<link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="styles.css?v=14">
 <style>
   .mig-wrap { max-width: 900px; margin: 0 auto; padding: 32px 20px 80px; }
   .mig-wrap h1 { font-size: 30px; margin: 0 0 8px; }
@@ -18,7 +18,12 @@
   .mig-forras li { background: rgba(255,255,255,.05); border-radius: 8px; padding: 8px 12px; font-size: 13px; }
   .mig-forras b { color: var(--lime, #9ed52b); font-size: 15px; margin-right: 6px; }
   .mig-forras span { color: var(--muted, #8a9a86); }
-  .mig-tabla { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+  /* A hatoszlopos tablazat telefonon nem tordelheto ertelmesen, de az
+     EGESZ lapot sem huzhatja oldalra: sajat, vizszintesen gorgetheto
+     savot kap. (Ez az oldal csak a styles.css-t tolti be, az admin.css-t
+     nem — ezert all itt a szabaly, es nem ott.) */
+  .mig-tabla-wrap { max-width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .mig-tabla { width: 100%; min-width: 430px; border-collapse: collapse; font-size: 13.5px; }
   .mig-tabla th { text-align: left; font-weight: 600; color: var(--muted, #8a9a86);
                   border-bottom: 1px solid rgba(255,255,255,.12); padding: 8px 10px; font-size: 12px;
                   text-transform: uppercase; letter-spacing: .05em; }
@@ -86,6 +91,6 @@
 <script src="data.js?v=12"></script>
 <script src="quest-courses.js?v=3"></script>
 <script src="uq-api.js?v=5"></script>
-<script src="atkoltoztetes.js?v=3"></script>
+<script src="atkoltoztetes.js?v=4"></script>
 </body>
 </html>

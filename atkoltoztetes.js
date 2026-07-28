@@ -363,7 +363,7 @@
     if (!terv.palyak.length) {
       h.push('<p class="mig-ures">Nem találtam átköltöztethető pályát ebben a böngészőben.</p>');
     } else {
-      h.push('<table class="mig-tabla"><thead><tr><th></th><th>Pálya</th><th>Forrás</th><th>Állomás</th><th>Feladat</th><th>Állapot</th></tr></thead><tbody>');
+      h.push('<div class="mig-tabla-wrap"><table class="mig-tabla"><thead><tr><th></th><th>Pálya</th><th>Forrás</th><th>Állomás</th><th>Feladat</th><th>Állapot</th></tr></thead><tbody>');
       terv.palyak.forEach(function (p, idx) {
         var fel = p.stations.reduce(function (a, s) { return a + s.tasks.length; }, 0);
         p.demo = !!DEMO_NEVEK[p.name];
@@ -375,7 +375,7 @@
                '<td>' + esc(p.forras) + '</td><td>' + p.stations.length +
                '</td><td>' + fel + '</td><td>' + (p.status === 'pub' ? 'közzétett' : 'vázlat') + '</td></tr>');
       });
-      h.push('</tbody></table>');
+      h.push('</tbody></table></div>');
 
       var demoDb = terv.palyak.filter(function (p) { return p.demo; }).length;
       if (demoDb) {

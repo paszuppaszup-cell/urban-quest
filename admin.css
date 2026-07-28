@@ -857,3 +857,87 @@
   .ed-branch-to { grid-column: 2; }
   .ed-branch-x { grid-row: 1; grid-column: 3; }
 }
+
+/* =========================================================
+   ADMIN FEJLÉC ÉS OLDALSÁV TELEFONON
+
+   A 900 px-es blokk eddig csak a törzset rendezte át; a FEJLÉC maradt egy
+   merev, egysoros flex: márkanév + 241 px-es kereső + gombok + fiók-menü.
+   Ezek együtt ~800 px-t igényelnek, és mivel a flex-elemek alapból nem
+   zsugorodnak a tartalmuk alá, az EGÉSZ oldal 800 px széles lett — ezért
+   lógott ki minden admin lap 250–700 pixellel telefonon.
+
+   Itt nem zsugorítunk mindent olvashatatlanra, hanem eldöntjük, mi fér ki:
+   a márka és a fiók marad, a kereső és a hosszú feliratok elmennek.
+   ========================================================= */
+@media (max-width: 760px) {
+  .adm-top {
+    height: auto;
+    min-height: 54px;
+    flex-wrap: wrap;
+    gap: 8px 10px;
+    padding: 8px 12px;
+  }
+  /* A kereső 241 px-t kérne — telefonon ez önmagában több, mint a fél
+     képernyő. A keresés a listák saját szűrőjével is elérhető. */
+  .adm-search { display: none; }
+
+  .adm-brand { min-width: 0; flex: 1 1 auto; }
+  .adm-brand-text { min-width: 0; }
+  .adm-brand-sub { display: none; }
+  .adm-brand-name { font-size: 15px; }
+
+  .adm-top-right { min-width: 0; flex: 0 0 auto; gap: 8px; margin-left: auto; }
+  /* A fiókgombból az avatar marad — a név és a szerepkör két sornyi
+     szöveg lenne ott, ahol egy ikonnyi hely van. */
+  .adm-user-text { display: none; }
+  .adm-user { padding: 4px; gap: 0; }
+
+  /* A fejléc-gombokból az ikon marad, a felirat csak akkor, ha van hely. */
+  .adm-top-right .adm-btn { padding: 0 10px; font-size: 0; gap: 0; }
+  .adm-top-right .adm-btn .ico { font-size: 12px; margin: 0; }
+
+  /* Az oldalsáv vízszintes, görgethető sáv — a `min-width: 0` nélkül a
+     nav-elemek együttes szélessége újra szétfeszítené a lapot. */
+  .adm-side {
+    min-width: 0;
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    padding: 8px 10px;
+    scrollbar-width: none;
+  }
+  .adm-side::-webkit-scrollbar { display: none; }
+  .adm-nav { flex-wrap: nowrap; gap: 6px; min-width: 0; }
+  .adm-nav-item { flex: none; white-space: nowrap; }
+  .adm-collapse { display: none; }   /* nincs mit összecsukni vízszintesen */
+
+  .adm-main { min-width: 0; padding: 14px 12px 24px; }
+  .adm-course-head { flex-direction: column; align-items: stretch; gap: 10px; }
+  .adm-course-actions { flex-wrap: wrap; }
+  .adm-stats { grid-template-columns: 1fr; }
+}
+
+/* A táblázatok nem tördelhetők értelmesen: kapjanak saját, vízszintesen
+   görgethető sávot, hogy ne az egész oldalt húzzák oldalra. */
+@media (max-width: 760px) {
+  .mig-tabla-wrap, .adm-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+}
+
+/* Az apró, csak ikonos vezérlők (fiók bezárása, mező-ürítés, nyelv-eltávolítás,
+   ág törlése) 16–30 pixeresek — egérrel rendben, ujjal viszont eltalálhatatlan.
+
+   A DOBOZUKAT nem növeljük, mert az szétnyomná a pilleket és a sorokat;
+   helyette egy láthatatlan réteggel nyújtjuk ki a tapintható területet
+   a doboz köré. A megjelenés változatlan, a találati felület 32 px fölé nő. */
+@media (pointer: coarse), (max-width: 760px) {
+  .jtk-drawer-x, .jtk-clear, .jtk-lang-x, .ed-branch-x,
+  .est-rm, .est-go, .uq-toast-x {
+    position: relative;
+  }
+  .jtk-drawer-x::after, .jtk-clear::after, .jtk-lang-x::after, .ed-branch-x::after,
+  .est-rm::after, .est-go::after, .uq-toast-x::after {
+    content: '';
+    position: absolute;
+    inset: -9px;
+  }
+}
