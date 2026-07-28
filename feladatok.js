@@ -189,6 +189,9 @@
          hogy egy régebbi, még át nem költöztetett sor se veszítse el. */
       video: r.video || (r.config && r.config.video) || '',
       badge: (r.config && r.config.badge) || '',
+      /* CSAPATLÁNC: a config 'relay' kulcsa alatt él, nem külön oszlopban —
+         így a publikálási lánc (bundle → lejátszó) generikusan átviszi. */
+      relay: (r.config && r.config.relay) || { on: false },
       hints: (r.hints || []).map(h => ({ text: h.text, cost: h.cost })),
       cfg: cfgMegoldassal(r.kind, r.config, r.solution)
     };
@@ -527,6 +530,16 @@
     if (t.type === 'szoveg' && !c.accepted.some(a => a.trim())) errs.push('elfogadott válasz');
     if (t.type === 'puzzle') { if (c.subtype === 'order' && c.items.filter(i => i.trim()).length < 2) errs.push('min. 2 elem'); if (c.subtype === 'match' && c.pairs.filter(p => p.left.trim() && p.right.trim()).length < 2) errs.push('min. 2 pár'); }
     if (t.type === 'kod' && !String(c.code).trim()) errs.push('kód');
+    /* CSAPATLÁNC. A hibás lánc néma: a szerző mindent rendben lát, a játékosok
+       pedig a terepen akadnak el, három külön helyszínen. Ezért itt is szólunk,
+       és a publikálás (course_lint) is blokkolja. */
+    const r = t.relay || {};
+    if (r.on) {
+      if (RELAY_OK_TIPUS.indexOf(t.type) < 0) errs.push('a lánc ezen a típuson nem működik');
+      if (!String(r.group || '').trim())      errs.push('lánc neve');
+      if (!(r.total >= 2))                    errs.push('min. 2 láncszem');
+      if (!(r.role >= 1 && r.role <= r.total)) errs.push('a láncszem sorszáma 1 és ' + (r.total || 2) + ' közé essen');
+    }
     return errs;
   }
   function refreshValidity() {
@@ -557,7 +570,78 @@
     el.status.value = (STATUS[cur.status] || STATUS.draft).label; applyStatusDot();
     el.rewardXp.value = cur.points + ' XP';
     el.badge.value = cur.badge || '';
+    relayFill();
   }
+
+  /* =========================================================
+     CSAPATLÁNC (váltó) — típusfüggetlen szekció
+
+     A lánc NEM új feladattípus, hanem kapcsoló a meglévők fölött: a
+     tasks.config 'relay' kulcsa alatt utazik. Egy új tasks.kind érték
+     20-26 ponton igényelne módosítást (négy párhuzamos típustábla,
+     ikon-sprite-ok, varázsló-generátor, érzés × típus mátrix), és a
+     megoldás-hash láncát is átírná.
+     ========================================================= */
+  const RELAY_OK_TIPUS = ['kviz', 'szoveg', 'kod', 'puzzle'];
+  const rEl = id => document.getElementById(id);
+
+  function relayFill() {
+    const r = (cur && cur.relay) || {};
+    const be = !!r.on;
+    const kapcs = rEl('feRelayOn'); if (!kapcs) return;
+    kapcs.setAttribute('aria-checked', String(be));
+    const test = rEl('feRelayBody'); if (test) test.hidden = !be;
+    rEl('feRelayGroup').value = r.group || '';
+    rEl('feRelayRole').value  = r.role  || 1;
+    rEl('feRelayTotal').value = r.total || 3;
+    rEl('feRelayGrace').value = r.graceMin || 8;
+    rEl('feRelayNote').value  = (cur.cfg && cur.cfg.noteLabel) || '';
+    relayTiltas();
+  }
+
+  /* Az auto_ok típusoknál (fotó/GPS/QR/…) a kliens nem küld választ, tehát a
+     közös tábla „kész" sort mutatna ÜRES válasszal — pont azt nem kapná meg
+     a következő játékos, amiért a lánc létezik. Ezért a kapcsoló ott tiltott. */
+  function relayTiltas() {
+    const kapcs = rEl('feRelayOn'); if (!kapcs) return;
+    const jo = RELAY_OK_TIPUS.indexOf(cur.type) > -1;
+    kapcs.disabled = !jo;
+    const sec = kapcs.closest('.fe-relay-sec');
+    if (sec) sec.classList.toggle('is-tiltott', !jo);
+    if (!jo && cur.relay && cur.relay.on) {
+      cur.relay.on = false;
+      kapcs.setAttribute('aria-checked', 'false');
+      const test = rEl('feRelayBody'); if (test) test.hidden = true;
+    }
+  }
+
+  function relayOlvas() {
+    if (!rEl('feRelayOn')) return;
+    cur.relay = cur.relay || {};
+    cur.relay.on    = rEl('feRelayOn').getAttribute('aria-checked') === 'true';
+    cur.relay.group = String(rEl('feRelayGroup').value || '').trim();
+    cur.relay.role  = Math.max(1, Math.min(12, parseInt(rEl('feRelayRole').value, 10)  || 1));
+    cur.relay.total = Math.max(2, Math.min(12, parseInt(rEl('feRelayTotal').value, 10) || 2));
+    cur.relay.graceMin = Math.max(1, Math.min(60, parseInt(rEl('feRelayGrace').value, 10) || 8));
+    const jegyzet = String(rEl('feRelayNote').value || '').trim();
+    cur.cfg = cur.cfg || {};
+    if (jegyzet) cur.cfg.noteLabel = jegyzet; else delete cur.cfg.noteLabel;
+  }
+
+  (function wireRelay() {
+    const kapcs = rEl('feRelayOn'); if (!kapcs) return;
+    kapcs.addEventListener('click', () => {
+      if (kapcs.disabled) return;
+      const uj = kapcs.getAttribute('aria-checked') !== 'true';
+      kapcs.setAttribute('aria-checked', String(uj));
+      const test = rEl('feRelayBody'); if (test) test.hidden = !uj;
+      relayOlvas(); refreshValidity();
+    });
+    ['feRelayGroup', 'feRelayRole', 'feRelayTotal', 'feRelayGrace', 'feRelayNote'].forEach(id => {
+      const e = rEl(id); if (!e) return;
+      e.addEventListener('input', () => { relayOlvas(); refreshValidity(); });
+    });
+  })();
   function applyDiffDot() { const dk = DIFF_KEY[cur.diff] || 'kozepes'; el.diffDot.style.background = DIFF_COLOR[dk]; }
   function applyStatusDot() { const st = STATUS[cur.status] || STATUS.draft; el.statusDot.style.background = st.color; el.statusDot.style.boxShadow = st.glow ? '0 0 6px ' + st.color : 'none'; }
 
@@ -573,8 +657,9 @@
     const elsoAllomas = (CEL_PALYA
       ? STATIONS_OPT.find(s => String(s.course_id) === CEL_PALYA)
       : STATIONS_OPT[0]) || STATIONS_OPT[0] || {};
-    cur = src ? clone(src) : { question: '', station: elsoAllomas.name || '', route: elsoAllomas.course_name || '', type: 'kviz', points: 30, diff: 'Könnyű', status: 'draft', media: '', image: '', video: '', hints: [], badge: '', cfg: defaultCfg('kviz') };
+    cur = src ? clone(src) : { question: '', station: elsoAllomas.name || '', route: elsoAllomas.course_name || '', type: 'kviz', points: 30, diff: 'Könnyű', status: 'draft', media: '', image: '', video: '', hints: [], badge: '', relay: { on: false }, cfg: defaultCfg('kviz') };
     if (!cur.cfg) cur.cfg = defaultCfg(cur.type);
+    if (!cur.relay) cur.relay = { on: false };
     el.title.textContent = curId ? 'Feladat szerkesztése' : 'Új feladat';
     fillBase(); renderEditor();
     ov.classList.remove('is-hidden'); ov.setAttribute('aria-hidden', 'false');
@@ -629,8 +714,12 @@
       /* A videó saját oszlopba megy. A nehézség és a kitűző továbbra is a
          config-ban utazik — azoknak nincs külön oszlopuk. */
       video: cur.video || '',
+      /* A relay NEM megoldás-adat, ezért a cfgMegoldasNelkul() és a
+         megoldasCfgbol() érintetlen marad — a lánc leírója a config mellé
+         kerül, a nehézség és a kitűző mintájára. */
       config: Object.assign(cfgMegoldasNelkul(cur.type, cur.cfg), {
-        difficulty: cur.diff || '', badge: cur.badge || ''
+        difficulty: cur.diff || '', badge: cur.badge || '',
+        relay: (cur.relay && cur.relay.on) ? cur.relay : { on: false }
       }),
       solution: megoldasCfgbol(cur.type, cur.cfg),
       hints: (cur.hints || []).filter(h => h && h.text)
@@ -675,7 +764,10 @@
     const c = e.target.closest('.fe-typecard'); if (!c) return;
     const nt = c.dataset.type; if (nt === cur.type) return;
     cur.type = nt; cur.cfg = defaultCfg(nt);
-    renderTypeGrid(); renderTypeConfig(); renderPreview(); refreshValidity();
+    /* A típusváltás nullázza a cfg-t, ezért a lánc „nyers leolvasás" címkéjét
+       újra be kell írni — és ha az új típus nem láncozható, a kapcsoló kikapcsol. */
+    renderTypeGrid(); renderTypeConfig(); renderPreview();
+    relayTiltas(); relayOlvas(); refreshValidity();
   });
   // alapmezők
   el.q.addEventListener('input', () => { cur.question = el.q.value; el.cq.textContent = el.q.value.length; document.querySelector('.pv-q').textContent = el.q.value || 'A feladat kérdése…'; refreshValidity(); });

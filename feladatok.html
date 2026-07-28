@@ -12,7 +12,7 @@
 <link rel="stylesheet" href="styles.css?v=14">
 <link rel="stylesheet" href="admin.css?v=18">
 <link rel="stylesheet" href="feladatok.css?v=3">
-<link rel="stylesheet" href="feladat-szerkeszto.css?v=6">
+<link rel="stylesheet" href="feladat-szerkeszto.css?v=7">
 </head>
 <body class="admin-body">
 
@@ -280,6 +280,48 @@
         <div id="feTypeConfig"></div>
       </div>
 
+      <!-- CSAPATLÁNC (váltó)
+           Szándékosan TÍPUSFÜGGETLEN szekció, nem a #feTypeConfig-ba kerül:
+           az a panel típusonként újrarajzolódik és nincs alapértelmezett ága,
+           tehát a lánc beállításai minden típusváltásnál eltűnnének. -->
+      <div class="fe-sec fe-relay-sec">
+        <h3>Csapatlánc (váltó)</h3>
+        <div class="fe-relay-head">
+          <div>
+            <b>A csapat itt szétválik</b>
+            <p>Az előző játékos megoldása kell ehhez a feladványhoz. Csak
+               kvíz, szöveges, kód és puzzle típuson kapcsolható be.</p>
+          </div>
+          <button class="ed-toggle" type="button" role="switch" id="feRelayOn" aria-checked="false"><span></span></button>
+        </div>
+        <div id="feRelayBody" hidden>
+          <div class="fe-row2">
+            <div class="fe-fg"><label>Lánc neve</label>
+              <div class="ed-field"><input type="text" id="feRelayGroup" placeholder="pl. harom-pecset" maxlength="40" autocomplete="off"></div></div>
+            <div class="fe-fg"><label>Türelmi idő (perc)</label>
+              <div class="ed-field"><input type="number" id="feRelayGrace" min="1" max="60" step="1" value="8"></div></div>
+          </div>
+          <div class="fe-row2">
+            <div class="fe-fg"><label>Hányadik láncszem</label>
+              <div class="ed-field"><input type="number" id="feRelayRole" min="1" max="12" step="1" value="1"></div></div>
+            <div class="fe-fg"><label>Hány láncszem összesen</label>
+              <div class="ed-field"><input type="number" id="feRelayTotal" min="2" max="12" step="1" value="3"></div></div>
+          </div>
+          <div class="fe-fg">
+            <label>„Nyers leolvasás" mező címkéje <span class="fe-opt">(nem kötelező)</span></label>
+            <div class="ed-field"><input type="text" id="feRelayNote" placeholder="pl. Hány lovas vezér áll az oszlop tövében?" maxlength="80" autocomplete="off"></div>
+          </div>
+          <p class="fe-relay-hint">
+            A türelmi idő letelte után a kapu magától kinyílik, ha a társ nem
+            jelentkezik. Ha egy láncszemet senki nem visz, a rendszer feloldja
+            és a megoldását kiírja a közös táblára — a lánc rövidül.
+            A szétváláshoz a térképen <code>role:1</code>, <code>role:2</code>…
+            élcímkék kellenek, és minden ágnak ugyanarra a találkozó-állomásra
+            kell visszatérnie.
+          </p>
+        </div>
+      </div>
+
       <div class="fe-sec">
         <h3>Nyomok (fokozatos segítség)</h3>
         <div class="fe-list" id="feHints"></div>
@@ -318,7 +360,7 @@
 <div class="uq-toast-wrap" id="uqToasts"></div>
 
 <script src="uq-api.js?v=6"></script>
-<script src="feladatok.js?v=11"></script>
+<script src="feladatok.js?v=12"></script>
 <script src="uq-admin-fejlec.js?v=1"></script>
 </body>
 </html>

@@ -1,4 +1,4 @@
-/* automatikusan generált fordítás-szótár — végigjátszó felület (68 kulcs) */
+/* automatikusan generált fordítás-szótár — végigjátszó felület (76 kulcs) */
 window.UQI18N = window.UQI18N || {};
 Object.assign(window.UQI18N, {
   "Végigjátszás": { en: "Playthrough", de: "Spieldurchlauf", fr: "Partie", es: "Partida", it: "Partita" },
@@ -63,5 +63,22 @@ Object.assign(window.UQI18N, {
   "a következő állomás": { en: "the next station", de: "die nächste Station", fr: "l'étape suivante", es: "la siguiente estación", it: "la prossima tappa" },
   "rövidebb út": { en: "shorter route", de: "kürzerer Weg", fr: "chemin plus court", es: "camino más corto", it: "strada più corta" },
   "tipp": { en: "hints", de: "Tipps", fr: "indices", es: "pistas", it: "indizi" },
-  "pont": { en: "points", de: "Punkte", fr: "points", es: "puntos", it: "punti" }
+  "pont": { en: "points", de: "Punkte", fr: "points", es: "puntos", it: "punti" },
+  /* --- csapatlánc (váltó) ---
+     Csak a TELJES, önálló szövegcsomópontok fordíthatók: az uq-i18n.js a
+     trimmelt csomópont egészére illeszt. A számmal összefűzött feliratok
+     (pl. „2/3 láncszem kész") ezért szándékosan nem szerepelnek itt. */
+  "Csapatlánc": { en: "Team relay", de: "Team-Staffel", fr: "Relais d'équipe", es: "Relevo de equipo", it: "Staffetta di squadra" },
+  "A társad megoldására vártok": { en: "Waiting for your teammate's answer", de: "Ihr wartet auf die Lösung eures Teammitglieds", fr: "Vous attendez la réponse de votre coéquipier", es: "Esperáis la respuesta de vuestro compañero", it: "Aspettate la risposta del compagno" },
+  "kész": { en: "done", de: "fertig", fr: "terminé", es: "listo", it: "fatto" },
+  "kihagyva": { en: "skipped", de: "übersprungen", fr: "ignoré", es: "omitido", it: "saltato" },
+  "dolgozik": { en: "working", de: "arbeitet", fr: "en cours", es: "trabajando", it: "al lavoro" },
+  "úton": { en: "on the way", de: "unterwegs", fr: "en route", es: "en camino", it: "in arrivo" },
+  "nem jelentkezik": { en: "not responding", de: "meldet sich nicht", fr: "ne répond pas", es: "no responde", it: "non risponde" },
+  "vár": { en: "waiting", de: "wartet", fr: "en attente", es: "esperando", it: "in attesa" },
+  "Te": { en: "You", de: "Du", fr: "Toi", es: "Tú", it: "Tu" },
+  "Csapattárs": { en: "Teammate", de: "Teammitglied", fr: "Coéquipier", es: "Compañero", it: "Compagno" },
+  "Nincs játékos": { en: "No player", de: "Kein Spieler", fr: "Aucun joueur", es: "Sin jugador", it: "Nessun giocatore" },
+  "a rendszer oldotta fel": { en: "unlocked by the system", de: "vom System freigegeben", fr: "débloqué par le système", es: "desbloqueado por el sistema", it: "sbloccato dal sistema" },
+  "kihagyott láncszem": { en: "skipped link", de: "übersprungenes Glied", fr: "maillon ignoré", es: "eslabón omitido", it: "anello saltato" }
 });

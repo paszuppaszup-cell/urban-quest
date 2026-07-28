@@ -15,7 +15,7 @@
 (function () {
   'use strict';
 
-  var LEJATSZO = 'jatszas.js?v=11';
+  var LEJATSZO = 'jatszas.js?v=13';
   var CACHE_ELO = 'uq_bundle_';           // offline tartalék pályánként
 
   var DIFF_LABEL = { konnyu: 'Könnyű', kozepes: 'Közepes', nehez: 'Nehéz', extrem: 'Extrém' };
@@ -72,7 +72,15 @@
              ül, és enélkül a folytatott játékokban eltűnne. */
           video: t.video || (t.config && t.config.video) || '',
           cfg: t.config || {},
-          /* a kiértékeléshez — nyers megoldás nincs a csomagban */
+          /* CSAPATLÁNC. A lánc leírója KÜLÖN mezőben utazik, nem a config-ban:
+             a zárt láncszemnél a config szándékosan üres (a kérdés és a
+             beállítások nem mennek le a telefonra), de a feladatnak akkor is
+             tudnia kell magáról, hogy ő a lánc hányadik szeme. */
+          relay: t.relay || null,
+          /* a kiértékeléshez — nyers megoldás nincs a csomagban.
+             Láncos feladatnál ez üres: a hash rövid válasznál visszafejthető
+             lenne, és pont az a válasz a következő játékos kulcsa. Ilyenkor
+             a szerver bírálja el a beküldést (relay_submit). */
           answer_hashes: t.answer_hashes || [],
           salt: t.salt || '',
           auto_ok: !!t.auto_ok,

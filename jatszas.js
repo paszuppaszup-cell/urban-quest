@@ -439,7 +439,7 @@
               a szerver számát kell látnia, nem a sajátunkat.
      tarsak — csapatban: a szerver szerinti haladás, ami tőlünk függetlenül,
               a többiek telefonjáról érkezett. */
-  const SYNC = { on: false, session: null, state: null, tarsak: 0 };
+  const SYNC = { on: false, session: null, state: null, tarsak: 0, roles: [], relayGroup: null };
 
   function uuidv4() {
     if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
@@ -484,6 +484,85 @@
       };
     }
     SYNC.on = true;
+    relayInit();
+  }
+
+  /* =========================================================
+     CSAPATLÁNC (váltó)
+
+     A csapat szétválik külön helyszínekre, és az egyik játékos megoldása a
+     következő játékos feladványának kulcsa. A szerep a SZERVEREN él, nem a
+     telefonon: ha telefont cseréltél, megosztott linkről szálltál be vagy
+     törölted a böngésző tárolóját, ugyanazt a szerepet kapod vissza, mert a
+     fiókodhoz tartozik, nem a készülékedhez.
+     ========================================================= */
+  function vanLanc() {
+    const q = window.QUEST_COURSES && QUEST_COURSES[QUEST_ID];
+    return !!(q && (q.tasks || []).some(t => t.relay && t.relay.on));
+  }
+
+  function relayInit() {
+    if (!SYNC.on || !window.UQRelay || !vanLanc()) return;
+    UQRelay.szerepFoglal(SYNC.session.id)
+      .then(d => {
+        SYNC.roles = (d && d.roles) || [];
+        SYNC.relayGroup = (d && d.group) || null;
+        if (!SYNC.roles.length && !SYNC.relayGroup) return null;
+        return UQRelay.indit(SYNC.session.id, SYNC.relayGroup);
+      })
+      .then(d => { if (d) UQRelay.figyel(relayValtozott); })
+      .catch(() => {});
+  }
+
+  /* A tábla frissülése SOHA nem rajzolhatja újra a feladatot: a
+     renderPlayAnswer() minden hívásnál nullázza a helyi bevitelt (play.pv) és
+     kvíznél újrakeveri az opciókat — négymásodpercenként törölné a félig
+     beírt kódot a játékos keze alatt. Csak a tábla konténere frissül.
+     Egyetlen kivétel a kapu KINYÍLÁSA: ott épp azért nincs mit elveszíteni,
+     mert a feladvány addig zárva volt. */
+  function relayValtozott() {
+    const host = $('#uqRelayBoard');
+    if (host && window.UQRelay) UQRelay.rajzol(host);
+
+    const task = play.stationTasks && play.stationTasks[play.taskIdx];
+    if (!task || !window.UQRelay || !UQRelay.aktiv(task)) return;
+    if (play.relayZarva && !UQRelay.zarva(task)) {
+      play.relayZarva = false;
+      relayAtvesz(task);
+      renderPlay();
+      if (window.UQ && UQ.toast) UQ.toast('A lánc továbbért — a feladványod megnyílt.');
+      try { if (navigator.vibrate) navigator.vibrate([40, 60, 40]); } catch (e) {}
+    }
+  }
+
+  /* Nyitott kapunál a feladvány szövege és beállításai a SZERVERRŐL érkeznek:
+     a csomagban üresen utaztak, hogy fejlesztői eszközzel se legyenek előre
+     olvashatók. */
+  function relayAtvesz(task) {
+    if (!window.UQRelay) return;
+    const sor = UQRelay.sajatSor(task);
+    if (!sor) return;
+    if (sor.question) task.question = sor.question;
+    if (sor.config && typeof sor.config === 'object') task.cfg = sor.config;
+  }
+
+  /* Melyik szétválás-ág az enyém? Sosem tippelünk: tippelve két embert
+     küldenénk ugyanoda, és a lánc közepét senki nem birtokolná. */
+  function sajatRoleAg(agak) {
+    const enyeim = SYNC.roles || [];
+    for (let i = 0; i < agak.length; i++) {
+      const m = /^role:(\d+)$/.exec(String(agak[i].key || ''));
+      if (m && enyeim.indexOf(+m[1]) > -1) return agak[i];
+    }
+    return null;
+  }
+
+  /* Akinek nincs szerepe ebben a láncban, a találkozóra megy. */
+  function talalkozoIndex() {
+    const a = window.UQRelay && UQRelay.allapot();
+    if (!a || !a.meet) return -1;
+    for (let i = 0; i < COURSE.length; i++) if (COURSE[i].id === a.meet) return i;
+    return -1;
   }
 
   function emit(kind, extra) {
@@ -646,6 +725,9 @@
     play.active = false; play.finished = false; play.view = 'intro'; stopTimer();
     csapatKontextusUrites();
     SYNC.on = false; SYNC.session = null; SYNC.state = null; SYNC.tarsak = 0;
+    SYNC.roles = []; SYNC.relayGroup = null;
+    /* A lánc pollingja különben a kilépés után is percenként kérdezgetne. */
+    if (window.UQRelay) UQRelay.leall();
     renderPlay();
   }
 
@@ -673,6 +755,8 @@
        hogy az eredménye megérkezett-e. Csak a csapat-kontextust engedjük el,
        hogy az „Újra” friss menetet indítson a lezárt közös helyett. */
     csapatKontextusUrites();
+    /* Az összegzőn már nincs lánc — a tábla pollingja itt áll le. */
+    if (window.UQRelay) UQRelay.leall();
     finishSave(); renderPlay();
   }
   function playAfterStation() {
@@ -692,6 +776,33 @@
        választani — oda megyünk. */
     const agak = (s.branches || []).filter(b => b && b.to >= 0 && b.to < COURSE.length);
     if (agak.length) {
+      /* SZÉTVÁLÁS (csapatlánc).
+
+         Ha MINDEN ág 'role:' címkéjű, ez nem döntési pont, hanem a csapat
+         szétválása: a telefon nem kérdez, hanem magától a saját szerepének
+         megfelelő útra lép. Mindenki más állomást lát, más címmel, más
+         térképponttal. */
+      const roleAgak = agak.filter(b => /^role:\d+$/.test(String(b.key || '')));
+      if (roleAgak.length && roleAgak.length === agak.length) {
+        const enyem = sajatRoleAg(roleAgak);
+        if (enyem) return playGoto(enyem.to);
+        /* Nincs szerepünk ebben a láncban (pl. többen vagyunk, mint ahány
+           láncszem): a találkozóra megyünk, nem tippelünk útvonalat. */
+        const meet = talalkozoIndex();
+        if (meet > -1) return playGoto(meet);
+
+        /* Se szerep, se ismert találkozó — ez a vendég/bejelentkezés nélküli
+           eset, ahol a szerep sosem osztódott ki. Ilyenkor az ELSŐ láncszemre
+           megyünk: az soha nincs zárva, tehát a játékos legalább játszhat.
+           A választó felkínálása itt rosszabb lenne: a 2. és 3. láncszem
+           kérdése le sem jött a telefonra, tehát üres feladvány fogadná. */
+        const elso = roleAgak.reduce((a, b) => {
+          const na = +(/^role:(\d+)$/.exec(String(a.key))[1]);
+          const nb = +(/^role:(\d+)$/.exec(String(b.key))[1]);
+          return nb < na ? b : a;
+        });
+        if (elso) return playGoto(elso.to);
+      }
       if (agak.length === 1) return playGoto(agak[0].to);
       play.decOpts = agak;
       play.view = 'decision';
@@ -715,8 +826,14 @@
       play.skipped++;
     }
     /* A szerver a NYERS választ kapja meg, és maga dönt a helyességről —
-       a kliens állítása (is_correct) csak audit. Átugrásnál nincs válasz. */
-    if (uuidszeru(task.id)) {
+       a kliens állítása (is_correct) csak audit. Átugrásnál nincs válasz.
+
+       LÁNCOS feladatnál a megoldást már a relay_submit beírta az eseménybe,
+       tehát itt csak az ÁTUGRÁST küldjük — különben ugyanaz a válasz kétszer
+       kerülne a naplóba, két különböző időbélyeggel, és a közös táblán a
+       későbbi példány jelenne meg „első helyes"-ként. */
+    const lancosFeladat = !!(window.UQRelay && UQRelay.aktiv(task));
+    if (uuidszeru(task.id) && (atugorva || !lancosFeladat)) {
       emit('task_attempted', {
         task_id: task.id,
         is_correct: !!credited,
@@ -748,6 +865,14 @@
       const rb = $('#uqPlayResume'); // folytatás mentett állapotból
       if (rb) rb.addEventListener('click', () => { const st = resumeState(); if (st) playResume(st); else playStart(); });
       return;
+    }
+    /* CSAPATLÁNC: a nyitott láncszem KÉRDÉSE és beállításai a szerverről
+       jönnek — a csomagban üresen utaztak, hogy fejlesztői eszközzel se
+       legyenek előre olvashatók. Ezt a kártya HTML-je ELŐTT kell átvenni,
+       különben üres kérdéssel rajzolnánk ki a feladványt. */
+    const lancTask = play.stationTasks && play.stationTasks[play.taskIdx];
+    if (lancTask && window.UQRelay && UQRelay.aktiv(lancTask) && !UQRelay.zarva(lancTask)) {
+      relayAtvesz(lancTask);
     }
     /* Egyoszlopos, telefonra szabott elrendezés minden képernyőn. Az
        útvonal és a lépéslista lecsukható blokkba került: elérhető, de nem
@@ -931,9 +1056,34 @@
   /* Szándékosan NEM gyorstárazunk: az első HUD-rajzoláskor a pálya még
      érkezhet az adatbázisból, és egy korán befagyasztott szám a játék
      végéig hibás nevezőt mutatna. Az újraszámolás pár tömbművelet. */
+  /* Elágazó pályán a játékos SOSEM éri el az összes feladatot: a döntési
+     pontnál az egyik ág kiesik. A régi számláló mégis a pálya ÖSSZES
+     feladatát adta nevezőnek, ezért a fejléc „8 / 9"-et írt ott, ahol a
+     8 / 8 volt a teljes teljesítmény — a játékos úgy zárta a kalandot,
+     hogy látszólag maradt hiánya.
+
+     Amit bejártunk, az biztos; előre pedig csak az innen még ELÉRHETŐ
+     állomásokat számoljuk. A szám így a döntés pillanatában szűkül a
+     valóban rá váró feladatokra, nem utólag derül ki. */
   function playTasksTotal() {
+    const szamit = new Set(play.path || []);
+    const innen = (play.path && play.path.length) ? play.path[play.path.length - 1] : 0;
+    const sor = [innen];
+    const latott = new Set([innen]);
+
+    while (sor.length) {
+      const i = sor.shift();
+      szamit.add(i);
+      const s = COURSE[i];
+      if (!s) continue;
+      const agak = (s.branches || []).filter(b => b && b.to >= 0 && b.to < COURSE.length);
+      const kovetkezok = agak.length ? agak.map(b => b.to)
+                                     : (i + 1 < COURSE.length ? [i + 1] : []);
+      kovetkezok.forEach(j => { if (!latott.has(j)) { latott.add(j); sor.push(j); } });
+    }
+
     let n = 0;
-    COURSE.forEach((s, i) => { n += (stationPlayTasks(i) || []).length; });
+    szamit.forEach(i => { n += (stationPlayTasks(i) || []).length; });
     return n;
   }
 
@@ -1226,16 +1376,128 @@
     });
   }
 
+  /* --- CSAPATLÁNC: váró-panel és szerveroldali beküldés --- */
+
+  function relayVaroHTML(task) {
+    const r = (task.relay && task.relay.role) || 1;
+    return '<div class="uq-pl-rwait">' +
+      '<span class="big"><svg class="ico" aria-hidden="true"><use href="#a-lock"/></svg></span>' +
+      '<b>A társad megoldására vártok</b>' +
+      '<small>Ez a lánc ' + r + '. szeme. A feladványod akkor nyílik meg, amikor ' +
+      'az előtted lévő láncszem megérkezik — vagy magától, ha a társad nem jelentkezik.</small>' +
+      '</div>';
+  }
+
+  /* A láncos beküldést a SZERVER bírálja el: a megoldás hash-e sem jött le a
+     telefonra, mert rövid válasznál visszafejthető lenne — és pont az a
+     válasz a következő játékos kulcsa. */
+  function relayBekuld(task, valasz, gomb) {
+    if (!window.UQRelay) return;
+    if (gomb) gomb.disabled = true;
+    const jz = $('#uqRelayNote');
+    UQRelay.bekuld(task.id, valasz, jz ? jz.value : null, deviceId())
+      .then(r => {
+        if (r && r.ok) { play.lastAnswer = valasz; playTaskDone(true, null); return; }
+        if (gomb) gomb.disabled = false;
+        $$('#uqPlayAnswer .uq-pl-opt').forEach(x => { x.disabled = false; });
+        playWrong();
+      })
+      .catch(e => {
+        if (gomb) gomb.disabled = false;
+        $$('#uqPlayAnswer .uq-pl-opt').forEach(x => { x.disabled = false; });
+        const m = String((e && e.message) || '');
+        if (window.UQ && UQ.toast) {
+          UQ.toast(m.indexOf('lánc még nem') > -1
+            ? 'A lánc még nem ért ide — a társad megoldása hiányzik.'
+            : 'A válaszod nem ért fel a szerverre. Nézd meg a kapcsolatot, és próbáld újra.');
+        }
+      });
+  }
+
+  function renderRelayInput(task, box, act) {
+    const c = task.cfg || {};
+    let h = '';
+    /* NYERS LEOLVASÁS külön mezőben: ettől lesz a tábla hibajavító eszköz,
+       nem csak közvetítő — a társ látja, hol csúszott el a számolás. */
+    const cimke = String(c.noteLabel || '').trim();
+    if (cimke) {
+      h += '<label class="uq-pl-rnotelbl"><span>' + esc(cimke) + '</span>' +
+           '<input type="text" id="uqRelayNote" autocomplete="off" maxlength="120"></label>';
+    }
+
+    if (task.type === 'kviz') {
+      let opts = (c.options || []).map((o, i) => ({ o: o, i: i }));
+      if (c.shuffle) opts = opts.sort(() => Math.random() - 0.5);
+      h += '<div class="uq-pl-opts">' + opts.map(x =>
+        '<button class="uq-pl-opt" type="button" data-v="' + esc(x.o.text || '') + '">' +
+        esc(x.o.text || '—') + '</button>').join('') + '</div>';
+      box.innerHTML = h;
+      box.querySelectorAll('.uq-pl-opt').forEach(b => b.addEventListener('click', () => {
+        box.querySelectorAll('.uq-pl-opt').forEach(x => { x.disabled = true; });
+        relayBekuld(task, b.dataset.v, b);
+      }));
+      return;
+    }
+
+    const szam = (task.type === 'kod' && c.codeType !== 'word');
+    h += '<div class="uq-pl-input">' +
+         '<input type="text" id="uqPlayIn" autocomplete="off"' +
+         (szam ? ' inputmode="numeric" placeholder="Írd be a kódot…"'
+               : ' placeholder="Írd be a választ…"') +
+         (c.codeLen ? ' maxlength="' + (+c.codeLen) + '"' : '') + '>' +
+         '<button class="uq-pl-go" type="button" id="uqPlayGo">' +
+         (szam ? 'Feltör' : 'Ellenőrzés') + '</button></div>';
+    box.innerHTML = h;
+    const go = () => relayBekuld(task, $('#uqPlayIn').value, $('#uqPlayGo'));
+    $('#uqPlayGo').addEventListener('click', go);
+    $('#uqPlayIn').addEventListener('keydown', e => { if (e.key === 'Enter') go(); });
+  }
+
   function renderPlayAnswer() {
     const task = play.stationTasks[play.taskIdx];
     const c = task.cfg || {}; const box = $('#uqPlayAnswer'); const act = $('#uqPlayActions');
     play.pv = { code: '', order: null };
+
+    /* ---- CSAPATLÁNC -------------------------------------------------
+       A tábla a feladvány FÖLÖTT áll, külön konténerben: a típusonkénti
+       ágak csak a #uqPlayAnswer tartalmát cserélik, így a négymásodpercenkénti
+       frissítés sosem rajzolja újra a beviteli mezőt. */
+    const lancos = !!(window.UQRelay && UQRelay.aktiv(task));
+    if (lancos) {
+      let bh = document.getElementById('uqRelayBoard');
+      if (!bh) {
+        bh = document.createElement('div');
+        bh.id = 'uqRelayBoard';
+        if (box.parentNode) box.parentNode.insertBefore(bh, box);
+      }
+      UQRelay.rajzol(bh);
+      UQRelay.megerkeztem();      // innen jár a türelmi óra (szerver-óra)
+
+      if (UQRelay.zarva(task)) {
+        play.relayZarva = true;
+        box.innerHTML = relayVaroHTML(task);
+        /* A „Feladat átugrása" gomb zárt kapunál is MEGMARAD: a lánc
+           megszakadhat, a játék nem. */
+        act.innerHTML = tippSorHTML(task) +
+          '<button class="uq-pl-skip" type="button" id="uqPlaySkip">' +
+          '<svg class="ico ico-xs" aria-hidden="true"><use href="#a-collapse"/></svg>Feladat átugrása</button>';
+        $('#uqPlaySkip').addEventListener('click', () => playTaskDone(false, task.reveal, true));
+        wireTipp(task);
+        return;
+      }
+      play.relayZarva = false;
+    }
+
     act.innerHTML = tippSorHTML(task) +
       '<button class="uq-pl-skip" type="button" id="uqPlaySkip"><svg class="ico ico-xs" aria-hidden="true"><use href="#a-collapse"/></svg>Feladat átugrása</button>';
     /* az átugrás explicit jelzés a szervernek is (skipped=true, válasz nélkül) */
     $('#uqPlaySkip').addEventListener('click', () => playTaskDone(false, task.reveal, true));
     wireTipp(task);
     const done = (ok) => playTaskDone(ok, ok ? null : task.reveal);
+
+    /* Nyitott láncszem: a beküldést a szerver bírálja el (relay_submit), nem
+       a helyi hash-összevetés — láncos feladatnál hash sem jött le. */
+    if (lancos) return renderRelayInput(task, box, act);
 
     if (task.type === 'kviz') {
       let opts = (c.options || []).map((o, i) => ({ o: o, i: i }));

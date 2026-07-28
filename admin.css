@@ -583,6 +583,46 @@
 .uq-pl-actions{margin-top:14px;}
 .uq-pl-actions .adm-btn{width:100%;justify-content:center;height:46px;}
 
+/* --- csapatlánc (váltó): a közös tábla ---
+   A tábla a feladvány FÖLÖTT áll, és négymásodpercenként frissül. A saját
+   sorod ki van emelve, a zárt láncszemnél pedig KIÍRVA áll, mire vártok —
+   ettől lesz a várakozás drukk, nem tanácstalanság. */
+.uq-pl-relay{margin:0 0 16px;border:1px solid var(--line);border-radius:12px;background:rgb(255 255 255 / .02);overflow:hidden;}
+.uq-pl-rhead{display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:1px solid var(--line);background:rgb(255 255 255 / .02);}
+.uq-pl-rhead b{font-size:12.5px;letter-spacing:.02em;}
+.uq-pl-rhead .ico{color:var(--lime);}
+.uq-pl-rcount{margin-left:auto;font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums;}
+.uq-pl-rrows{display:flex;flex-direction:column;}
+.uq-pl-rrow{padding:10px 14px;border-top:1px solid rgb(255 255 255 / .05);}
+.uq-pl-rrow:first-child{border-top:none;}
+.uq-pl-rrow.uq-pl-rme{background:rgb(var(--lime-rgb) / .06);box-shadow:inset 3px 0 0 var(--lime);}
+.uq-pl-rfej{display:flex;align-items:center;gap:9px;}
+.uq-pl-rnum{width:20px;height:20px;flex:none;border-radius:6px;display:grid;place-items:center;background:rgb(255 255 255 / .06);border:1px solid var(--line);font-size:11px;font-weight:700;font-variant-numeric:tabular-nums;}
+.uq-pl-rrow.kesz .uq-pl-rnum{background:rgb(var(--lime-rgb) / .18);border-color:rgb(var(--lime-rgb) / .5);color:var(--lime);}
+.uq-pl-rnev{font-size:12.5px;color:var(--text);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.uq-pl-rtag{margin-left:auto;flex:none;font-size:10.5px;padding:2px 7px;border-radius:99px;border:1px solid var(--line);color:var(--muted);}
+.uq-pl-rrow.kesz     .uq-pl-rtag{color:var(--ok);border-color:rgb(var(--lime-rgb) / .45);}
+.uq-pl-rrow.nema     .uq-pl-rtag{color:var(--kozepes);border-color:rgb(224 185 58 / .45);}
+.uq-pl-rrow.kihagyva .uq-pl-rtag{color:var(--muted);border-style:dashed;}
+.uq-pl-rnote{margin:6px 0 0 29px;font-size:11px;color:var(--muted);}
+.uq-pl-rans{margin:4px 0 0 29px;font-size:13.5px;font-weight:700;color:#fff;word-break:break-word;}
+.uq-pl-rans.auto{font-weight:600;color:var(--text-2);}
+.uq-pl-rauto{display:inline-block;margin:2px 0 0 29px;font-size:10.5px;color:var(--muted);font-style:italic;}
+.uq-pl-rlock{margin:4px 0 0 29px;font-size:11px;color:var(--muted);}
+
+/* zárt láncszem: a feladvány szövege le sem jött a telefonra */
+.uq-pl-rwait{text-align:center;padding:26px 18px;border:1px dashed var(--line);border-radius:12px;background:rgb(255 255 255 / .02);}
+.uq-pl-rwait .big{display:grid;place-items:center;width:52px;height:52px;margin:0 auto 12px;border-radius:14px;background:rgb(255 255 255 / .04);border:1px solid var(--line);}
+.uq-pl-rwait .big .ico{width:24px;height:24px;color:var(--muted);}
+.uq-pl-rwait b{display:block;font-size:14px;color:#fff;margin-bottom:6px;}
+.uq-pl-rwait small{display:block;max-width:38ch;margin:0 auto;font-size:11.5px;line-height:1.55;color:var(--text-2);}
+
+/* a nyers leolvasás külön mezője */
+.uq-pl-rnotelbl{display:block;margin:0 0 10px;}
+.uq-pl-rnotelbl span{display:block;margin-bottom:5px;font-size:11px;color:var(--muted);}
+.uq-pl-rnotelbl input{width:100%;height:40px;padding:0 13px;background:rgb(255 255 255 / .03);border:1px solid var(--line);border-radius:10px;color:var(--text);font-family:var(--font-body);font-size:13px;outline:none;transition:.14s;}
+.uq-pl-rnotelbl input:focus{border-color:var(--lime);}
+
 /* --- döntési pont --- */
 .uq-pl-decision{max-width:560px;}
 .uq-pl-decision .uq-pl-dec-head{display:flex;gap:14px;align-items:flex-start;padding:22px 22px 6px;}

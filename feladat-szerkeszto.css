@@ -203,3 +203,17 @@
 /* videó a játékos-előnézetben (16:9) */
 .pv-video{position:relative;width:100%;aspect-ratio:16/9;margin-bottom:10px;border-radius:12px;overflow:hidden;border:1px solid rgb(var(--lime-rgb) / .3);background:#000;}
 .pv-video iframe,.pv-video video{position:absolute;inset:0;width:100%;height:100%;border:0;display:block;}
+
+/* --- Csapatlánc (váltó) ---
+   Típusfüggetlen szekció: a #feTypeConfig típusonként újrarajzolódik, ott a
+   lánc beállításai minden típusváltásnál eltűnnének. */
+.fe-relay-head{display:flex;align-items:flex-start;gap:16px;margin-bottom:14px;}
+.fe-relay-head b{display:block;font-size:13px;color:var(--text);margin-bottom:4px;}
+.fe-relay-head p{margin:0;font-size:11.5px;line-height:1.5;color:var(--muted);max-width:46ch;}
+.fe-relay-head .ed-toggle{flex:none;margin-top:2px;}
+.fe-relay-sec.is-tiltott .fe-relay-head b,
+.fe-relay-sec.is-tiltott .fe-relay-head p{opacity:.45;}
+.fe-relay-sec.is-tiltott .ed-toggle{opacity:.35;cursor:not-allowed;}
+.fe-opt{font-weight:400;color:var(--muted);font-size:11px;}
+.fe-relay-hint{margin:4px 0 0;font-size:11px;line-height:1.6;color:var(--muted);}
+.fe-relay-hint code{padding:1px 5px;border-radius:4px;background:rgb(255 255 255 / .06);border:1px solid var(--line);font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:10.5px;color:var(--text-2);}

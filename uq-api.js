@@ -266,8 +266,10 @@
 
   /**
    * @param path  pl. '/courses?select=*&status=eq.pub'
-   * @param opts  {method, body, headers, prefer, anon}
+   * @param opts  {method, body, headers, prefer, anon, timeout}
    *              anon:true -> szándékosan token nélkül (publikus olvasás)
+   *              timeout   -> ms; ennyi után a kérés MEGSZAKAD és hálózati
+   *                           hibaként viselkedik
    */
   function rest(path, opts) {
     opts = opts || {};
@@ -290,11 +292,33 @@
       }
       Object.keys(opts.headers || {}).forEach(function (k) { headers[k] = opts.headers[k]; });
 
+      /* IDŐKORLÁT. Eddig semmilyen korlát nem volt, ezért egy lassú mobil-
+         hálózaton lógó kérés NEM dobott TypeError-t: az isNetworkError hamis
+         maradt, a visszalépés el sem indult, és a kimenő sor határozatlan
+         ideig blokkolva maradt egyetlen félbeszakadt kérés mögött. */
+      var vezerlo = null, ora = null;
+      if (opts.timeout && typeof AbortController === 'function') {
+        vezerlo = new AbortController();
+        ora = setTimeout(function () { vezerlo.abort(); }, opts.timeout);
+      }
+
       return fetch(URL_BASE + '/rest/v1' + path, {
         method: method,
         headers: headers,
+        signal: vezerlo ? vezerlo.signal : undefined,
         body: opts.body === undefined ? undefined : JSON.stringify(opts.body)
-      });
+      }).then(function (r) { if (ora) clearTimeout(ora); return r; },
+              function (e) {
+                if (ora) clearTimeout(ora);
+                /* A megszakítás hálózati hiba, nem programhiba: így indul el
+                   a visszalépés és a sor újrapróbálkozása. */
+                if (e && e.name === 'AbortError') {
+                  var h = new TypeError('időtúllépés');
+                  h.timeout = true;
+                  throw h;
+                }
+                throw e;
+              });
     }
 
     return fire()
