@@ -6,15 +6,15 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<meta name="description" content="Urban Quest ranglista – mérjétek össze tudásotokat, és hódítsátok meg a várost!">
-<title>Ranglista – Urban Quest</title>
+<meta name="description" content="Urban Quest térkép – hol indulnak a küldetések a városban? Nézd meg térképen, és válassz.">
+<title>Térkép – Urban Quest</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&family=Inter:wght@400..700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="vendor/leaflet/leaflet.css">
 <link rel="stylesheet" href="styles.css?v=14">
 <link rel="stylesheet" href="uq-auth.css?v=6">
-<link rel="stylesheet" href="uq-account.css?v=3">
-<link rel="stylesheet" href="ranglista.css?v=5">
+<link rel="stylesheet" href="terkep.css?v=1">
 </head>
 <body>
 
@@ -68,7 +68,7 @@
       <a href="index.html#kuldetesek">Küldetések</a>
       <a href="index.html#hogyan">Hogyan működik?</a>
       <a href="index.html#arak">Árak</a>
-      <a href="ranglista.html" class="is-active">Ranglista</a>
+      <a href="ranglista.html">Ranglista</a>
       <a href="index.html#rolunk">Rólunk</a>
       <a href="index.html#ajandek">Ajándékutalvány</a>
       <a href="index.html#kapcsolat">Kapcsolat</a>
@@ -94,121 +94,29 @@
   </div>
 </header>
 
-<main class="rank-page">
-  <!-- cím-sáv -->
-  <section class="rank-hero">
-    <img class="rank-hero-img" src="assets/hero-mountain.svg" alt="" aria-hidden="true">
-    <div class="rank-hero-bg" aria-hidden="true"></div>
-    <div class="rank-wrap">
-      <h1>Ranglista</h1>
-      <p>Mérjétek össze tudásotokat, és hódítsátok meg a várost!</p>
-    </div>
+<main class="terkep-lap">
+  <section class="terkep-fejlec">
+    <h1>Hol indulnak a küldetések?</h1>
+    <p class="terkep-alcim">Koppints egy tűre, és megnézheted a küldetést. A tű az indulási pontot mutatja.</p>
   </section>
 
-  <div class="rank-wrap">
-    <div class="rank-layout">
-      <!-- FŐ OSZLOP -->
-      <div class="rank-main">
-        <!-- dobogó — a ranglista.js tölti fel valós adatból; üresen rejtve marad -->
-        <div class="podium" id="podium" hidden></div>
-
-        <!-- szűrő -->
-        <!-- A négy szűrő korábban díszlet volt: sima <div>-ek, egyetlen
-             eseménykezelő nélkül. Most valódi, billentyűzettel is kezelhető
-             vezérlők; a pálya/nehézség/város választékát a betöltött
-             eredmények adják, tehát nem kínálunk olyat, amire nincs sor. -->
-        <form class="rank-filter" id="rankFilter" autocomplete="off">
-          <label class="rf"><span class="rf-label">Időszak</span><span class="rf-val">
-            <select class="rf-sel" id="fIdoszak">
-              <option value="">Összes idő</option>
-              <option value="7">Elmúlt 7 nap</option>
-              <option value="30">Elmúlt 30 nap</option>
-              <option value="365">Elmúlt egy év</option>
-            </select><svg class="ico ico-xs" aria-hidden="true"><use href="#i-chevron-down"/></svg></span>
-          </label>
-          <label class="rf"><span class="rf-label">Pálya</span><span class="rf-val">
-            <select class="rf-sel" id="fPalya"><option value="">Összes pálya</option></select>
-            <svg class="ico ico-xs" aria-hidden="true"><use href="#i-chevron-down"/></svg></span>
-          </label>
-          <label class="rf"><span class="rf-label">Nehézség</span><span class="rf-val">
-            <select class="rf-sel" id="fNehezseg"><option value="">Összes nehézség</option></select>
-            <svg class="ico ico-xs" aria-hidden="true"><use href="#i-chevron-down"/></svg></span>
-          </label>
-          <label class="rf"><span class="rf-label">Város / kategória</span><span class="rf-val">
-            <select class="rf-sel" id="fVaros"><option value="">Összes város</option></select>
-            <svg class="ico ico-xs" aria-hidden="true"><use href="#i-chevron-down"/></svg></span>
-          </label>
-          <button class="btn btn-ghost" type="reset" id="fAlaphelyzet"><svg class="ico ico-sm" aria-hidden="true"><use href="#i-refresh"/></svg>Szűrők alaphelyzetbe állítása</button>
-        </form>
-
-        <!-- táblázat -->
-        <div class="rank-table">
-          <div class="rank-row rank-head">
-            <span>Helyezés</span><span>Csapat neve</span><span>Teljesített pálya</span><span>Pontszám</span><span>Időeredmény</span><span>Teljesítés dátuma</span><span>Város / kategória</span>
-          </div>
-          <div class="rank-body" id="rankBody">
-            <!-- sorok JS-ből -->
-          </div>
-          <div class="rank-more"><button class="btn btn-ghost" type="button" id="loadMore"><svg class="ico ico-sm" aria-hidden="true"><use href="#i-chevron-down"/></svg>Több találat betöltése</button></div>
-        </div>
-
-        <!-- közösségi statisztikák -->
-        <div class="rank-community">
-          <h3><svg class="ico ico-sm" aria-hidden="true"><use href="#i-users"/></svg>Közösségi statisztikák</h3>
-          <div class="rc-grid">
-            <div class="rc-stat"><svg class="ico" aria-hidden="true"><use href="#i-users"/></svg><div><b id="stTeams">–</b><span>Összes csapat</span></div></div>
-            <div class="rc-stat"><svg class="ico" aria-hidden="true"><use href="#i-map"/></svg><div><b id="stFinished">–</b><span>Teljesített pályák</span></div></div>
-            <div class="rc-stat"><svg class="ico" aria-hidden="true"><use href="#i-shield"/></svg><div><b id="stCourses">–</b><span>Elérhető küldetés</span></div></div>
-            <div class="rc-stat"><svg class="ico" aria-hidden="true"><use href="#i-trophy"/></svg><div><b id="stPoints">–</b><span>Összes pontszám</span></div></div>
-            <div class="rc-stat"><svg class="ico" aria-hidden="true"><use href="#i-city"/></svg><div><b id="stCities">–</b><span>Aktív városok</span></div></div>
-          </div>
-        </div>
-      </div>
-
-      <!-- OLDALSÁV -->
-      <aside class="rank-side">
-        <!-- Heti bajnok — a ranglista.js tölti; ha a héten senki nem végzett, rejtve marad -->
-        <div class="side-card champ" id="champCard" hidden>
-          <h3>Heti bajnok</h3>
-          <p class="champ-date"><svg class="ico ico-sm" aria-hidden="true"><use href="#i-calendar"/></svg><span id="champDate"></span></p>
-          <div class="champ-team">
-            <span class="champ-logo"><svg class="ico" aria-hidden="true"><use href="#i-shield"/></svg></span>
-            <div><div class="champ-name" id="champName"></div><div class="champ-pts"><span id="champPts"></span><small>pont</small></div></div>
-          </div>
-        </div>
-
-        <!-- Saját statisztika — csak bejelentkezve, csak valós menetekből -->
-        <div class="side-card" id="pstatCard" hidden>
-          <h3>Játékos statisztikáid</h3>
-          <div class="pstats">
-            <div class="pstat"><span>Helyezésed</span><b id="psRank">–</b></div>
-            <div class="pstat accent"><span>Összesített pontszám</span><b><span id="psPoints">0</span><span class="u">pont</span></b></div>
-            <div class="pstat"><span>Teljesített pályák</span><b id="psDone">0</b></div>
-            <div class="pstat time wide"><span>Átlagos időeredmény</span><b><svg class="ico" aria-hidden="true"><use href="#i-clock"/></svg><span id="psAvg">–</span></b></div>
-          </div>
-        </div>
-
-        <!-- A teljesítmény-jelvények funkció még nem létezik: kitalált jelvényeket
-             dátummal mutatni félrevezető lenne, ezért a blokk egyelőre kimarad. -->
-
-        <div class="join-cta">
-          <h3>Csatlakozz a kalandhoz!</h3>
-          <p>Alakítsd meg csapatod, és kerülj fel a ranglistára!</p>
-          <a class="btn btn-lime" id="csapatAlapit" href="regisztracio.html"><svg class="ico ico-sm" aria-hidden="true"><use href="#i-users"/></svg>Csapat alapítása</a>
-        </div>
-      </aside>
-    </div>
+  <div class="terkep-keret">
+    <div id="terkep" role="application" aria-label="A küldetések indulási pontjai térképen"></div>
+    <div class="terkep-allapot" id="terkepAllapot" aria-live="polite"></div>
   </div>
+
+  <section class="terkep-lista" id="terkepLista" aria-label="Küldetések listája"></section>
 </main>
 
+<script src="vendor/leaflet/leaflet.js"></script>
+<script src="data.js?v=12"></script>
 <script src="uq-api.js?v=6"></script>
   <script src="uq-auth.js?v=7"></script>
 <script src="uq-account.js?v=7"></script>
-<script src="uq-team.js?v=2"></script>
-<script src="ranglista.js?v=5"></script>
-<script src="i18n/kozos.js?v=2"></script>
-<script src="i18n/ranglista.js?v=2"></script>
+<script src="uq-catalog.js?v=4"></script>
+<script src="terkep.js?v=1"></script>
 <script src="uq-tabbar.js?v=1"></script>
+<script src="i18n/kozos.js?v=2"></script>
 <script src="uq-i18n.js?v=2"></script>
 </body>
 </html>

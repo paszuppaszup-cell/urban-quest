@@ -1,0 +1,126 @@
+/* =========================================================
+   URBAN QUEST — várostérkép oldal
+
+   A --lime itt a márkazöld marad: ez a lap TÖBB pályát mutat egyszerre,
+   tehát nincs egyetlen „pálya színe", amit át lehetne venni.
+   ========================================================= */
+
+.terkep-lap {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 28px 20px 48px;
+}
+
+.terkep-fejlec { margin-bottom: 18px; }
+.terkep-fejlec h1 {
+  font-family: Archivo, system-ui, sans-serif;
+  font-size: clamp(24px, 5vw, 38px);
+  line-height: 1.1;
+  text-wrap: balance;
+  margin: 0 0 8px;
+}
+.terkep-alcim {
+  color: var(--text-2);
+  margin: 0;
+  max-width: 62ch;
+}
+
+/* --- a térkép kerete --- */
+.terkep-keret {
+  position: relative;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  overflow: hidden;
+  background: var(--bg-elev);
+}
+
+#terkep {
+  height: clamp(320px, 56vh, 560px);
+  width: 100%;
+}
+/* Ha nincs mit kirajzolni, a térkép ne foglaljon üres helyet. */
+#terkep.is-ures { height: 0; }
+
+/* --- állapotüzenet (töltés, hiba, üres) --- */
+.terkep-allapot:not(:empty) {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  padding: 22px 20px;
+}
+.terkep-allapot strong { font-size: 15px; }
+.terkep-allapot span { color: var(--muted); font-size: 13px; }
+.terkep-allapot .btn { margin-top: 6px; }
+.terkep-tolt { color: var(--muted); font-size: 13px; }
+
+/* --- saját tű ---
+   A Leaflet alapértelmezett tűje külön képfájlokat tölt be, amik a vendor
+   mappából más útvonalra mutatnának — ezért rajzolt tűt használunk. */
+.terkep-tu { background: none; border: 0; }
+.terkep-tu-pont {
+  display: block;
+  width: 18px; height: 18px;
+  margin: 2px;
+  border-radius: 50%;
+  background: var(--lime);
+  border: 3px solid var(--bg);
+  box-shadow: 0 0 0 2px var(--lime), 0 2px 8px rgb(0 0 0 / .5);
+}
+
+/* --- felbukkanó buborék --- */
+.leaflet-popup-content-wrapper {
+  background: var(--bg-card);
+  color: var(--text);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+.leaflet-popup-tip { background: var(--bg-card); border: 1px solid var(--line); }
+.leaflet-popup-content { margin: 12px 14px; }
+
+.terkep-pop { display: flex; flex-direction: column; gap: 3px; }
+.terkep-pop strong { font-size: 14px; }
+.terkep-pop-hely,
+.terkep-pop-cim { color: var(--muted); font-size: 12px; }
+.terkep-pop-link {
+  margin-top: 7px;
+  color: var(--lime);
+  font-weight: 600;
+  font-size: 13px;
+}
+
+/* --- szöveges lista a térkép alatt --- */
+.terkep-lista { margin-top: 26px; }
+.terkep-lista-cim {
+  font-family: Archivo, system-ui, sans-serif;
+  font-size: 18px;
+  margin: 0 0 12px;
+}
+.terkep-lista-sorok {
+  list-style: none;
+  margin: 0; padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(260px, 100%), 1fr));
+  gap: 10px;
+}
+.terkep-sor a {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 13px 15px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--bg-card);
+  transition: border-color .18s, transform .18s;
+}
+.terkep-sor a:hover,
+.terkep-sor a:focus-visible { border-color: var(--lime); transform: translateY(-1px); }
+.terkep-sor-nev { font-weight: 600; }
+.terkep-sor-meta { color: var(--muted); font-size: 12.5px; }
+.terkep-sor-meta em { font-style: normal; color: var(--dim); }
+
+@media (max-width: 760px) {
+  .terkep-lap { padding: 20px 14px 36px; }
+  .terkep-keret { border-radius: 12px; }
+  #terkep { height: clamp(280px, 48vh, 420px); }
+}
