@@ -402,6 +402,10 @@
         path: play.path.slice(), points: play.points, hintCost: play.hintCost,
         hintsUsed: play.hintsUsed.slice(), solvedIds: play.solvedIds.slice(),
         done: play.done, skipped: play.skipped, taskIdx: play.taskIdx,
+        /* A képernyő is a mentett állapot része. Enélkül a döntési
+           képernyőn abbahagyott játék az állomás elejére tért vissza, és a
+           csapat újra végigkattintotta a már megoldott feladatokat. */
+        view: play.view,
         /* abszolút kezdés + eltelt idő: az előbbi a határidőhöz, az utóbbi a
            fiókban megjelenített játékidőhöz kell */
         startTs: play.startTs, elapsedMs: playElapsed(),
@@ -573,6 +577,15 @@
     play.solvedIds = Array.isArray(state.solvedIds) ? state.solvedIds.map(String) : [];
     play.done = state.done || 0; play.skipped = state.skipped || 0;
     play.result = null; play.decOpts = []; play.pv = {};
+
+    /* Ha a döntési képernyőn hagyták abba, oda térünk vissza — az ágakat
+       a pályából olvassuk újra, nem a mentésből: így egy időközbeni
+       szerkesztés sem hagy maga után nem létező választásokat. */
+    if (state.view === 'decision') {
+      const agak = (COURSE[idx].branches || []).filter(b => b && b.to >= 0 && b.to < COURSE.length);
+      if (agak.length >= 2) { play.decOpts = agak; play.view = 'decision'; }
+    }
+
     play.stationTasks = stationPlayTasks(idx);
     /* A felső korlát a HOSSZ − 1: a hosszra korlátozva a taskIdx a tömbön
        kívülre mutatna, és a kirajzolás undefined feladaton hasalna el. */

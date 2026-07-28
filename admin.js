@@ -1069,13 +1069,22 @@
   function playFinish() { play.finished = true; play.view = 'summary'; play.finalMs = playElapsed(); stopTimer(); renderPlay(); }
   function playAfterStation() {
     const i = playCurIdx();
-    if (state[i].type === 'Döntési pont') {
-      const opts = [];
-      if (i + 1 < state.length) opts.push(i + 1);
-      if (i + 2 < state.length) opts.push(i + 2);
-      if (opts.length >= 2) { play.decOpts = opts; play.view = 'decision'; renderPlay(); return; }
-      if (opts.length === 1) return playGoto(opts[0]);
-      return playFinish();
+    const s = state[i];
+
+    /* A megadott ágak szerint megyünk tovább — ugyanaz a szabály, mint az
+       éles lejátszóban (jatszas.js playAfterStation). Korábban itt a lista
+       következő KÉT állomása jött, ezért a próbajáték mást mutatott, mint
+       a mellette lévő térkép és mint a valódi játék. */
+    const agak = (s.branches || [])
+      .map(b => ({ idx: state.indexOf(b.to), label: b.label || '' }))
+      .filter(b => b.idx >= 0);
+
+    if (agak.length) {
+      if (agak.length === 1) return playGoto(agak[0].idx);
+      play.decOpts = agak;
+      play.view = 'decision';
+      renderPlay();
+      return;
     }
     if (i + 1 < state.length) return playGoto(i + 1);
     return playFinish();
@@ -1258,9 +1267,18 @@
   function playDecisionHTML() {
     const i = playCurIdx(); const s = state[i];
     let h = '<div class="uq-pl-card uq-pl-decision"><div class="uq-pl-dec-head"><span class="uq-pl-dec-ic"><svg class="ico" aria-hidden="true"><use href="#a-diamond"/></svg></span><div><h3>' + esc(s.name) + '</h3><p>' + esc(s.desc || 'Válaszd ki a következő útvonalat!') + '</p></div></div>';
-    h += '<div class="uq-pl-routes">' + play.decOpts.map((ti, k) => {
-      const t = state[ti];
-      return '<button class="uq-pl-route" type="button" data-goto="' + ti + '"><span class="uq-pl-route-k">' + (k === 0 ? 'A' : 'B') + '</span><span class="uq-pl-route-body"><b>' + esc(t.name) + '</b><small>' + esc(t.type) + (k === 1 ? ' · rövidebb út' : ' · a következő állomás') + '</small></span><svg class="ico ico-sm uq-pl-route-go" aria-hidden="true"><use href="#a-route"/></svg></button>';
+    /* A gombon a SZERZŐ ÁLTAL ÍRT válasz áll, alatta az állomás, ahová
+       visz. A korábbi „rövidebb út" / „a következő állomás" alcím semmilyen
+       adatból nem következett — kitalált információ volt. */
+    const betuk = 'ABCDEFGH';
+    h += '<div class="uq-pl-routes">' + play.decOpts.map((ag, k) => {
+      const t = state[ag.idx];
+      const felirat = (ag.label || '').trim() || t.name;
+      const alcim = (ag.label || '').trim() ? t.name : t.type;
+      return '<button class="uq-pl-route" type="button" data-goto="' + ag.idx + '">' +
+        '<span class="uq-pl-route-k">' + (betuk[k] || (k + 1)) + '</span>' +
+        '<span class="uq-pl-route-body"><b>' + esc(felirat) + '</b><small>' + esc(alcim) + '</small></span>' +
+        '<svg class="ico ico-sm uq-pl-route-go" aria-hidden="true"><use href="#a-route"/></svg></button>';
     }).join('') + '</div></div>';
     return h;
   }
@@ -1300,7 +1318,8 @@
     const cur = playCurIdx();
     let base = '';
     state.forEach((s, i) => {
-      const tg = s.type === 'Döntési pont' ? [i + 1, i + 2] : [i + 1];
+      const agakIdx = (s.branches || []).map(b => state.indexOf(b.to)).filter(x => x >= 0);
+      const tg = agakIdx.length ? agakIdx : [i + 1];
       tg.forEach(ti => { if (ti < state.length) { const a = svgXY(s), b = svgXY(state[ti]); base += '<line x1="' + a.x.toFixed(1) + '" y1="' + a.y.toFixed(1) + '" x2="' + b.x.toFixed(1) + '" y2="' + b.y.toFixed(1) + '" class="uq-pm-base"/>'; } });
     });
     let done = '';

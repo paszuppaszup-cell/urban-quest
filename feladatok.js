@@ -491,7 +491,20 @@
       });
     } else {
       // foto / gps / qr / gyors — reprezentatív akció
-      const act = { foto: { ic: 'a-camera', lbl: 'Fotó feltöltése', txt: c.instruction || 'Készíts képet a helyszínen' }, gps: { ic: 'a-target', lbl: 'Helyszín igazolása', txt: 'Menj a megjelölt pontra (' + (c.radius || 30) + ' m)' }, qr: { ic: 'a-qr', lbl: 'QR beolvasása', txt: 'Keresd meg és olvasd be a kódot' }, gyors: { ic: 'a-bolt', lbl: 'Indítás', txt: (c.game === 'tap' ? 'Koppints ' + (c.target || 15) + '-öt ' + (c.time || 5) + ' mp alatt' : 'Mini-játék: ' + (c.game || 'tap')) } }[t.type];
+      /* Az 'info' és a 'dontes' típus hiányzott ebből a táblázatból, ezért
+         `act` undefined lett, és a következő sor `act.ic`-je KIVÉTELT dobott:
+         az élő előnézet elhasalt, amint ilyen feladatot választottál. A
+         'gyors' viszont már nem létező típus (az adatbázis nem engedi) —
+         azt csak a visszamenőleges olvashatóság kedvéért hagyjuk itt. */
+      const AKCIO = {
+        foto:   { ic: 'a-camera', lbl: 'Fotó feltöltése',    txt: c.instruction || 'Készíts képet a helyszínen' },
+        gps:    { ic: 'a-target', lbl: 'Helyszín igazolása', txt: 'Menj a megjelölt pontra (' + (c.radius || 30) + ' m)' },
+        qr:     { ic: 'a-qr',     lbl: 'QR beolvasása',      txt: 'Keresd meg és olvasd be a kódot' },
+        info:   { ic: 'a-check',  lbl: 'Megvan',             txt: c.instruction || 'Olvasd el, majd nyugtázd.' },
+        dontes: { ic: 'a-route',  lbl: 'Tovább',             txt: 'Az útvonalat a döntési pont elágazása dönti el — azt a Pályák oldalon állítod be.' },
+        gyors:  { ic: 'a-bolt',   lbl: 'Indítás',            txt: (c.game === 'tap' ? 'Koppints ' + (c.target || 15) + '-öt ' + (c.time || 5) + ' mp alatt' : 'Mini-játék: ' + (c.game || 'tap')) }
+      };
+      const act = AKCIO[t.type] || { ic: 'a-task', lbl: 'Kész', txt: 'Ehhez a típushoz nincs külön előnézet.' };
       box.innerHTML = `<div class="pv-action"><span class="big">${ico(act.ic)}</span><p>${esc(act.txt)}</p><button class="pv-do" type="button" id="pvGo">${act.lbl}</button></div>`;
       document.getElementById('pvGo').addEventListener('click', () => { if (pv.solved) return; pv.attempts++; finish(true); });
     }
