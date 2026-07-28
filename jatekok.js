@@ -112,7 +112,12 @@
       thumb: (Math.abs(String(r.id).charCodeAt(0) + String(r.id).charCodeAt(1)) % 6) + 1,
       // csak a felület számára — törlés előtti figyelmeztetéshez
       _allomas: r.allomas_db, _feladat: r.feladat_db, _menet: r.menet_db,
-      _elo: r.van_elo_verzio, _slug: r.slug
+      _elo: r.van_elo_verzio, _slug: r.slug,
+      /* A szerkesztés már nem teszi azonnal élesre a pályát: a mentés csak
+         befagyaszt egy verziót, a játékosok a legutóbb KÖZZÉTETT-et kapják.
+         Ezt látnia kell a szerzőnek, különben azt hiszi, kész van. */
+      _kozzetetlen: r.kozzetetlen_modositas === true,
+      _akadaly: r.kozzeteteli_akadaly || 0
     };
   }
 
@@ -365,7 +370,9 @@
     setTimeout(megjelenit, 60);
     const dismiss = () => { t.classList.remove('is-show'); setTimeout(() => t.remove(), 260); };
     t.querySelector('.uq-toast-x').addEventListener('click', dismiss);
-    setTimeout(dismiss, 3200);
+    /* A hibaüzenetet el kell tudni olvasni. A közzététel-kapu több tételt is
+       felsorol — 3,2 másodperc alatt ez elolvashatatlan. */
+    setTimeout(dismiss, opts.tart || (type === 'ok' ? 3200 : 9000));
   }
 
   /* =========================================================
@@ -428,6 +435,10 @@
       <div class="jtk-langs">${langs}</div>
       <div><span class="jtk-status ${st.cls}"><span class="dot"></span>${st.label}</span>${
         nincsElo(g) ? '<span class="jtk-warn" title="Közzétett, de nincs befagyasztott verziója, ezért nem jelenik meg a publikus oldalon. Nyomd meg a Közzététel gombot.">nem látható</span>' : ''
+      }${
+        g._kozzetetlen ? '<span class="jtk-warn is-draft" title="A legutóbbi szerkesztéseid be vannak fagyasztva, de a játékosok még a korábban közzétett verziót játsszák. A Közzététel gombbal teszed élesre.">közzé nem tett módosítás</span>' : ''
+      }${
+        g._akadaly ? '<span class="jtk-warn" title="' + g._akadaly + ' dolog akadályozza a közzétételt — a Közzététel gomb megmutatja, mi.">' + g._akadaly + ' akadály</span>' : ''
       }</div>
       <div class="jtk-actions">
         <button class="jtk-act jtk-act-edit" type="button" data-act="edit" aria-label="Szerkesztés">${ico('a-edit')}</button>
@@ -720,6 +731,23 @@
 
   function hibaToast(err) {
     var m = String((err && err.message) || 'Ismeretlen hiba');
+
+    /* A közzététel-kapu több tételt sorol fel egyetlen mondatban. Nyers
+       formában ez egy olvashatatlan fal — inkább listaként mutatjuk, és csak
+       az első néhányat, hogy a doboz ne nőjön ki a képernyőből. */
+    var kapu = m.match(/^A pálya így nem tehető közzé:\s*([\s\S]+)$/);
+    if (kapu) {
+      var tetelek = kapu[1].split(' | ').map(function (s) { return s.trim(); }).filter(Boolean);
+      var mutat = tetelek.slice(0, 4);
+      var tobbi = tetelek.length - mutat.length;
+      toast('A pálya még nem tehető közzé', {
+        type: 'warn',
+        sub: mutat.map(function (t) { return '• ' + t; }).join('\n') +
+             (tobbi > 0 ? '\n• …és még ' + tobbi + ' dolog' : '') +
+             '\nJavítsd ezeket a Pályák oldalon, aztán próbáld újra.'
+      });
+      return;
+    }
     toast('Nem sikerült', { type: 'warn', sub: m });
   }
 
@@ -835,8 +863,11 @@
     return UQAPI.rest('/rpc/save_course', { method: 'POST', body: { p: payload } })
       .then(() => {
         if (status !== 'pub') return ujratolt('Piszkozatként mentve', g.name + ' — nem jelenik meg nyilvánosan');
-        // közzététel: friss verziót fagyasztunk be, ettől lesz látható és játszható
-        return UQAPI.rest('/rpc/publish_course', { method: 'POST', body: { p_course: id } })
+        /* Ez az EGYETLEN hely, ahol egy pálya élesre kerül: p_go_live = true.
+           A többi mentés csak befagyaszt egy verziót, a játékosok addig a
+           legutóbb közzétettet játsszák. A szerver a course_lint-tel kapuz —
+           félkész pálya nem mehet ki. */
+        return UQAPI.rest('/rpc/publish_course', { method: 'POST', body: { p_course: id, p_go_live: true } })
           .then(r => {
             const v = Array.isArray(r) ? r[0] : r;
             const figy = (v && v.warnings && v.warnings.length)

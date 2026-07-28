@@ -465,13 +465,22 @@
           return UQAPI.rest('/rpc/publish_course', { method: 'POST', body: { p_course: d.course_id } })
             .then(function (pr) {
               var v = Array.isArray(pr) ? pr[0] : pr;
+              /* Az átköltöztetés NEM tesz élesre semmit: befagyaszt egy
+                 verziót, a pálya piszkozat marad. Közzétenni a Játékok
+                 oldalon kell, miután átnézted. Ezt ki is mondjuk, mert a
+                 régi „publikálva" szöveg mást ígért, mint ami történik. */
+              var akadaly = (v && v.blockers && v.blockers.length) ? v.blockers.length : 0;
               if (v && v.warnings && v.warnings.length) {
-                ir('<p class="mig-warn">↳ publikálva, de: ' + v.warnings.map(esc).join('; ') + '</p>');
+                ir('<p class="mig-warn">↳ verzió befagyasztva (v' + (v && v.version) + '), de: ' +
+                   v.warnings.map(esc).join('; ') + '</p>');
               } else {
-                ir('<p class="mig-ok-sor">↳ publikálva (v' + (v && v.version) + ')</p>');
+                ir('<p class="mig-ok-sor">↳ verzió befagyasztva (v' + (v && v.version) + ') — piszkozat marad</p>');
+              }
+              if (akadaly) {
+                ir('<p class="mig-warn">↳ ' + akadaly + ' dolgot rendbe kell tenni, mielőtt közzéteheted</p>');
               }
             })
-            .catch(function (e) { ir('<p class="mig-gond-sor">↳ publikálás nem sikerült: ' + esc(e.message) + '</p>'); });
+            .catch(function (e) { ir('<p class="mig-gond-sor">↳ a verzió befagyasztása nem sikerült: ' + esc(e.message) + '</p>'); });
         })
         .catch(function (e) {
           hiba++;

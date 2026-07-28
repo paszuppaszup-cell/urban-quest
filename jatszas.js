@@ -434,7 +434,12 @@
      Offline is működik: az események az uq-api kimenő sorába kerülnek,
      és akkor mennek el, amikor van hálózat.
      ========================================================= */
-  const SYNC = { on: false, session: null };
+  /* state  — a szerver legutóbbi, mérvadó összegzése a menetről. A pontot
+              a ranglista ebből veszi, tehát ha eltér a helyitől, a JÁTÉKOSNAK
+              a szerver számát kell látnia, nem a sajátunkat.
+     tarsak — csapatban: a szerver szerinti haladás, ami tőlünk függetlenül,
+              a többiek telefonjáról érkezett. */
+  const SYNC = { on: false, session: null, state: null, tarsak: 0 };
 
   function uuidv4() {
     if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
@@ -499,6 +504,11 @@
     UQAPI.queue({
       path: '/rpc/sync_batch',
       method: 'POST',
+      /* Eredményt KÉRÜNK. Enélkül a szerver válasza — benne az elfogadott
+         események száma és a menet mérvadó összegzése — a padlóra esett,
+         és a játékos sosem tudta meg, ha egy válasza nem ért célba. */
+      prefer: 'return=representation',
+      tag: 'sync_batch',
       body: {
         p_session: SYNC.session,
         p_events: [esemeny],
@@ -506,7 +516,31 @@
       }
     });
     UQAPI.flush();
+    szinkronJelzes();
   }
+
+  /* A szerver válasza megérkezett egy beküldésre. */
+  document.addEventListener('uq:written', function (ev) {
+    const d = ev.detail || {};
+    if (d.tag !== 'sync_batch' || !SYNC.on) return;
+    const r = Array.isArray(d.result) ? d.result[0] : d.result;
+    if (!r || typeof r !== 'object') return;
+    if (r.session_id && SYNC.session && r.session_id !== SYNC.session.id) return;  // régi menet válasza
+
+    if (r.state && typeof r.state === 'object') {
+      const elozo = SYNC.state;
+      SYNC.state = r.state;
+      /* Csapatban a többiek telefonja ugyanebbe a menetbe ír. Ha a szerver
+         többet tud, mint amennyit MI csináltunk, az a csapattársak munkája. */
+      const sajat = play.done + play.skipped;
+      SYNC.tarsak = Math.max(0, (r.state.tasks_done || 0) + (r.state.tasks_skipped || 0) - sajat);
+      if (!elozo || elozo.points !== r.state.points || SYNC.tarsak) frissitHud();
+    }
+    szinkronJelzes();
+  });
+
+  /* A kimenő sor ürült (vagy elbukott) — a jelzés frissül. */
+  document.addEventListener('uq:synced', function () { szinkronJelzes(); });
 
   /* URL-ben érkező csapatkód (megosztott link): ha nincs helyi csapat-
      kontextus, belépünk a kóddal — így a link önmagában is elég. */
@@ -602,8 +636,27 @@
   }
   function playExit() {
     /* Kilépés előtt mentünk — a felső sáv vissza-nyila is ide fut be. */
-    if (play.active && !play.finished) saveSnapshot();
-    play.active = false; play.finished = false; play.view = 'intro'; stopTimer(); renderPlay();
+    if (play.active && !play.finished) {
+      saveSnapshot();
+      /* A menetet LE IS ZÁRJUK a szerveren. Enélkül a félbehagyott menetek
+         örökre „folyamatban" maradtak: a rebuild_session_state kezeli ezt az
+         eseményt, csak sosem kapta meg. */
+      emit('session_abandoned', {});
+    }
+    play.active = false; play.finished = false; play.view = 'intro'; stopTimer();
+    csapatKontextusUrites();
+    SYNC.on = false; SYNC.session = null; SYNC.state = null; SYNC.tarsak = 0;
+    renderPlay();
+  }
+
+  /* A menet véget ért ezen a telefonon: a csapat-kontextus nem élhet tovább.
+     Enélkül a uq_team_ctx_v1 a készüléken maradt, és egy későbbi „Újra"
+     UGYANABBA a közös menetbe küldött új eseményeket — visszamenőleg átírva
+     a csapat már kiírt eredményét. Új közös menethez a váróból kell indulni. */
+  function csapatKontextusUrites() {
+    if (!window.UQTeam || !UQTeam.clearCtx) return;
+    const t = UQTeam.ctx && UQTeam.ctx();
+    if (t && t.slug === QUEST_ID) UQTeam.clearCtx();
   }
   function playCurIdx() { return play.path[play.path.length - 1]; }
   function playGoto(i) {
@@ -616,6 +669,10 @@
   function playFinish() {
     play.finished = true; play.view = 'summary'; play.finalMs = playElapsed(); stopTimer();
     emit('session_finished', {});
+    /* A SYNC szándékosan él tovább: az összegzőn a játékos még látni akarja,
+       hogy az eredménye megérkezett-e. Csak a csapat-kontextust engedjük el,
+       hogy az „Újra” friss menetet indítson a lezárt közös helyett. */
+    csapatKontextusUrites();
     finishSave(); renderPlay();
   }
   function playAfterStation() {
@@ -809,7 +866,65 @@
       '</div>' +
       cella('a-clock', t.szoveg, t.cimke, { id: 'uqPlayTime', cls: t.lejart ? 'warn' : '' }) +
       cella('a-star', playPoints(), 'Pontod', { cls: 'lime' }) +
-      '</div>';
+      '</div>' +
+      '<div class="uq-sync" id="uqSync" aria-live="polite"></div>';
+  }
+
+  /* A HUD újrarajzolása a teljes képernyő cseréje nélkül. */
+  function frissitHud() {
+    const regi = document.querySelector('.uq-play > .uq-hud');
+    if (!regi) return;
+    const doboz = document.createElement('div');
+    doboz.innerHTML = playHudHTML();
+    const uj = doboz.querySelector('.uq-hud');
+    const ujSav = doboz.querySelector('.uq-sync');
+    const regiSav = document.getElementById('uqSync');
+    if (uj) regi.replaceWith(uj);
+    if (ujSav && regiSav) regiSav.replaceWith(ujSav);
+    szinkronJelzes();
+  }
+
+  /* ---------------------------------------------------------------------
+     SZINKRON-JELZÉS
+
+     Eddig a játékos semmit nem tudott arról, hogy a válaszai megérkeztek-e.
+     Terepen ez a legfontosabb információ: ha a menet végén derül ki, hogy
+     tizenöt válasz a telefonon ragadt, már nincs mit tenni.
+     Három állapotot mutat, és csak akkor szól, ha van miről.
+     --------------------------------------------------------------------- */
+  function szinkronJelzes() {
+    const sav = document.getElementById('uqSync');
+    if (!sav) return;
+    if (!SYNC.on || !window.UQAPI) { sav.innerHTML = ''; return; }
+
+    const varakozo = UQAPI.pending('sync_batch');
+    const elveszett = (UQAPI.dead() || []).filter(e => String(e.path || '').indexOf('sync_batch') > -1).length;
+    const sorok = [];
+
+    if (elveszett) {
+      sorok.push('<span class="uq-sync-item is-bad">' +
+        '<svg class="ico ico-xs" aria-hidden="true"><use href="#a-x"/></svg>' +
+        elveszett + ' válasz nem ért célba</span>');
+    }
+    if (varakozo) {
+      sorok.push('<span class="uq-sync-item is-wait">' +
+        '<svg class="ico ico-xs" aria-hidden="true"><use href="#a-refresh"/></svg>' +
+        varakozo + ' válasz vár szinkronra' +
+        (UQAPI.online() ? '' : ' — nincs net') + '</span>');
+    }
+    if (SYNC.tarsak) {
+      sorok.push('<span class="uq-sync-item is-team">' +
+        '<svg class="ico ico-xs" aria-hidden="true"><use href="#a-users"/></svg>' +
+        'A csapattársak ' + SYNC.tarsak + ' feladattal haladtak</span>');
+    }
+    /* Ha a szerver mást számol, mint mi, a szerveré az igazság — a ranglista
+       abból dolgozik. Elhallgatni a legrosszabb változat. */
+    if (SYNC.state && typeof SYNC.state.points === 'number' && SYNC.state.points !== playPoints()) {
+      sorok.push('<span class="uq-sync-item is-note">' +
+        'A szerver ' + SYNC.state.points + ' pontot számol</span>');
+    }
+
+    sav.innerHTML = sorok.join('');
   }
 
   /* Az összes feladat a pályán — a fejléc „N / M feladat" számlálójához. */

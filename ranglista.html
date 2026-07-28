@@ -14,7 +14,7 @@
 <link rel="stylesheet" href="styles.css?v=14">
 <link rel="stylesheet" href="uq-auth.css?v=6">
 <link rel="stylesheet" href="uq-account.css?v=3">
-<link rel="stylesheet" href="ranglista.css?v=3">
+<link rel="stylesheet" href="ranglista.css?v=5">
 </head>
 <body>
 
@@ -113,12 +113,32 @@
         <div class="podium" id="podium" hidden></div>
 
         <!-- szűrő -->
+        <!-- A négy szűrő korábban díszlet volt: sima <div>-ek, egyetlen
+             eseménykezelő nélkül. Most valódi, billentyűzettel is kezelhető
+             vezérlők; a pálya/nehézség/város választékát a betöltött
+             eredmények adják, tehát nem kínálunk olyat, amire nincs sor. -->
         <form class="rank-filter" id="rankFilter" autocomplete="off">
-          <div class="rf"><span class="rf-label">Időszak</span><span class="rf-val">Összes idő<svg class="ico ico-xs" aria-hidden="true"><use href="#i-chevron-down"/></svg></span></div>
-          <div class="rf"><span class="rf-label">Pálya</span><span class="rf-val">Összes pálya<svg class="ico ico-xs" aria-hidden="true"><use href="#i-chevron-down"/></svg></span></div>
-          <div class="rf"><span class="rf-label">Nehézség</span><span class="rf-val">Összes nehézség<svg class="ico ico-xs" aria-hidden="true"><use href="#i-chevron-down"/></svg></span></div>
-          <div class="rf"><span class="rf-label">Város / kategória</span><span class="rf-val">Összes város<svg class="ico ico-xs" aria-hidden="true"><use href="#i-chevron-down"/></svg></span></div>
-          <button class="btn btn-ghost" type="reset"><svg class="ico ico-sm" aria-hidden="true"><use href="#i-refresh"/></svg>Szűrők alaphelyzetbe állítása</button>
+          <label class="rf"><span class="rf-label">Időszak</span><span class="rf-val">
+            <select class="rf-sel" id="fIdoszak">
+              <option value="">Összes idő</option>
+              <option value="7">Elmúlt 7 nap</option>
+              <option value="30">Elmúlt 30 nap</option>
+              <option value="365">Elmúlt egy év</option>
+            </select><svg class="ico ico-xs" aria-hidden="true"><use href="#i-chevron-down"/></svg></span>
+          </label>
+          <label class="rf"><span class="rf-label">Pálya</span><span class="rf-val">
+            <select class="rf-sel" id="fPalya"><option value="">Összes pálya</option></select>
+            <svg class="ico ico-xs" aria-hidden="true"><use href="#i-chevron-down"/></svg></span>
+          </label>
+          <label class="rf"><span class="rf-label">Nehézség</span><span class="rf-val">
+            <select class="rf-sel" id="fNehezseg"><option value="">Összes nehézség</option></select>
+            <svg class="ico ico-xs" aria-hidden="true"><use href="#i-chevron-down"/></svg></span>
+          </label>
+          <label class="rf"><span class="rf-label">Város / kategória</span><span class="rf-val">
+            <select class="rf-sel" id="fVaros"><option value="">Összes város</option></select>
+            <svg class="ico ico-xs" aria-hidden="true"><use href="#i-chevron-down"/></svg></span>
+          </label>
+          <button class="btn btn-ghost" type="reset" id="fAlaphelyzet"><svg class="ico ico-sm" aria-hidden="true"><use href="#i-refresh"/></svg>Szűrők alaphelyzetbe állítása</button>
         </form>
 
         <!-- táblázat -->
@@ -181,11 +201,11 @@
   </div>
 </main>
 
-<script src="uq-api.js?v=5"></script>
+<script src="uq-api.js?v=6"></script>
   <script src="uq-auth.js?v=7"></script>
 <script src="uq-account.js?v=7"></script>
 <script src="uq-team.js?v=2"></script>
-<script src="ranglista.js?v=4"></script>
+<script src="ranglista.js?v=5"></script>
 <script src="i18n/kozos.js?v=2"></script>
 <script src="i18n/ranglista.js?v=2"></script>
 <script src="uq-i18n.js?v=2"></script>

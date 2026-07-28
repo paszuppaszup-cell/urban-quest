@@ -183,6 +183,41 @@
   color: var(--lime, #9ed52b);
 }
 .uq-hud-ic .ico { width: 15px; height: 15px; }
+
+/* --- szinkron-jelzés a HUD alatt -------------------------------------------
+   Csak akkor foglal helyet, ha van mondanivalója (üresen nincs se margó, se
+   magassága). Több jelzés esetén tördel — telefonon ez a szűk keresztmetszet.
+   -------------------------------------------------------------------------- */
+.uq-sync { display: flex; flex-wrap: wrap; gap: 6px; min-width: 0; }
+.uq-sync:not(:empty) { margin-top: 8px; }
+.uq-sync-item {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 5px 9px; border-radius: 999px;
+  font-size: 11px; line-height: 1.3; font-weight: 600;
+  border: 1px solid transparent;
+  max-width: 100%; min-width: 0;
+}
+.uq-sync-item .ico { flex: 0 0 auto; }
+.uq-sync-item.is-wait {
+  color: var(--warn, #e8b23a);
+  background: color-mix(in srgb, var(--warn, #e8b23a) 12%, transparent);
+  border-color: color-mix(in srgb, var(--warn, #e8b23a) 34%, transparent);
+}
+.uq-sync-item.is-bad {
+  color: #ff7a6b;
+  background: rgba(255, 122, 107, .12);
+  border-color: rgba(255, 122, 107, .34);
+}
+.uq-sync-item.is-team {
+  color: var(--lime, #9ed52b);
+  background: rgb(var(--lime-rgb) / .12);
+  border-color: rgb(var(--lime-rgb) / .3);
+}
+.uq-sync-item.is-note {
+  color: var(--muted, #8b957f);
+  background: rgba(255, 255, 255, .04);
+  border-color: var(--line, #232a1e);
+}
 .uq-hud-txt { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
 .uq-hud-txt b {
   font-family: var(--font-display, 'Archivo'), sans-serif;

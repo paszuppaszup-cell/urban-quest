@@ -392,6 +392,28 @@
     return n;
   }
 
+  /* A holtlevél-tár: ide kerül, amit a szerver érdemben elutasított, vagy
+     ami idegen fiók beküldése. Eddig csak ÍRTUK — a játékos sosem tudta meg,
+     hogy egy válasza nem ért célba. Ezek az olvasók teszik láthatóvá. */
+  function dead() {
+    return obKeys(DEAD_PREFIX).map(function (k) {
+      var e = readJSON(k, null);
+      if (e) e._key = k;
+      return e;
+    }).filter(Boolean);
+  }
+
+  /* Egy bejegyzés (qid) vagy — argumentum nélkül — az egész tár eldobása.
+     Csak akkor hívd, ha a felhasználó látta és tudomásul vette. */
+  function deadClear(qid) {
+    var n = 0;
+    obKeys(DEAD_PREFIX).forEach(function (k) {
+      if (qid && k !== DEAD_PREFIX + qid) return;
+      try { localStorage.removeItem(k); n++; } catch (e) {}
+    });
+    return n;
+  }
+
   var flushing = false;
 
   function flush() {
@@ -433,9 +455,19 @@
         method: entry.method || 'POST',
         body: entry.body,
         prefer: entry.prefer || 'return=minimal,resolution=ignore-duplicates'
-      }).then(function () {
+      }).then(function (valasz) {
         try { localStorage.removeItem(key); } catch (e) {}
         sent++; i++;
+        /* A szerver válasza eddig a padlóra esett. Aki eredményt kért
+           (prefer: return=representation), az itt kapja meg — ebből tudja
+           a hívó, hogy a beküldése ÉRDEMBEN megtörtént-e, nem csak hogy a
+           kérés lement. A címke szerint válogat, hogy egy funkció ne
+           reagáljon a szomszéd funkció beküldésére. */
+        if (entry.tag) {
+          document.dispatchEvent(new CustomEvent('uq:written', {
+            detail: { tag: entry.tag, qid: entry.qid, path: entry.path, result: valasz }
+          }));
+        }
         return step();
       }).catch(function (err) {
         // Offline vagy szerverhiba: megállunk. Ez az elem és minden
@@ -591,6 +623,8 @@
     queue: queue,
     flush: flush,
     pending: pending,
+    dead: dead,
+    deadClear: deadClear,
     uuid: uuid,
     upload: upload,
     removeFile: removeFile,

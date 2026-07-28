@@ -333,7 +333,7 @@
 .uq-toast-ic .ico { width: 14px; height: 14px; stroke-width: 3; }
 .uq-toast-body { min-width: 0; display: flex; flex-direction: column; gap: 1px; }
 .uq-toast-body b { font-size: 12.5px; font-weight: 700; color: #fff; line-height: 1.2; }
-.uq-toast-body small { font-size: 11px; color: var(--muted); }
+.uq-toast-body small { font-size: 11px; color: var(--muted); white-space: pre-line; line-height: 1.45; }
 .uq-toast-x { flex: none; margin-left: auto; width: 24px; height: 24px; display: grid; place-items: center; border-radius: 6px; color: var(--muted); }
 .uq-toast-x:hover { background: rgb(255 255 255 / .07); color: #fff; }
 .uq-toast.is-error .uq-toast-ic { background: var(--extrem); color: #fff; }

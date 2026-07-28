@@ -94,7 +94,7 @@
   function percToS(s) { var m = String(s || '').match(/\d+/); return m ? Number(m[0]) * 60 : null; }
 
   function dbToStation(r) {
-    return mk({
+    var o = {
       id: r.id,
       name: r.name || 'Állomás',
       type: KIND_LABEL[r.kind] || 'Feladat állomás',
@@ -102,8 +102,17 @@
       difficulty: DIFF_LABEL[r.difficulty] || 'Közepes',
       location: (r.lat != null && r.lng != null) ? (r.lat + ', ' + r.lng) : '47.5149, 19.0800',
       timeLimitOn: r.time_limit_s != null,
-      timeLimit: r.time_limit_s ? (Math.round(r.time_limit_s / 60) + ' perc') : '10 perc'
-    });
+      timeLimit: r.time_limit_s ? (Math.round(r.time_limit_s / 60) + ' perc') : '10 perc',
+      /* image = a TÁROLÓBAN lévő kép címe (ezt kapja a játékos),
+         img   = a szerkesztő bélyegképének CSS-háttere. A kettő nem
+         cserélhető fel: korábban csak az utóbbi létezett, ezért a
+         feltöltött kép sosem jutott túl a böngésző memóriáján. */
+      image: r.image || ''
+    };
+    /* Csak akkor írjuk felül a bélyegkép hátterét, ha VAN kép — az
+       Object.assign az `undefined`-et is átmásolná az alapérték fölé. */
+    if (r.image) o.img = 'center/cover no-repeat url("' + r.image + '")';
+    return mk(o);
   }
 
   function stationPayload(s) {
@@ -118,7 +127,12 @@
       difficulty: LABEL_DIFF[s.difficulty] || 'kozepes',
       description: s.desc || '',
       lat: loc.lat, lng: loc.lng,
-      time_limit_s: s.timeLimitOn ? percToS(s.timeLimit) : null
+      time_limit_s: s.timeLimitOn ? percToS(s.timeLimit) : null,
+      /* Ez a mező eddig hiányzott a beküldésből: a „Kép cseréje" gomb
+         csinált egy böngésző-memóriabeli hivatkozást, sikert jelzett, és a
+         kép a lap bezárásával elveszett. A tábla és a befagyasztás régóta
+         tudja kezelni — csak sosem kapott értéket. */
+      image: s.image || null
     };
   }
 
@@ -1498,16 +1512,37 @@
   on($('#edImageBtn'), 'click', () => imgInput.click());
   on(imgInput, 'change', () => {
     const f = imgInput.files && imgInput.files[0];
-    if (f) {
-      const url = URL.createObjectURL(f);
-      state[current].img = 'center/cover no-repeat url("' + url + '")';
-    } else {
-      // fallback: következő gradiens
+    if (!f) {
+      // nincs fájl: csak a szerkesztő bélyegképének háttere vált
       const idx = (IMG_GRADS.indexOf(state[current].img) + 1) % IMG_GRADS.length;
       state[current].img = IMG_GRADS[idx < 0 ? 0 : idx];
+      state[current].image = '';
+      thumbEl.style.background = state[current].img;
+      scheduleSync();
+      toast('Háttér cserélve', { type: 'info', sub: 'Ez csak a szerkesztő bélyegképe' });
+      return;
     }
-    thumbEl.style.background = state[current].img;
-    toast('Kép frissítve', { sub: f ? f.name : 'Új háttér beállítva' });
+
+    /* A fájl a TÁROLÓBA megy, és a kapott cím kerül az állomásra. A régi
+       megoldás URL.createObjectURL-lel csinált egy lapon belüli hivatkozást,
+       „Kép frissítve" üzenetet írt ki, és a kép a lap bezárásával megszűnt —
+       az adatbázisban mind a hét állomás képe NULL maradt. */
+    const sAkkor = state[current];
+    thumbEl.style.opacity = '.5';
+    toast('Kép feltöltése…', { type: 'info', sub: f.name });
+    UQAPI.upload(f)
+      .then(function (r) {
+        sAkkor.image = r.url;
+        sAkkor.img = 'center/cover no-repeat url("' + r.url + '")';
+        if (state[current] === sAkkor) thumbEl.style.background = sAkkor.img;
+        scheduleSync();
+        toast('Kép beállítva', { sub: f.name + ' — mentés után a játékosok is látják' });
+      })
+      .catch(function (e) {
+        toast('A kép feltöltése nem sikerült', { type: 'error', sub: (e && e.message) || 'hálózati hiba' });
+      })
+      .then(function () { thumbEl.style.opacity = ''; });
+
     imgInput.value = '';
   });
 

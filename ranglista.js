@@ -51,7 +51,8 @@
 
   var body = document.getElementById('rankBody');
   var more = document.getElementById('loadMore');
-  var sorok = [];
+  var mind = [];          // amit a szerver adott
+  var sorok = [];         // amit a szűrők meghagytak — ezt rajzoljuk
   var mutatva = 10;
   var enNevem = null;
 
@@ -63,7 +64,11 @@
   }
 
   function sorHTML(r, helyezes) {
-    var enVagyok = enNevem && r.player_name === enNevem;
+    /* „Ki vagyok én?" — a szerver dönti el a menet tulajdonjoga alapján
+       (en_vagyok, lásd az enyem() segédfüggvényt). A korábbi névegyezés két
+       azonos nevű játékost összeolvasztott, egy átnevezés pedig kettévágta
+       az előzményt. */
+    var enVagyok = enyem(r);
     var pos = helyezes <= 3
       ? '<span class="rr-medal m' + helyezes + '">' + helyezes + '</span>'
       : '<span class="rr-num">' + helyezes + '</span>';
@@ -115,13 +120,89 @@
   }
 
   function render() {
+    if (!sorok.length) {
+      allapot('<p><strong>Nincs találat a beállított szűrőkkel.</strong></p>' +
+              '<p>Lazíts rajtuk, vagy állítsd őket alaphelyzetbe.</p>');
+      return;
+    }
+    /* A helyezés a NÉZETBŐL jön, nem a képernyőn elfoglalt helyről: ha egy
+       pályára szűrsz, a pályán belüli helyezés a helyes szám, egyébként az
+       összesített. Enélkül a szűrés „1. hely"-et írna olyannak, aki nem az. */
+    var egyPalya = !!(fPalya && fPalya.value);
     body.innerHTML = sorok.slice(0, mutatva).map(function (r, i) {
-      return sorHTML(r, i + 1);
+      var h = egyPalya ? r.rank : r.overall_rank;
+      return sorHTML(r, h || (i + 1));
     }).join('');
     if (more) more.style.display = (mutatva >= sorok.length) ? 'none' : '';
     renderPodium();
     sajatStat();
   }
+
+  /* ---------- szűrők ---------- */
+
+  var fIdoszak   = document.getElementById('fIdoszak');
+  var fPalya     = document.getElementById('fPalya');
+  var fNehezseg  = document.getElementById('fNehezseg');
+  var fVaros     = document.getElementById('fVaros');
+  var urlap      = document.getElementById('rankFilter');
+
+  /* A választékot a VALÓS eredmények adják: nem kínálunk olyan pályát vagy
+     várost, amire egyetlen befejezett menet sincs. */
+  function feltoltValaszto(sel, ertekek, alap) {
+    if (!sel) return;
+    var volt = sel.value;
+    sel.innerHTML = '<option value="">' + alap + '</option>' +
+      ertekek.map(function (e) {
+        return '<option value="' + esc(e.ertek) + '">' + esc(e.cimke) + '</option>';
+      }).join('');
+    if (volt && ertekek.some(function (e) { return e.ertek === volt; })) sel.value = volt;
+  }
+
+  function egyediek(kulcsMezo, cimkeMezo) {
+    var latott = {}, ki = [];
+    mind.forEach(function (r) {
+      var k = r[kulcsMezo];
+      if (!k || latott[k]) return;
+      latott[k] = 1;
+      ki.push({ ertek: String(k), cimke: String(r[cimkeMezo] || k) });
+    });
+    ki.sort(function (a, b) { return a.cimke.localeCompare(b.cimke, 'hu'); });
+    return ki;
+  }
+
+  function valasztokFeltoltese() {
+    feltoltValaszto(fPalya, egyediek('course_slug', 'course_name'), 'Összes pálya');
+    feltoltValaszto(fNehezseg, egyediek('difficulty', 'difficulty_label'), 'Összes nehézség');
+    feltoltValaszto(fVaros, egyediek('city', 'city'), 'Összes város');
+  }
+
+  function szur() {
+    var napok = parseInt(fIdoszak && fIdoszak.value, 10);
+    var hatar = napok ? Date.now() - napok * 864e5 : null;
+    var palya = fPalya && fPalya.value;
+    var neh   = fNehezseg && fNehezseg.value;
+    var varos = fVaros && fVaros.value;
+
+    sorok = mind.filter(function (r) {
+      if (palya && r.course_slug !== palya) return false;
+      if (neh && r.difficulty !== neh) return false;
+      if (varos && String(r.city || '') !== varos) return false;
+      if (hatar) {
+        var t = r.finished_at ? Date.parse(r.finished_at) : NaN;
+        if (!(t >= hatar)) return false;      // dátum nélküli sor kiesik a szűrésnél
+      }
+      return true;
+    });
+    mutatva = 10;
+    render();
+  }
+
+  [fIdoszak, fPalya, fNehezseg, fVaros].forEach(function (s) {
+    if (s) s.addEventListener('change', szur);
+  });
+  /* A type="reset" a böngésző saját ürítése — az ELŐTT fut le, hogy a mezők
+     kiürülnének, ezért a szűrést a következő körre halasztjuk. */
+  if (urlap) urlap.addEventListener('reset', function () { setTimeout(szur, 0); });
 
   function betolt() {
     if (!window.UQAPI) {
@@ -137,14 +218,17 @@
     // Az összesített sorrend a nézetből jön (overall_rank), a kliens nem rendez.
     UQAPI.rest('/v_leaderboard_course?select=*&order=points.desc,elapsed_ms.asc&limit=100', { anon: !u })
       .then(function (rows) {
-        sorok = rows || [];
-        if (!sorok.length) {
+        mind = rows || [];
+        if (!mind.length) {
           allapot(
             '<p><strong>Még senki nem fejezett be pályát.</strong></p>' +
             '<p>Amint az első csapat végigjátszik egy küldetést, itt jelenik meg az eredménye.</p>');
+          if (urlap) urlap.hidden = true;      // nincs mit szűrni
           return;
         }
-        render();
+        if (urlap) urlap.hidden = false;
+        valasztokFeltoltese();
+        szur();
       })
       .catch(function (err) {
         var offline = !UQAPI.online();
@@ -200,15 +284,27 @@
 
   /* A saját statisztika a már letöltött ranglistából számol — nincs
      külön kérés, és nem is látszik semmi, amíg nincs valós menet. */
+  /* A saját összesítő a TELJES eredménylistából dolgozik, nem a szűrtből:
+     a „3 pálya teljesítve" a te előzményed, nem a képernyő pillanatnyi
+     állapota. A hovatartozást a szerver mondja meg (en_vagyok), névegyezés
+     csak akkor tartalék, ha a mező hiányzik. */
+  function enyem(r) {
+    return (r.en_vagyok === true) ||
+           (r.en_vagyok === undefined && enNevem && r.player_name === enNevem);
+  }
+
   function sajatStat() {
     var kartya = document.getElementById('pstatCard');
-    if (!kartya || !enNevem) return;
-    var enyeim = sorok.filter(function (r) { return r.player_name === enNevem; });
-    if (!enyeim.length) return;
+    if (!kartya) return;
+    var enyeim = mind.filter(enyem);
+    if (!enyeim.length) { kartya.hidden = true; return; }
 
     var osszPont = enyeim.reduce(function (a, r) { return a + Number(r.points || 0); }, 0);
     var osszIdo  = enyeim.reduce(function (a, r) { return a + Number(r.elapsed_ms || 0); }, 0);
-    var helyezes = sorok.findIndex(function (r) { return r.player_name === enNevem; }) + 1;
+    /* A helyezés a nézet összesített rangja — a legjobb eredményed számít. */
+    var helyezes = Math.min.apply(null, enyeim.map(function (r) {
+      return Number(r.overall_rank) || (mind.indexOf(r) + 1);
+    }));
 
     szoveg('psRank', helyezes + '.');
     szoveg('psPoints', pont(osszPont));
