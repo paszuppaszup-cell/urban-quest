@@ -981,3 +981,26 @@
     inset: -9px;
   }
 }
+
+/* --- „Melyik állomás után" (bejövő élek) -----------------------------------
+   Ugyanaz a sor-felépítés, mint az elágazásnál, csak fordított sorrendben:
+   előbb a forrás, aztán a felirat. A `hidden` attribútumot itt is ki kell
+   segíteni, mert a szerzői display legyőzi a böngésző alapszabályát. */
+#edPrevBox[hidden], #edPrevWarn[hidden] { display: none !important; }
+
+.ed-prev-from { flex: 1 1 170px; min-width: 0; }
+.ed-prev-note {
+  flex: 1 1 auto; min-width: 0;
+  font-size: 11.5px; color: var(--muted);
+  padding-left: 2px;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.ed-warn {
+  display: block;
+  margin-top: 8px; padding: 8px 10px;
+  font-size: 11.5px; line-height: 1.5;
+  color: #ffc98a;
+  background: rgba(255, 201, 138, .1);
+  border: 1px solid rgba(255, 201, 138, .28);
+  border-radius: 8px;
+}

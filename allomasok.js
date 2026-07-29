@@ -778,8 +778,11 @@
   document.getElementById('btnPublish').addEventListener('click', () => {
     const st = byId(state.selectedId);
     if (!st || !st.courseId) { toast('Nincs kijelölt állomás', { type: 'warn', sub: 'Válassz egyet, hogy tudjam, melyik pályát tegyem közzé.' }); return; }
-    toast('Pálya frissítése…', { type: 'info', sub: st.route });
-    frissenTartPalyat(st.courseId).then(() => toast('Pálya közzétéve', { sub: st.route + ' — a játékosok az új változatot kapják' }));
+    toast('Verzió befagyasztása…', { type: 'info', sub: st.route });
+    /* Ez NEM közzététel: csak befagyaszt egy szerkesztési verziót. Élesre a
+       Játékok oldal Közzététel gombja teszi, ami a course_lint kapun is átvisz. */
+    frissenTartPalyat(st.courseId).then(() => toast('Verzió befagyasztva', {
+      sub: st.route + ' — az előnézet már ezt mutatja; a játékosokhoz a Játékok oldalon teheted ki' }));
   });
 
   /* A Közzététel legördülő három pontja (most / ütemezés / piszkozat)

@@ -733,9 +733,13 @@
            mentés önmagában sosem jutna el a játékig. Az érintett játékot
            automatikusan újrapublikáljuk — enélkül a feladat csak az admin
            listában létezne, a játékban nem. */
+        /* A mentés BEFAGYASZT egy verziót, de NEM tesz élesre: a játékosok a
+           legutóbb közzétettet játsszák tovább. Ezt ki kell mondani, különben
+           a szerző azt hiszi, kész van. Élesíteni a Játékok oldalon lehet. */
         return frissenTartPalyat(stId).then(() =>
-          ujratolt('Feladat elmentve — a játékban is frissült',
-            cur.question.length > 42 ? cur.question.slice(0, 42) + '…' : cur.question));
+          ujratolt('Feladat elmentve',
+            (cur.question.length > 42 ? cur.question.slice(0, 42) + '…' : cur.question) +
+            ' — a játékosokhoz a Játékok oldal Közzététel gombjával jut el'));
       })
       .catch(hibaToast);
   }

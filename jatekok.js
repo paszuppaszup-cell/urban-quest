@@ -641,7 +641,8 @@
   function saveDrawer() {
     if (!state.selectedId) { toast('Nincs kiválasztott játék', { type: 'error' }); return; }
     UQAPI.rest('/rpc/save_course', { method: 'POST', body: { p: urlapPayload(state.selectedId) } })
-      .then(() => ujratolt('Játék elmentve', 'A publikus oldalon is frissült'))
+      /* A mentés az adatlapot írja, nem a játékosok verzióját. */
+      .then(() => ujratolt('Játék elmentve', 'A játékosokhoz a Közzététel gombbal jut el'))
       .catch(hibaToast);
   }
 

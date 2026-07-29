@@ -165,7 +165,7 @@
           honnan.branches.push({ label: r.label || '', to: hova, key: r.branch_key || '' });
           honnan._voltAg = true;
         });
-        renderBranches();
+        renderBranches(); renderPrev();
       })
       .catch(function () { /* offline: ágak nélkül is szerkeszthető a pálya */ });
   }
@@ -193,6 +193,175 @@
       });
     }, Promise.resolve());
   }
+
+  /* =========================================================
+     MELYIK ÁLLOMÁS UTÁN (bejövő élek)
+
+     Ugyanaz a gráf, mint az elágazás-szerkesztőé, csak a másik irányból
+     nézve. Az él MINDIG a forrás állomás `branches` tömbjében él — itt csak
+     máshonnan nyúlunk hozzá. Ezért nincs külön mentés: az agakMentese()
+     változatlanul mindent kiír.
+     ========================================================= */
+
+  /* Kik mutatnak erre az állomásra? [{ honnan: index, ag: objektum }] */
+  function elozmenyek(cel) {
+    var ki = [];
+    state.forEach(function (p, i) {
+      (p.branches || []).forEach(function (b) {
+        if (b && b.to === cel) ki.push({ honnan: i, ag: b });
+      });
+    });
+    return ki;
+  }
+
+  function dontesiPont(st) { return !!(st && st.type === 'Döntési pont'); }
+
+  function renderPrev() {
+    var box = $('#edPrevBox');
+    if (!box) return;
+    var s = state[current];
+    if (!s) { box.hidden = true; return; }
+    box.hidden = false;
+
+    var lista = $('#edPrev');
+    var db = $('#edPrevCount');
+    var hint = $('#edPrevHint');
+    var warn = $('#edPrevWarn');
+    var elozok = elozmenyek(s);
+
+    if (db) db.textContent = elozok.length ? '(' + elozok.length + ')' : '';
+
+    /* A kezdő állomásnak nincs értelme előzményt adni — ott indul a játék. */
+    var kezdo = s.type === 'Kezdő állomás';
+    if (hint) {
+      hint.textContent = kezdo
+        ? 'Ez a kezdő állomás — itt indul a játék, ezért nem következik semmi után. Ha mégis megadsz előzményt, a pálya körbeér.'
+        : 'Add meg, melyik állomás(ok) után következzen ez. Több is lehet — így ér össze két ág ugyanazon a ponton.';
+    }
+
+    if (!elozok.length) {
+      lista.innerHTML = '<div class="est-empty">' +
+        (kezdo ? 'Nincs előzménye — így helyes.'
+               : 'Nincs megadva előzmény. Ilyenkor a játék a LISTA sorrendje szerint jut ide, ' +
+                 'ami átrendezés után máshová vezethet.') + '</div>';
+      if (warn) warn.hidden = true;
+      return;
+    }
+
+    var opciok = state.map(function (t, i) {
+      if (t === s) return '';
+      return '<option value="' + i + '">' + (i + 1) + '. ' + esc(t.name) + '</option>';
+    }).join('');
+
+    lista.innerHTML = elozok.map(function (e, k) {
+      var forras = state[e.honnan];
+      var kellCimke = dontesiPont(forras);
+      return '<div class="ed-branch" data-p="' + k + '">' +
+        '<div class="ed-field ed-select ed-prev-from">' +
+          '<select data-p-from="' + k + '"><option value="">— melyik után? —</option>' + opciok + '</select>' +
+          '<svg class="ico ico-xs" aria-hidden="true"><use href="#a-down"/></svg>' +
+        '</div>' +
+        (kellCimke
+          ? '<input class="ed-branch-label" type="text" data-p-label="' + k + '" ' +
+            'placeholder="A válasz szövege — ezt látja a játékos" value="' + esc(e.ag.label || '') + '">'
+          : '<span class="ed-prev-note">közvetlen folytatás</span>') +
+        '<button class="ed-branch-x" type="button" data-p-del="' + k + '" aria-label="Előzmény törlése">' +
+          '<svg class="ico ico-xs" aria-hidden="true"><use href="#a-x"/></svg></button>' +
+      '</div>';
+    }).join('');
+
+    elozok.forEach(function (e, k) {
+      var sel = lista.querySelector('[data-p-from="' + k + '"]');
+      if (sel) sel.value = String(e.honnan);
+    });
+
+    /* Figyelmeztetés: ha egy NEM döntési pont több felé mutat, a játékos
+       választóképernyőt kap felirat nélküli gombokkal. Nem tiltjuk — lehet
+       szándékos —, de ki kell mondani. */
+    var gondok = [];
+    elozok.forEach(function (e) {
+      var forras = state[e.honnan];
+      var ki = (forras.branches || []).filter(function (b) { return b && state.indexOf(b.to) >= 0; });
+      if (ki.length > 1 && !dontesiPont(forras)) {
+        gondok.push((e.honnan + 1) + '. „' + forras.name + '” — ' + ki.length + ' folytatása van, de nem döntési pont');
+      }
+    });
+    if (warn) {
+      warn.hidden = !gondok.length;
+      warn.textContent = gondok.length
+        ? gondok.join(' • ') + '. A játékos itt választóképernyőt kap felirat nélkül — tedd döntési ponttá, vagy vedd le az egyik folytatást.'
+        : '';
+    }
+  }
+
+  /* --- az előzmény-szerkesztő eseményei (delegálva) --- */
+
+  document.addEventListener('input', function (ev) {
+    var el = ev.target.closest ? ev.target.closest('[data-p-label]') : null;
+    if (!el) return;
+    var s = state[current]; if (!s) return;
+    var e = elozmenyek(s)[+el.dataset.pLabel];
+    if (!e) return;
+    e.ag.label = el.value;
+    saveCourse();
+  });
+
+  document.addEventListener('change', function (ev) {
+    var el = ev.target.closest ? ev.target.closest('[data-p-from]') : null;
+    if (!el) return;
+    var s = state[current]; if (!s) return;
+    var e = elozmenyek(s)[+el.dataset.pFrom];
+    if (!e) return;
+
+    var ujIdx = el.value === '' ? -1 : +el.value;
+    /* A régi forrásból kivesszük, az újba betesszük — az él mindig a forrás
+       állomásnál él, tehát a „ki mutat rám" változtatása két tömböt érint. */
+    var regi = state[e.honnan];
+    var i = (regi.branches || []).indexOf(e.ag);
+    if (i > -1) regi.branches.splice(i, 1);
+    regi._voltAg = true;
+
+    if (ujIdx >= 0 && state[ujIdx]) {
+      var uj = state[ujIdx];
+      uj.branches = uj.branches || [];
+      uj._voltAg = true;
+      uj.branches.push({ label: e.ag.label || '', to: s, key: e.ag.key || '' });
+    }
+    renderPrev(); renderBranches(); renderPrev(); renderRoutes(); saveCourse();
+  });
+
+  document.addEventListener('click', function (ev) {
+    var del = ev.target.closest ? ev.target.closest('[data-p-del]') : null;
+    if (del) {
+      var s = state[current]; if (!s) return;
+      var e = elozmenyek(s)[+del.dataset.pDel];
+      if (!e) return;
+      var forras = state[e.honnan];
+      var i = (forras.branches || []).indexOf(e.ag);
+      if (i > -1) forras.branches.splice(i, 1);
+      forras._voltAg = true;
+      renderPrev(); renderBranches(); renderPrev(); renderRoutes(); saveCourse();
+      return;
+    }
+
+    var add = ev.target.closest ? ev.target.closest('#edAddPrev') : null;
+    if (add) {
+      var st = state[current]; if (!st) return;
+      /* Alapértelmezés: az ELŐZŐ állomás a listában — ez a leggyakoribb eset,
+         és így egy kattintással kész, ha csak meg akarod erősíteni a sorrendet. */
+      var alap = current > 0 ? current - 1 : (state.length > 1 ? 1 : -1);
+      if (alap < 0 || !state[alap]) { toast('Ehhez legalább két állomás kell', { type: 'warn' }); return; }
+      var p = state[alap];
+      if (elozmenyek(st).some(function (x) { return x.honnan === alap; })) {
+        toast('Ez az állomás már előzmény', { type: 'info', sub: p.name });
+        return;
+      }
+      p.branches = p.branches || [];
+      p._voltAg = true;
+      p.branches.push({ label: '', to: st, key: '' });
+      renderPrev(); renderBranches(); renderPrev(); renderRoutes(); saveCourse();
+    }
+  });
 
   function renderBranches() {
     var box = $('#edBranchBox');
@@ -267,7 +436,7 @@
       var s = state[current]; if (!s || !s.branches) return;
       s.branches.splice(+del.dataset.bDel, 1);
       s._voltAg = true;
-      renderBranches(); renderRoutes(); saveCourse();
+      renderBranches(); renderPrev(); renderRoutes(); saveCourse();
       return;
     }
     if (e.target.closest && e.target.closest('#edAddBranch')) {
@@ -279,7 +448,7 @@
       var kov = state[current + 1] || state.find(function (x) { return x !== st; }) || null;
       st.branches.push({ label: '', to: kov, key: '' });
       st._voltAg = true;
-      renderBranches(); renderRoutes(); saveCourse();
+      renderBranches(); renderPrev(); renderRoutes(); saveCourse();
     }
   });
 
@@ -727,8 +896,8 @@
 
   function loadForm(i) {
     const s = state[i];
-    if (!s) { renderBranches(); return; }
-    renderBranches();
+    if (!s) { renderBranches(); renderPrev(); return; }
+    renderBranches(); renderPrev();
     fieldEls.name.value = s.name;
     fieldEls.num.value = i + 1;
     fieldEls.type.value = s.type;
@@ -805,7 +974,7 @@
     state[current].type = fieldEls.type.value;
     renderList();
     renderNodes();
-    renderBranches();      // döntési pontnál előbukkan az elágazás-szerkesztő
+    renderBranches(); renderPrev();      // döntési pontnál előbukkan az elágazás-szerkesztő
     renderRoutes();
   });
   // Nehézség: pötty szín
