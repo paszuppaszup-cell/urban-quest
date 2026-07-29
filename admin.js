@@ -261,10 +261,13 @@
           '<select data-p-from="' + k + '"><option value="">— melyik után? —</option>' + opciok + '</select>' +
           '<svg class="ico ico-xs" aria-hidden="true"><use href="#a-down"/></svg>' +
         '</div>' +
+        /* Feliratot CSAK döntési pontnál kérünk — ott az a válasz szövege,
+           amit a játékos gombként lát. Sima állomásnál nincs mit felirat-
+           ozni, és a keskeny fiókban minden pixel a választóé. */
         (kellCimke
           ? '<input class="ed-branch-label" type="text" data-p-label="' + k + '" ' +
             'placeholder="A válasz szövege — ezt látja a játékos" value="' + esc(e.ag.label || '') + '">'
-          : '<span class="ed-prev-note">közvetlen folytatás</span>') +
+          : '') +
         '<button class="ed-branch-x" type="button" data-p-del="' + k + '" aria-label="Előzmény törlése">' +
           '<svg class="ico ico-xs" aria-hidden="true"><use href="#a-x"/></svg></button>' +
       '</div>';

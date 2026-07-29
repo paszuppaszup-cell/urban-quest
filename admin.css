@@ -988,13 +988,22 @@
    segíteni, mert a szerzői display legyőzi a böngésző alapszabályát. */
 #edPrevBox[hidden], #edPrevWarn[hidden] { display: none !important; }
 
-.ed-prev-from { flex: 1 1 170px; min-width: 0; }
-.ed-prev-note {
-  flex: 1 1 auto; min-width: 0;
-  font-size: 11.5px; color: var(--muted);
-  padding-left: 2px;
-  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+/* A .ed-branch sor RACS, negy oszlopra szabva (jelveny / felirat / cel /
+   torles). Az elozmeny-sor viszont csak haromfele: valaszto, jegyzet vagy
+   felirat, torles. Sajat racskep nelkul a valaszto a 26 pixeles elso
+   oszlopba kerult, es hasznalhatatlanul osszelapult — a sor letrejott, de
+   nem lehetett benne allomast valasztani. */
+.ed-branch[data-p] {
+  /* Ket oszlop: a valaszto kapja az egesz helyet, mellette a torles.
+     A fiok ~310 px szeles — harom vezerlo egy sorban mind olvashatatlan
+     lenne, ezert a dontesi pont felirata kulon sorba kerul. */
+  grid-template-columns: minmax(0, 1fr) 30px;
+  row-gap: 6px;
 }
+.ed-prev-from { min-width: 0; height: 34px; grid-column: 1; grid-row: 1; }
+.ed-prev-from select { font-size: 12.5px; }
+.ed-branch[data-p] .ed-branch-x { grid-column: 2; grid-row: 1; }
+.ed-branch[data-p] .ed-branch-label { grid-column: 1 / -1; grid-row: 2; }
 .ed-warn {
   display: block;
   margin-top: 8px; padding: 8px 10px;
