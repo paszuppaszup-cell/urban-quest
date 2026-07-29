@@ -568,6 +568,84 @@
     return uuid().slice(0, 8) + '-' + tiszta;
   }
 
+  /* ---------------------------------------------------------
+     KÉP-KICSINYÍTÉS A FELTÖLTÉS ELŐTT
+
+     A játék terepen, mobiladaton fut. Egy 5 MB-os, 2304 pixeles PNG-t a
+     telefon másodpercekig tölt, és a feladat képének helye addig üresen áll —
+     pontosan úgy néz ki, mint egy hiányzó kép. A tárolóba ezért legfeljebb
+     1600 pixeles, tömörített változat megy.
+
+     SZÁNDÉKOSAN nem automatikus a upload()-ban: a hívók (Média oldal) a
+     méretet és a mime-típust is FELÍRJÁK a rekordba, és ha a upload() a hátuk
+     mögött cserélné a fájlt, a nyilvántartás hazudna. Ezért a hívó előbb
+     kicsinyít, aztán MÉR és tölt — ugyanazon a fájlon.
+
+     Ha bármi nem sikerül (nem kép, animált GIF, SVG, canvas-hiba), az
+     EREDETI fájl megy vissza változtatás nélkül: jobb egy nagy kép, mint
+     semmi. Ez a függvény sosem hibázik el.
+     --------------------------------------------------------- */
+  var KEP_MAX_PX = 1600;
+  var KICSINYITHETO = { 'image/jpeg': 1, 'image/jpg': 1, 'image/png': 1, 'image/webp': 1 };
+
+  function kicsinyitKep(file, maxPx) {
+    var max = maxPx > 0 ? maxPx : KEP_MAX_PX;
+    try {
+      if (!file || !KICSINYITHETO[String(file.type || '').toLowerCase()]) return Promise.resolve(file);
+      if (typeof document === 'undefined' || !document.createElement) return Promise.resolve(file);
+    } catch (e) { return Promise.resolve(file); }
+
+    return new Promise(function (kesz) {
+      var url = null, kep = new Image();
+      function vissza(f) {
+        if (url) { try { URL.revokeObjectURL(url); } catch (e) {} }
+        kesz(f || file);
+      }
+      /* Ne akadjon meg örökre egy dekódolhatatlan fájlon. */
+      var ido = setTimeout(function () { vissza(file); }, 15000);
+
+      kep.onload = function () {
+        clearTimeout(ido);
+        try {
+          var w = kep.naturalWidth, h = kep.naturalHeight;
+          if (!w || !h) return vissza(file);
+          if (w <= max && h <= max && file.size < 900 * 1024) return vissza(file);
+          var r = Math.min(1, max / Math.max(w, h));
+          var cw = Math.max(1, Math.round(w * r)), ch = Math.max(1, Math.round(h * r));
+          var c = document.createElement('canvas');
+          c.width = cw; c.height = ch;
+          var ctx = c.getContext('2d');
+          if (!ctx) return vissza(file);
+          ctx.drawImage(kep, 0, 0, cw, ch);
+          /* KÉT kódolót próbálunk, és a KISEBBET tartjuk meg. A webp az
+             átlátszóságot is átviszi, a jpeg viszont fotón gyakran kisebb —
+             előre nem tudható, melyik nyer, mérni kell.
+             Ha egyik sem lesz kisebb az eredetinél (ez tipikusan zajos,
+             már optimalizált képnél fordul elő), az EREDETI megy fel: nem
+             töltünk fel nagyobb fájlt, mint amit a szerző adott. */
+          var varunk = 2, legjobb = null;
+          function jelolt(blob, tipus, kiterjesztes) {
+            if (blob && (!legjobb || blob.size < legjobb.blob.size)) {
+              legjobb = { blob: blob, tipus: tipus, ext: kiterjesztes };
+            }
+            if (--varunk > 0) return;
+            if (!legjobb || legjobb.blob.size >= file.size) return vissza(file);
+            var nev = String(file.name || 'kep').replace(/\.[a-z0-9]+$/i, '') + legjobb.ext;
+            var uj;
+            try { uj = new File([legjobb.blob], nev, { type: legjobb.tipus }); }
+            catch (e) { legjobb.blob.name = nev; uj = legjobb.blob; }
+            vissza(uj);
+          }
+          c.toBlob(function (b) { jelolt(b, 'image/webp', '.webp'); }, 'image/webp', 0.86);
+          c.toBlob(function (b) { jelolt(b, 'image/jpeg', '.jpg'); }, 'image/jpeg', 0.86);
+        } catch (e) { vissza(file); }
+      };
+      kep.onerror = function () { clearTimeout(ido); vissza(file); };
+      try { url = URL.createObjectURL(file); kep.src = url; }
+      catch (e) { clearTimeout(ido); vissza(file); }
+    });
+  }
+
   function upload(file, opts) {
     opts = opts || {};
     if (!session || !session.access_token) {
@@ -660,6 +738,7 @@
     deadClear: deadClear,
     uuid: uuid,
     upload: upload,
+    kicsinyitKep: kicsinyitKep,
     removeFile: removeFile,
     publicUrl: storagePublicUrl,
     BUCKET: BUCKET

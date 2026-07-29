@@ -556,20 +556,25 @@
         hibak++; return egy(i + 1);
       }
 
-      return Promise.all([meriKep(file), meriHang(file)])
-        .then(function (mert) {
-          var meta = Object.assign({}, mert[0], mert[1]);
-          return UQAPI.upload(file).then(function (fel) {
-            return UQAPI.rest('/rpc/save_media', { method: 'POST', body: { p: {
-              kind: type,
-              title: file.name,
-              storage_path: fel.path,
-              mime: file.type || '',
-              bytes: String(file.size),
-              width: meta.width == null ? '' : String(meta.width),
-              height: meta.height == null ? '' : String(meta.height),
-              duration_s: meta.duration_s == null ? '' : String(meta.duration_s)
-            } } });
+      /* Előbb KICSINYÍTÜNK, és csak utána mérünk: a rekordba az kerül, ami
+         tényleg felmegy. (Ha a mérés az eredetin futna, a Média oldal
+         5 MB-ot és 2304 pixelt írna ki egy 1600 pixeles fájlra.) */
+      return UQAPI.kicsinyitKep(file)
+        .then(function (f) {
+          return Promise.all([meriKep(f), meriHang(f)]).then(function (mert) {
+            var meta = Object.assign({}, mert[0], mert[1]);
+            return UQAPI.upload(f).then(function (fel) {
+              return UQAPI.rest('/rpc/save_media', { method: 'POST', body: { p: {
+                kind: type,
+                title: file.name,
+                storage_path: fel.path,
+                mime: f.type || '',
+                bytes: String(f.size),
+                width: meta.width == null ? '' : String(meta.width),
+                height: meta.height == null ? '' : String(meta.height),
+                duration_s: meta.duration_s == null ? '' : String(meta.duration_s)
+              } } });
+            });
           });
         })
         .then(function () { kesz.push(file.name); })
@@ -595,23 +600,26 @@
     }
     var regiPath = m.storagePath;
 
-    Promise.all([meriKep(file), meriHang(file)])
-      .then(function (mert) {
-        var meta = Object.assign({}, mert[0], mert[1]);
-        return UQAPI.upload(file).then(function (fel) {
-          return UQAPI.rest('/media?id=eq.' + id, {
-            method: 'PATCH',
-            body: {
-              kind: type,
-              storage_path: fel.path,
-              external_url: null,
-              mime: file.type || '',
-              bytes: file.size,
-              width: meta.width == null ? null : meta.width,
-              height: meta.height == null ? null : meta.height,
-              duration_s: meta.duration_s == null ? null : meta.duration_s
-            },
-            prefer: 'return=minimal'
+    /* Cserénél is a KICSINYÍTETT fájlt mérjük és töltjük — lásd feltoltes(). */
+    UQAPI.kicsinyitKep(file)
+      .then(function (f) {
+        return Promise.all([meriKep(f), meriHang(f)]).then(function (mert) {
+          var meta = Object.assign({}, mert[0], mert[1]);
+          return UQAPI.upload(f).then(function (fel) {
+            return UQAPI.rest('/media?id=eq.' + id, {
+              method: 'PATCH',
+              body: {
+                kind: type,
+                storage_path: fel.path,
+                external_url: null,
+                mime: f.type || '',
+                bytes: f.size,
+                width: meta.width == null ? null : meta.width,
+                height: meta.height == null ? null : meta.height,
+                duration_s: meta.duration_s == null ? null : meta.duration_s
+              },
+              prefer: 'return=minimal'
+            });
           });
         });
       })

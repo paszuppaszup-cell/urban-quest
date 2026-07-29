@@ -168,8 +168,12 @@
 .fe-media-rm:hover{color:var(--extrem);border-color:rgb(224 58 47 / .4);background:rgb(224 58 47 / .1);}
 
 /* előnézet: valódi kép a "Kép helye" helyén */
-.pv-media.has-img{padding:0;border-style:solid;border-color:rgb(var(--lime-rgb) / .3);overflow:hidden;}
-.pv-media.has-img img{width:100%;height:100%;object-fit:cover;display:block;}
+/* Ha VAN kép, az előnézet magassága a KÉP ARÁNYÁT követi, és a teljes kép
+   látszik. Korábban a 120 pixeles sávra volt vágva (object-fit:cover), tehát
+   a szerző sosem azt látta, amit a játékos kap — épp azt nem lehetett
+   ellenőrizni, amiért az előnézet van. */
+.pv-media.has-img{padding:0;border-style:solid;border-color:rgb(var(--lime-rgb) / .3);overflow:hidden;height:auto;min-height:120px;}
+.pv-media.has-img img{width:100%;height:auto;max-height:52vh;object-fit:contain;display:block;}
 
 /* Média-tár képválasztó rács a modalban */
 .fe-mp-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:10px;}

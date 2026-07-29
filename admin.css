@@ -526,8 +526,17 @@
 .uq-pl-tmeta b{font-size:14.5px;color:#fff;line-height:1.35;font-weight:600;}
 .uq-pl-tpts{display:inline-flex;align-items:center;gap:4px;font-size:12px;color:var(--lime);font-weight:700;flex:none;}
 .uq-pl-tpts .ico{width:13px;height:13px;}
-.uq-pl-taskimg{margin:0 0 14px;border-radius:12px;overflow:hidden;border:1px solid var(--line);background:#0f130d;}
-.uq-pl-taskimg img{width:100%;max-height:230px;object-fit:cover;display:block;}
+/* FELADAT-KÉP: a TELJES kép látszik.
+   Korábban `max-height:230px` + `object-fit:cover` volt, ami a képet középre
+   vágta — a 2304×1792-es nyomképnek a negyede kimaradt. Ha a kép MAGA a nyom,
+   ez a játékot rontja el, nem csak a látványt.
+   Most a magasság a kép arányát követi (height:auto), tehát nincs vágás. A
+   `max-height` csak a nagyon magas (portré) képet fogja meg, és ott a
+   `contain` gondoskodik róla, hogy ne nyúljon meg — inkább legyen keret.
+   A `min-height` a helyet TARTJA a betöltés alatt: enélkül a kártya
+   összecsuklik, majd a kép megjelenésekor a felület a játékos alatt ugrik. */
+.uq-pl-taskimg{margin:0 0 14px;border-radius:12px;overflow:hidden;border:1px solid var(--line);background:#0f130d;min-height:120px;}
+.uq-pl-taskimg img{width:100%;height:auto;max-height:70vh;object-fit:contain;display:block;}
 .uq-pl-taskvid{position:relative;width:100%;aspect-ratio:16/9;margin:0 0 14px;border-radius:12px;overflow:hidden;border:1px solid var(--line);background:#000;}
 .uq-pl-taskvid iframe,.uq-pl-taskvid video{position:absolute;inset:0;width:100%;height:100%;border:0;display:block;}
 

@@ -1865,7 +1865,10 @@
     const sAkkor = state[current];
     thumbEl.style.opacity = '.5';
     toast('Kép feltöltése…', { type: 'info', sub: f.name });
-    UQAPI.upload(f)
+    /* Kicsinyítés a feltöltés előtt: terepen, mobiladaton egy 5 MB-os kép
+       másodpercekig üres helynek látszik. */
+    UQAPI.kicsinyitKep(f)
+      .then(function (kis) { return UQAPI.upload(kis); })
       .then(function (r) {
         sAkkor.image = r.url;
         sAkkor.img = 'center/cover no-repeat url("' + r.url + '")';
