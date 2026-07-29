@@ -67,6 +67,9 @@
     if (vm) return { kind: 'vimeo', embed: 'https://player.vimeo.com/video/' + vm[1] };
     return { kind: 'url', src: url };
   }
+  /* HTML-attribútumba írható háttér-érték (lásd playStationHTML). */
+  function hatterAttr(v) { return String(v == null ? '' : v).replace(/"/g, '&quot;'); }
+
   function videoEmbedHTML(url, cls) {
     const v = parseVideo(url);
     if (!v) return '';
@@ -1201,7 +1204,10 @@
     const tno = Math.min(play.taskIdx + 1, total);
     /* Hero: az állomás képe (vagy gradiens), rajta a sorszám-jelvény és az
        állomás neve — ez mondja meg a csapatnak, hova kell menniük. */
-    let h = '<div class="uq-pl-hero" style="background:' + (s.img || heroHatter(i)) + '">' +
+    /* A háttér-érték idézőjelet tartalmaz — url("https://…") —, ami a
+       style="…" attribútumot elvágta volna a kép URL-je előtt. A &quot; a
+       HTML-elemzőn átjut, és a CSS már valódi idézőjelet lát. */
+    let h = '<div class="uq-pl-hero" style="background:' + hatterAttr(s.img || heroHatter(i)) + '">' +
       '<span class="uq-pl-hero-fade" aria-hidden="true"></span>' +
       '<span class="uq-pl-hero-in">' +
         '<span class="uq-pl-badge">' +

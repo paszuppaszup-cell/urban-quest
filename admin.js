@@ -728,7 +728,13 @@
       TASKS_BY_STATION = {};
       return Promise.resolve();
     }
+    /* A `image` és a `video` NEM elhagyható a listából. A „Játékos nézet" fül
+       ugyanezekből a sorokból építi a feladatot, és amit itt nem kérünk el, az
+       a lejátszó számára nem létezik: a képpel feltöltött feladat képe némán
+       kimaradt az előnézetből — a kérdés és a válaszok látszottak, a kép nem.
+       (A `hints`-et is elkérjük, hogy a tipp-számláló ne hazudjon nullát.) */
     return UQAPI.rest('/v_admin_tasks?select=id,station_id,question,title,kind,points,status,config,solution' +
+                      ',image,video,hints,help,time_limit_s,required' +
                       '&course_id=eq.' + currentCourseId + '&order=station_position.asc,position.asc')
       .then(function (rows) {
         const m = {};
@@ -1255,6 +1261,34 @@
     return cfg;
   }
 
+  /* A háttér-érték IDÉZŐJELET tartalmaz — url("https://…") —, és a
+     style="…" attribútumot pontosan ott vágta el: a böngésző csak
+     `background:center/cover no-repeat url(` -ig olvasta, a kép URL-jét
+     pedig szemét attribútumnak látta. Ezért maradt üres az állomás hero-ja
+     akkor is, ha a képe fel volt töltve. A &quot; a HTML-elemzőn átjut, és
+     a CSS már valódi idézőjelet lát. */
+  function hatterAttr(v) { return String(v == null ? '' : v).replace(/"/g, '&quot;'); }
+
+  /* A „Játékos nézet" videót is mutat — ugyanaz a felismerés, mint a
+     lejátszóban (jatszas.js), hogy a két előnézet ne mondjon mást. */
+  function parseVideo(url) {
+    url = String(url == null ? '' : url).trim();
+    if (!url) return null;
+    if (/^data:video\//i.test(url) || /\.(mp4|webm|ogg)(\?.*)?$/i.test(url)) return { kind: 'file', src: url };
+    const yt = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([\w-]{11})/);
+    if (yt) return { kind: 'youtube', embed: 'https://www.youtube.com/embed/' + yt[1] };
+    const vm = url.match(/vimeo\.com\/(?:video\/)?(\d+)/);
+    if (vm) return { kind: 'vimeo', embed: 'https://player.vimeo.com/video/' + vm[1] };
+    return { kind: 'url', src: url };
+  }
+  function videoEmbedHTML(url, cls) {
+    const v = parseVideo(url);
+    if (!v) return '';
+    if (v.kind === 'youtube' || v.kind === 'vimeo')
+      return '<div class="' + (cls || '') + '"><iframe src="' + esc(v.embed) + '" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen" allowfullscreen loading="lazy"></iframe></div>';
+    return '<div class="' + (cls || '') + '"><video src="' + esc(v.src || url) + '" controls playsinline preload="metadata"></video></div>';
+  }
+
   function stationPlayTasks(i) {
     const s = state[i];
     if (!s) return [];
@@ -1264,7 +1298,8 @@
       .map(function (t) {
         const cfg = cfgMegoldassal(t);
         return { id: t.id, question: t.title || t.question, type: t.kind, cfg: cfg,
-                 points: t.points || 0, reveal: revealFor(t.kind, cfg), image: t.image || '' };
+                 points: t.points || 0, reveal: revealFor(t.kind, cfg),
+                 image: t.image || '', video: t.video || '' };
       });
   }
 
@@ -1380,7 +1415,7 @@
     const total = play.stationTasks.length;
     const tno = Math.min(play.taskIdx + 1, total);
     let h = '<div class="uq-pl-card">';
-    h += '<div class="uq-pl-hero" style="background:' + s.img + '"><span class="uq-pl-badge"><svg class="ico ico-xs" aria-hidden="true"><use href="#' + (s.type === 'Döntési pont' ? 'a-diamond' : 'a-pin') + '"/></svg>' + play.path.length + '. állomás</span><span class="uq-pl-type">' + esc(s.type) + '</span></div>';
+    h += '<div class="uq-pl-hero" style="background:' + hatterAttr(s.img) + '"><span class="uq-pl-badge"><svg class="ico ico-xs" aria-hidden="true"><use href="#' + (s.type === 'Döntési pont' ? 'a-diamond' : 'a-pin') + '"/></svg>' + play.path.length + '. állomás</span><span class="uq-pl-type">' + esc(s.type) + '</span></div>';
     h += '<div class="uq-pl-body">';
     h += '<h3>' + esc(s.name) + '</h3>';
     h += '<p class="uq-pl-desc">' + esc(s.desc || 'Nincs leírás ehhez az állomáshoz.') + '</p>';
@@ -1391,6 +1426,7 @@
         '<div class="uq-pl-tmeta"><span class="uq-pl-tlabel">' + ty.l + (total > 1 ? ' · ' + tno + '/' + total + ' feladat' : '') + '</span><b>' + esc(task.question) + '</b></div>' +
         '<span class="uq-pl-tpts"><svg class="ico ico-xs" aria-hidden="true"><use href="#a-star"/></svg>' + (task.points || 0) + '</span></div>';
       if (task.image) h += '<div class="uq-pl-taskimg"><img src="' + esc(task.image) + '" alt=""></div>';
+      if (task.video) h += videoEmbedHTML(task.video, 'uq-pl-taskvid');
       h += '<div class="uq-pl-answer" id="uqPlayAnswer"></div>';
       h += '<div class="uq-pl-actions" id="uqPlayActions"></div>';
     } else {
