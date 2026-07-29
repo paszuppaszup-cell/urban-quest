@@ -568,6 +568,15 @@
 .uq-pl-action p{font-size:13px;color:var(--text-2);margin-bottom:14px;}
 .uq-pl-do{padding:0 22px;height:44px;border-radius:11px;background:var(--lime);color:#0a0d0a;font-family:var(--font-body);font-weight:700;font-size:13.5px;border:0;cursor:pointer;}
 .uq-pl-do:hover{background:var(--lime-2);}
+/* GPS-visszajelzés: a mért távolság a helyszíntől. A „még N méterre"
+   állapot nem hiba — a csapat épp úton van —, ezért semleges, nem piros. */
+.uq-pl-gps{margin-top:12px;padding:9px 12px;border-radius:10px;font-size:12.5px;line-height:1.45;
+  border:1px solid var(--line);background:rgb(255 255 255 / .03);color:var(--text-2);}
+.uq-pl-gps.is-jo{border-color:rgb(var(--lime-rgb) / .4);background:rgb(var(--lime-rgb) / .12);color:var(--text);}
+.uq-pl-gps.is-tavol{border-color:rgb(224 185 58 / .45);color:var(--text);}
+.uq-pl-gps.is-hiba{border-color:rgb(255 255 255 / .14);color:var(--nehez);}
+.uq-pl-gps[hidden]{display:none !important;}
+
 .uq-pl-wrong{margin-top:10px;display:flex;align-items:center;gap:6px;font-size:12px;color:var(--nehez);}
 .uq-pl-wrong .ico{width:14px;height:14px;}
 .uq-pl-skip{width:100%;display:inline-flex;align-items:center;justify-content:center;gap:7px;height:40px;margin-top:2px;border:1px dashed var(--line);border-radius:10px;background:none;color:var(--muted);font-family:var(--font-body);font-size:12.5px;cursor:pointer;transition:.14s;}

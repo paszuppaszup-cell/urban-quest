@@ -1274,6 +1274,86 @@
     if (play.result) renderPlayResult(); else renderPlayAnswer();
   }
 
+  /* =========================================================
+     GPS-FELADAT — valódi helyszín-igazolás
+
+     Eddig ez egy gomb volt, ami azonnal jóváírta a pontot, a szerver pedig
+     „auto_ok"-ként bármit elfogadott: a Duna-parti Nyomozáson 70 pont járt
+     anélkül, hogy a csapat elindult volna otthonról.
+
+     Mostantól a telefon megméri a helyzetét, és a MÉRT PONT megy be a
+     naplóba; a bírálatot a szerver végzi a befagyasztott csomag koordinátája
+     ellen (geo_ok). A telefon itt csak visszajelzést ad — a pontot úgyis
+     a szerver számolja.
+     ========================================================= */
+  function tavolsagM(lat1, lng1, lat2, lng2) {
+    const R = 6371000, r = Math.PI / 180;
+    const dLat = (lat2 - lat1) * r, dLng = (lng2 - lng1) * r;
+    const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+              Math.cos(lat1 * r) * Math.cos(lat2 * r) * Math.sin(dLng / 2) * Math.sin(dLng / 2);
+    return R * 2 * Math.asin(Math.min(1, Math.sqrt(a)));
+  }
+
+  function renderGpsFeladat(box, c, done) {
+    const s = COURSE[playCurIdx()] || {};
+    const cel = { lat: parseFloat(s.lat), lng: parseFloat(s.lng) };
+    const sugar = Number(c.radius) > 0 ? Number(c.radius) : 30;
+    const vanCel = isFinite(cel.lat) && isFinite(cel.lng);
+
+    box.innerHTML =
+      '<div class="uq-pl-action">' +
+        '<span class="big"><svg class="ico" aria-hidden="true"><use href="#a-target"/></svg></span>' +
+        '<p>' + (vanCel
+          ? 'Menjetek a megjelölt pontra (' + sugar + ' m), és igazoljátok a helyszínt.'
+          : 'Ehhez az állomáshoz nincs koordináta megadva, ezért a helyszín nem igazolható.') + '</p>' +
+        '<button class="uq-pl-do" type="button" id="uqPlayGo"' + (vanCel ? '' : ' disabled') + '>Helyszín igazolása</button>' +
+        '<div class="uq-pl-gps" id="uqGpsAllapot" hidden></div>' +
+      '</div>';
+
+    const gomb = $('#uqPlayGo'), allapot = $('#uqGpsAllapot');
+    if (!gomb || !vanCel) return;
+
+    function ir(szoveg, tipus) {
+      if (!allapot) return;
+      allapot.hidden = false;
+      allapot.className = 'uq-pl-gps' + (tipus ? ' is-' + tipus : '');
+      allapot.textContent = szoveg;
+    }
+
+    gomb.addEventListener('click', () => {
+      if (!navigator.geolocation) {
+        /* Nincs helymeghatározás: nem tartjuk fogva a csapatot — átugorható
+           marad, és a szerver úgyis a mért pont hiányában nem ad pontot. */
+        ir('Ez a böngésző nem tud helyet meghatározni. Ugorjátok át a feladatot.', 'hiba');
+        return;
+      }
+      gomb.disabled = true;
+      ir('Helymeghatározás…', 'varakozik');
+      navigator.geolocation.getCurrentPosition(function (p) {
+        gomb.disabled = false;
+        const lat = p.coords.latitude, lng = p.coords.longitude;
+        const acc = Math.round(p.coords.accuracy || 0);
+        const d = Math.round(tavolsagM(lat, lng, cel.lat, cel.lng));
+        /* A mért pontosságot beszámítjuk, de legfeljebb 50 métert — pontosan
+           úgy, ahogy a szerver (geo_ok), hogy a telefon ne mondjon mást. */
+        const hatar = sugar + Math.min(Math.max(acc, 0), 50);
+        play.lastAnswer = { lat: lat, lng: lng, acc: acc };
+        if (d <= hatar) {
+          ir('Megvagytok — ' + d + ' m a ponttól.', 'jo');
+          done(true);
+        } else {
+          ir('Még ' + d + ' méterre vagytok a ponttól (' + sugar + ' m kell). ' +
+             'Menjetek közelebb, és nyomjátok meg újra.', 'tavol');
+        }
+      }, function (e) {
+        gomb.disabled = false;
+        ir(e && e.code === 1
+          ? 'A helymeghatározás le van tiltva. Engedélyezzétek a böngészőben, vagy ugorjátok át.'
+          : 'Nem sikerült megmérni a helyzeteteket. Próbáljátok újra a szabad ég alatt.', 'hiba');
+      }, { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 });
+    });
+  }
+
   function playWrong() {
     const box = $('#uqPlayAnswer'); if (!box) return;
     let m = box.querySelector('.uq-pl-wrong');
@@ -1606,8 +1686,10 @@
       act.innerHTML = '';
       box.innerHTML = '<div class="uq-pl-action"><span class="big"><svg class="ico" aria-hidden="true"><use href="#a-task"/></svg></span><p>Olvasd el az állomás feladatát a helyszínen, majd jelöld késznek a folytatáshoz.</p><button class="uq-pl-do" type="button" id="uqPlayGo">Megvan, kész</button></div>';
       $('#uqPlayGo').addEventListener('click', () => done(true));
+    } else if (task.type === 'gps') {
+      renderGpsFeladat(box, c, done);
     } else {
-      const a = { foto: { ic: 'a-camera', lbl: 'Fotó feltöltése', txt: (c.instruction || 'Készíts képet a helyszínen') }, gps: { ic: 'a-target', lbl: 'Helyszín igazolása', txt: 'Menj a megjelölt pontra (' + (c.radius || 30) + ' m)' }, qr: { ic: 'a-qr', lbl: 'QR beolvasása', txt: 'Keresd meg és olvasd be a kódot' }, gyors: { ic: 'a-bolt', lbl: 'Indítás', txt: (c.game === 'tap' ? 'Koppints ' + (c.target || 15) + '-öt ' + (c.time || 5) + ' mp alatt' : 'Mini-játék') } }[task.type] || { ic: 'a-target', lbl: 'Teljesítés', txt: 'Teljesítsd a feladatot' };
+      const a = { foto: { ic: 'a-camera', lbl: 'Fotó feltöltése', txt: (c.instruction || 'Készíts képet a helyszínen') }, qr: { ic: 'a-qr', lbl: 'QR beolvasása', txt: 'Keresd meg és olvasd be a kódot' }, gyors: { ic: 'a-bolt', lbl: 'Indítás', txt: (c.game === 'tap' ? 'Koppints ' + (c.target || 15) + '-öt ' + (c.time || 5) + ' mp alatt' : 'Mini-játék') } }[task.type] || { ic: 'a-target', lbl: 'Teljesítés', txt: 'Teljesítsd a feladatot' };
       box.innerHTML = '<div class="uq-pl-action"><span class="big"><svg class="ico" aria-hidden="true"><use href="#' + a.ic + '"/></svg></span><p>' + esc(a.txt) + '</p><button class="uq-pl-do" type="button" id="uqPlayGo">' + a.lbl + '</button></div>';
       $('#uqPlayGo').addEventListener('click', () => done(true));
     }
