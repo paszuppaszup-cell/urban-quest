@@ -602,6 +602,7 @@
         if (h1 && h1.childNodes[0]) h1.childNodes[0].textContent = currentGame + ' ';
         var cmName = $('#cmName'); if (cmName) cmName.value = currentGame;
         var sel = $('#admGameSelect'); if (sel) sel.value = courseId;
+        allapotKiiras();
         refreshActiveTab();
         if (map) {
           setTimeout(function () {
@@ -1607,17 +1608,98 @@
     'Piszkozat': { color: 'var(--kozepes)', glow: '0 0 6px var(--kozepes)', tag: 'is-draft' },
     'Archivált': { color: 'var(--muted)', glow: 'none', tag: 'is-archived' }
   };
+  /* A fejléc állapota EDDIG be volt égetve „Közzétéve"-re, a legördülőből
+     választás pedig csak a feliratot cserélte, és kiírta, hogy „Állapot
+     módosítva" — közben semmit nem mentett. Emiatt mutatott a szerkesztő
+     „KÖZZÉTÉVE"-t olyan pályán is, ami valójában sosem került ki. */
+
+  var STATUS_DB    = { 'Közzétéve': 'pub', 'Piszkozat': 'draft', 'Archivált': 'arch' };
+  var STATUS_CIMKE = { pub: 'Közzétéve', draft: 'Piszkozat', arch: 'Archivált' };
+
+  /* A fejléc a VALÓS állapotot mutatja. Külön eset: „közzétett", de élő
+     verzió nélkül — ilyenkor a pálya sehol nem jelenik meg, és ezt ki kell
+     mondani, nem zöld pipával elfedni. */
+  function allapotKiiras() {
+    var idx = COURSES_INDEX.find(function (c) { return c.id === currentCourseId; });
+    if (!idx || !statusLabel) return;
+    var pub = idx.status === 'pub';
+    var elo = idx.van_elo_verzio !== false;
+    var cimke = STATUS_CIMKE[idx.status] || 'Piszkozat';
+    var stilus = STATUS_STYLE[cimke] || STATUS_STYLE['Piszkozat'];
+
+    if (pub && !elo) {
+      statusLabel.textContent = 'Nem látható';
+      statusDot.style.background = 'var(--kozepes)';
+      statusDot.style.boxShadow = '0 0 6px var(--kozepes)';
+      courseTag.textContent = 'Nem látható';
+      courseTag.className = 'adm-tag is-draft';
+      courseTag.title = 'Közzétettként van jelölve, de nincs befagyasztott verziója, ezért sehol nem jelenik meg. Tedd közzé újra.';
+    } else {
+      statusLabel.textContent = cimke;
+      statusDot.style.background = stilus.color;
+      statusDot.style.boxShadow = stilus.glow;
+      courseTag.textContent = cimke;
+      courseTag.className = 'adm-tag' + (stilus.tag ? ' ' + stilus.tag : '');
+      courseTag.title = '';
+    }
+    $$('.uq-dd-item[data-status]').forEach(function (x) {
+      x.classList.toggle('is-active', x.dataset.status === cimke);
+    });
+  }
+
+  /* A váltás VALÓDI. Közzétételnél ugyanazon a kapun megy át, mint a Játékok
+     oldal: előbb a befagyasztás és a course_lint, és a státusz CSAK utána
+     változik — így nem maradhat „közzétett" pálya élő verzió nélkül. */
+  function allapotValtas(cimke) {
+    var db = STATUS_DB[cimke];
+    var id = currentCourseId;
+    if (!db || !id || !window.UQAPI) return;
+
+    function frissitIndex(ujStatus, ujElo) {
+      var idx = COURSES_INDEX.find(function (c) { return c.id === id; });
+      if (idx) { idx.status = ujStatus; if (ujElo !== undefined) idx.van_elo_verzio = ujElo; }
+      allapotKiiras();
+    }
+
+    if (db !== 'pub') {
+      UQAPI.rest('/rpc/save_course', { method: 'POST', body: { p: { id: id, status: db } } })
+        .then(function () {
+          frissitIndex(db);
+          toast('Állapot módosítva', { type: 'info', sub: cimke + ' — nem jelenik meg nyilvánosan' });
+        })
+        .catch(function (e) { toast('Nem sikerült', { type: 'error', sub: (e && e.message) || '' }); });
+      return;
+    }
+
+    toast('Közzététel…', { type: 'info', sub: 'ellenőrzés és befagyasztás' });
+    UQAPI.rest('/rpc/publish_course', { method: 'POST', body: { p_course: id, p_go_live: true } })
+      .then(function (r) {
+        var v = Array.isArray(r) ? r[0] : r;
+        return UQAPI.rest('/rpc/save_course', { method: 'POST', body: { p: { id: id, status: 'pub' } } })
+          .then(function () { return v; });
+      })
+      .then(function (v) {
+        frissitIndex('pub', true);
+        toast('Közzétéve', { sub: 'a játékosok az új változatot kapják (v' + (v && v.version) + ')' });
+      })
+      .catch(function (e) {
+        var m = String((e && e.message) || '');
+        var kapu = m.match(/^A pálya így nem tehető közzé:\s*([\s\S]+)$/);
+        if (kapu) {
+          var t = kapu[1].split(' | ').map(function (x) { return x.trim(); }).filter(Boolean);
+          toast('A pálya még nem tehető közzé', { type: 'warn',
+            sub: t.slice(0, 4).map(function (x) { return '• ' + x; }).join('\n') +
+                 (t.length > 4 ? '\n• …és még ' + (t.length - 4) + ' dolog' : '') });
+        } else {
+          toast('Nem sikerült', { type: 'error', sub: m });
+        }
+        allapotKiiras();   // a felirat maradjon az IGAZ értéken
+      });
+  }
+
   $$('.uq-dd-item[data-status]').forEach(it => it.addEventListener('click', () => {
-    const st = it.dataset.status;
-    statusLabel.textContent = st;
-    const s = STATUS_STYLE[st];
-    statusDot.style.background = s.color;
-    statusDot.style.boxShadow = s.glow;
-    courseTag.textContent = st;
-    courseTag.className = 'adm-tag' + (s.tag ? ' ' + s.tag : '');
-    $$('.uq-dd-item[data-status]').forEach(x => x.classList.toggle('is-active', x === it));
     closeAllFloating();
-    toast('Állapot módosítva', { type: 'info', sub: st });
+    allapotValtas(it.dataset.status);
   }));
 
   /* felhasználó dropdown */
@@ -1818,7 +1900,7 @@
 
     UQAPI.isAdmin().then(function (admin) {
       if (!admin) { hiba('Nincs jogosultság', 'Ez a fiók nem admin.'); return; }
-      return UQAPI.rest('/v_admin_courses?select=id,name&order=sort_order.asc,name.asc')
+      return UQAPI.rest('/v_admin_courses?select=id,name,status,van_elo_verzio&order=sort_order.asc,name.asc')
         .then(function (rows) {
           COURSES_INDEX = rows || [];
           if (!COURSES_INDEX.length) {

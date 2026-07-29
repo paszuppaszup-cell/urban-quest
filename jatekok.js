@@ -859,29 +859,48 @@
     /* A fiókban látott ADATOKAT fagyasztjuk be, nem a régieket: korábban
        csak {id, status} ment el, ezért a közzétett verzió a mentetlen
        szerkesztés ELŐTTI állapotot rögzítette. */
-    const payload = Object.assign(urlapPayload(id), { status: STATUS_DB[status] || status });
+    /* A STÁTUSZ SORRENDJE SZÁMÍT.
 
-    return UQAPI.rest('/rpc/save_course', { method: 'POST', body: { p: payload } })
-      .then(() => {
-        if (status !== 'pub') return ujratolt('Piszkozatként mentve', g.name + ' — nem jelenik meg nyilvánosan');
-        /* Ez az EGYETLEN hely, ahol egy pálya élesre kerül: p_go_live = true.
-           A többi mentés csak befagyaszt egy verziót, a játékosok addig a
-           legutóbb közzétettet játsszák. A szerver a course_lint-tel kapuz —
-           félkész pálya nem mehet ki. */
-        return UQAPI.rest('/rpc/publish_course', { method: 'POST', body: { p_course: id, p_go_live: true } })
-          .then(r => {
-            const v = Array.isArray(r) ? r[0] : r;
-            const figy = (v && v.warnings && v.warnings.length)
-              ? ' — figyelmeztetés: ' + v.warnings.join('; ')
-              : '';
-            return ujratolt('Közzétéve', g.name + ' (v' + (v && v.version) + ')' + figy);
-          });
+       Korábban előbb ment ki a status='pub', és csak utána a közzététel. Ha a
+       course_lint elbukott, a pálya „közzétett" maradt élő verzió nélkül —
+       vagyis a katalógusban nem jelent meg, a főoldal viszont beleszámolta.
+       Pontosan ez történt a „KÖZPÉNZ NYOMÁBAN" pályával.
+
+       Mostantól a tartalom a MOSTANI státusszal mentődik, utána fut a kapu,
+       és a status='pub' CSAK sikeres közzététel után megy ki. Bukáskor a
+       pálya piszkozat marad — ami igaz is. */
+    const tartalom = urlapPayload(id);
+    if (status !== 'pub') {
+      return UQAPI.rest('/rpc/save_course', {
+        method: 'POST', body: { p: Object.assign(tartalom, { status: STATUS_DB[status] || status }) }
+      })
+        .then(() => ujratolt('Piszkozatként mentve', g.name + ' — nem jelenik meg nyilvánosan'))
+        .then(() => true)
+        .catch(err => { hibaToast(err); return ujratolt().then(() => false); });
+    }
+
+    delete tartalom.status;                    // a státuszhoz még nem nyúlunk
+    return UQAPI.rest('/rpc/save_course', { method: 'POST', body: { p: tartalom } })
+      /* Ez az EGYETLEN hely, ahol egy pálya élesre kerül: p_go_live = true.
+         A többi mentés csak befagyaszt egy verziót, a játékosok addig a
+         legutóbb közzétettet játsszák. A szerver a course_lint-tel kapuz —
+         félkész pálya nem mehet ki. */
+      .then(() => UQAPI.rest('/rpc/publish_course', {
+        method: 'POST', body: { p_course: id, p_go_live: true }
+      }))
+      .then(r => {
+        const v = Array.isArray(r) ? r[0] : r;
+        // a kapun átment: MOST tehetjük közzétetté
+        return UQAPI.rest('/rpc/save_course', {
+          method: 'POST', body: { p: { id: id, status: 'pub' } }
+        }).then(() => v);
+      })
+      .then(v => {
+        const figy = (v && v.warnings && v.warnings.length)
+          ? ' — figyelmeztetés: ' + v.warnings.join('; ') : '';
+        return ujratolt('Közzétéve', g.name + ' (v' + (v && v.version) + ')' + figy);
       })
       .then(() => true)
-      /* Bukáskor is ÚJRA KELL tölteni: az első lépés (status='pub') már
-         lefutott, tehát a pálya „közzétett", de élő verzió nélkül —
-         láthatatlanul. A frissítés kiteszi rá a „nem látható" jelvényt,
-         különben a szerző csak kézi újratöltésnél szembesülne vele. */
       .catch(err => { hibaToast(err); return ujratolt().then(() => false); });
   }
 
