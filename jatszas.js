@@ -1360,6 +1360,54 @@
     });
   }
 
+  /* =========================================================
+     A MEGOLDÁS MEGMUTATÁSA ÁTUGRÁS UTÁN — a SZERVERRŐL
+
+     Eddig a kliens a letöltött csomagból próbálta kiolvasni (task.reveal),
+     de a csomagból — helyesen — ki van szedve a megoldás. Ezért kvíznél,
+     szövegesnél és kódnál MINDIG „Megoldás: —" jelent meg: a funkció halott
+     volt. Puzzle-nél viszont működött, épp azért, mert ott a válasz benne
+     maradt a csomagban — azt a rést most bezártuk.
+
+     A szöveget ezért a szerver adja (task_reveal), és CSAK azután, hogy az
+     átugrás eseménye meg is érkezett. Emiatt nem a kattintásnál kérjük,
+     hanem a következő nyugtázott szinkron után. Offline nem jelenik meg —
+     ez így helyes: a telefonon nincs is meg.
+     ========================================================= */
+  function megoldastKer(task) {
+    if (!SYNC.on || !SYNC.session || !window.UQAPI) return;
+    if (!task || !uuidszeru(task.id)) return;
+    const sid = SYNC.session.id, tid = task.id;
+    let lefutott = false;
+
+    function kerd() {
+      if (lefutott) return;
+      lefutott = true;
+      document.removeEventListener('uq:written', figyelo);
+      UQAPI.rest('/rpc/task_reveal', { method: 'POST', body: { p_session: sid, p_task: tid } })
+        .then(function (r) {
+          /* A PostgREST a skalár függvény eredményét nyersen adja vissza. */
+          const v = Array.isArray(r) ? r[0] : r;
+          const txt = (typeof v === 'string') ? v : (v && (v.task_reveal || v.reveal));
+          if (!txt) return;
+          /* Közben továbbléphetett — csak akkor írjuk ki, ha még ez az
+             eredmény van a képernyőn. */
+          if (play.result && play.result.task && play.result.task.id === tid && !play.result.ok) {
+            play.result.reveal = txt;
+            renderPlay();
+          }
+        })
+        .catch(function () {});
+    }
+    function figyelo(e) {
+      if (e && e.detail && e.detail.tag === 'sync_batch') kerd();
+    }
+    document.addEventListener('uq:written', figyelo);
+    /* Ha a beküldés már korábban célba ért (vagy a jelzés elmarad), akkor is
+       megkérdezzük — a szerver dönt, kiadja-e. */
+    setTimeout(kerd, 2500);
+  }
+
   function playWrong() {
     const box = $('#uqPlayAnswer'); if (!box) return;
     let m = box.querySelector('.uq-pl-wrong');
@@ -1422,7 +1470,7 @@
       const d = box.querySelector('.uq-pl-code'); if (d) d.outerHTML = disp();
     }));
   }
-  function drawPuzzle(box, c, done) {
+  function drawPuzzle(box, c, done, task) {
     if (!play.pv.order) play.pv.order = (c.items || []).map((_, i) => i).sort(() => Math.random() - 0.5);
     const draw = () => {
       box.innerHTML = '<div class="uq-pl-puzzle">' + play.pv.order.map((idx, pos) => '<div class="uq-pl-pz"><span class="n">' + (pos + 1) + '</span><span class="t">' + esc(c.items[idx]) + '</span><span class="mv"><button type="button" data-mv="up" data-pos="' + pos + '">▲</button><button type="button" data-mv="dn" data-pos="' + pos + '">▼</button></span></div>').join('') + '</div><button class="uq-pl-go uq-pl-wide" type="button" id="uqPlayGo">Ellenőrzés</button>';
@@ -1433,9 +1481,15 @@
       }));
       $('#uqPlayGo').addEventListener('click', () => {
         /* a szerver a sorbarakott elemeket kapja válaszként (tömbként) */
-        play.lastAnswer = play.pv.order.map(idx => String((c.items || [])[idx] == null ? '' : c.items[idx]));
-        const correct = play.pv.order.filter((idx, pos) => idx === pos).length;
-        if (correct === (c.items || []).length) done(true); else playWrong();
+        const valasz = play.pv.order.map(idx => String((c.items || [])[idx] == null ? '' : c.items[idx]));
+        /* A KIÉRTÉKELÉS HASH-ALAPÚ, nem index-egyezés.
+           A csomagban az `items` mostantól KEVERT sorrendben jön: a valódi
+           sorrend maga a helyes válasz volt, és a letöltött csomagból bárki
+           kiolvashatta (mérve: 40 pont fejlesztői eszközzel, törés nélkül).
+           Az index-egyezés így már nem dönthet — a tartalék csak a régi,
+           még újra nem publikált csomagoknak szól. */
+        const regiOk = play.pv.order.every((idx, pos) => idx === pos);
+        ertekel(task, valasz, regiOk).then(ok => ok ? done(true) : playWrong());
       });
     };
     draw();
@@ -1627,7 +1681,13 @@
         act.innerHTML = tippSorHTML(task) +
           '<button class="uq-pl-skip" type="button" id="uqPlaySkip">' +
           '<svg class="ico ico-xs" aria-hidden="true"><use href="#a-collapse"/></svg>Feladat átugrása</button>';
-        $('#uqPlaySkip').addEventListener('click', () => playTaskDone(false, task.reveal, true));
+        $('#uqPlaySkip').addEventListener('click', () => {
+          /* A megoldás szövegét a SZERVER adja (lásd megoldastKer) — a
+             csomagban nincs benne. A task.reveal csak a régi, beégetett
+             adat tartaléka. */
+          playTaskDone(false, task.reveal || null, true);
+          megoldastKer(task);
+        });
         wireTipp(task);
         return;
       }
@@ -1637,7 +1697,13 @@
     act.innerHTML = tippSorHTML(task) +
       '<button class="uq-pl-skip" type="button" id="uqPlaySkip"><svg class="ico ico-xs" aria-hidden="true"><use href="#a-collapse"/></svg>Feladat átugrása</button>';
     /* az átugrás explicit jelzés a szervernek is (skipped=true, válasz nélkül) */
-    $('#uqPlaySkip').addEventListener('click', () => playTaskDone(false, task.reveal, true));
+    $('#uqPlaySkip').addEventListener('click', () => {
+          /* A megoldás szövegét a SZERVER adja (lásd megoldastKer) — a
+             csomagban nincs benne. A task.reveal csak a régi, beégetett
+             adat tartaléka. */
+          playTaskDone(false, task.reveal || null, true);
+          megoldastKer(task);
+        });
     wireTipp(task);
     const done = (ok) => playTaskDone(ok, ok ? null : task.reveal);
 
@@ -1675,7 +1741,7 @@
         });
       } else { drawCodePad(box, c, done, task); }
     } else if (task.type === 'puzzle' && c.subtype !== 'match') {
-      drawPuzzle(box, c, done);
+      drawPuzzle(box, c, done, task);
     } else if (task.type === 'puzzle') {
       box.innerHTML = '<div class="uq-pl-match">' + (c.pairs || []).map((p, i) => '<div class="uq-pl-mrow"><span>' + esc(p.left) + '</span><select data-i="' + i + '"><option value="">…</option>' + (c.pairs || []).map((q, j) => '<option value="' + j + '">' + esc(q.right) + '</option>').join('') + '</select></div>').join('') + '</div><button class="uq-pl-go uq-pl-wide" type="button" id="uqPlayGo">Ellenőrzés</button>';
       $('#uqPlayGo').addEventListener('click', () => {
