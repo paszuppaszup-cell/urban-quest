@@ -152,6 +152,7 @@
   let PUBLIC = false, QUEST_ID = '';
   let RAW_COURSE = null;
   let COVER = '';               // a pálya borítóképe — az összegzőn jelenik meg
+  let PINNED = false;           // a futó menet saját (nem feltétlen élő) verziója
 
   function hibaKepernyo(cim, szoveg, gomb) {
     const root = document.getElementById('playRoot');
@@ -177,6 +178,10 @@
     route = qc.title || questParam;
     RAW_COURSE = Array.isArray(qc.stations) ? qc.stations : [];
     COVER = qc.image || (qq && qq.image) || '';
+    /* A csomag a FÉLBEHAGYOTT MENET befagyasztott verziója (uq-play-src), nem
+       a pálya mai állása. Ez a folytatáshoz helyes — új játékhoz viszont már
+       nem az, ezért az „elölről" gomb újratölti a lapot. */
+    PINNED = !!qc._pinned;
   } else if (params.get('game') || params.get('route')) {
     /* Régi admin-előnézet hivatkozás. Eddig ilyenkor indult a demó. */
     hibaKepernyo('Ez a hivatkozás elavult',
@@ -905,7 +910,18 @@
     if (!play.active) {
       host.innerHTML = playIntroHTML();
       const b = $('#uqPlayStart'); // indítás / újrakezdés (tiszta lappal)
-      if (b) b.addEventListener('click', () => { if (PUBLIC && window.UQAccount && window.UQAccount.clearProgress) window.UQAccount.clearProgress(QUEST_ID); playStart(); });
+      if (b) b.addEventListener('click', () => {
+        /* A törlés ELŐTT kell megnézni, volt-e egyáltalán mit eldobni. */
+        const voltMentes = !!resumeState();
+        if (PUBLIC && window.UQAccount && window.UQAccount.clearProgress) window.UQAccount.clearProgress(QUEST_ID);
+        /* Ha helyi haladást dobtunk el, a pálya MAI állása jár: a betöltött
+           csomag a most törölt menet régi verziója, ezért újratöltünk.
+           Csapatnál (nincs helyi mentés, a menet a váróból jön) NEM: ott a
+           közös menet verziója a mérvadó, és az újratöltés végtelen körbe
+           vinné a játékost, mert a csapat-kontextus a helyén marad. */
+        if (PINNED && voltMentes) { location.reload(); return; }
+        playStart();
+      });
       const rb = $('#uqPlayResume'); // folytatás mentett állapotból
       if (rb) rb.addEventListener('click', () => { const st = resumeState(); if (st) playResume(st); else playStart(); });
       return;

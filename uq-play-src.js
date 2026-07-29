@@ -15,7 +15,7 @@
 (function () {
   'use strict';
 
-  var LEJATSZO = 'jatszas.js?v=16';
+  var LEJATSZO = 'jatszas.js?v=17';
   var CACHE_ELO = 'uq_bundle_';           // offline tartalék pályánként
 
   var DIFF_LABEL = { konnyu: 'Könnyű', kozepes: 'Közepes', nehez: 'Nehéz', extrem: 'Extrém' };
@@ -129,14 +129,45 @@
     UQTema.alkalmaz(szin || null);
   }
 
-  function cacheOlvas(slug) {
+  function cacheOlvas(kulcs) {
     try {
-      var raw = localStorage.getItem(CACHE_ELO + slug);
+      var raw = localStorage.getItem(CACHE_ELO + kulcs);
       return raw ? JSON.parse(raw) : null;
     } catch (e) { return null; }
   }
-  function cacheIr(slug, bundle) {
-    try { localStorage.setItem(CACHE_ELO + slug, JSON.stringify(bundle)); } catch (e) {}
+  function cacheIr(kulcs, bundle) {
+    try { localStorage.setItem(CACHE_ELO + kulcs, JSON.stringify(bundle)); } catch (e) {}
+  }
+
+  /* =========================================================
+     A FUTÓ MENET SAJÁT VERZIÓJA
+
+     A szerver a menetet ahhoz a befagyasztott verzióhoz pontozza, amivel
+     elindult (game_sessions.course_version_id). A telefon viszont eddig
+     MINDIG a pálya élő csomagját töltötte le. Ha a szerző közben újra
+     közzétette a pályát, a folytatott játékos olyan feladatokat kapott,
+     amiket a menet verziója nem is ismer: a helyes válasza 0 pontot ért,
+     és „vitatott" jelet kapott — mindezt szó nélkül.
+
+     Ezért: ha van itt egy félbehagyott menet, ANNAK a csomagját kérjük le.
+     Aki elölről kezd, újra az élőt kapja (lásd a jatszas.js újraindítását).
+     ========================================================= */
+  var UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+  function futoMenet(slug) {
+    /* CSAPAT: a közös menet a váróból jön, és a megosztott linkről beszálló
+       társ telefonján NINCS helyi haladás — neki csak ez az egy nyoma van.
+       Ezért ez az első forrás. */
+    try {
+      var t = (window.UQTeam && UQTeam.ctx) ? UQTeam.ctx() : null;
+      if (t && t.slug === slug && UUID.test(String(t.session_id || ''))) return t.session_id;
+    } catch (e) {}
+    try {
+      if (!window.UQAccount || !UQAccount.activePlay) return null;
+      var p = UQAccount.activePlay(slug);
+      var sid = p && p.state && p.state.sessionId;
+      return UUID.test(String(sid || '')) ? sid : null;
+    } catch (e) { return null; }
   }
 
   var params = new URLSearchParams(location.search);
@@ -150,13 +181,19 @@
 
   if (!slug || !window.UQAPI) { betoltLejatszo(); return; }
 
+  /* Bejelentkezve, félbehagyott menettel a menet SAJÁT verziója a mérvadó.
+     Vendégként és előnézetben nincs szerveroldali menet, ott az élő csomag. */
+  var menet = (!elonezet && UQAPI.user()) ? futoMenet(slug) : null;
+  var cacheKulcs = menet ? ('s_' + menet) : slug;
+
   /* Offline: a legutóbb letöltött csomag azonnal érvénybe lép, hogy a
      terepen net nélkül is indulhasson a játék. Előnézetben NEM: ott épp
      azt akarod látni, ami most van az adatbázisban, nem a tegnapit. */
-  var gyors = elonezet ? null : cacheOlvas(slug);
+  var gyors = elonezet ? null : (cacheOlvas(cacheKulcs) || (menet ? cacheOlvas(slug) : null));
   if (gyors) {
     window.QUEST_COURSES = window.QUEST_COURSES || {};
     window.QUEST_COURSES[slug] = atalakit(gyors);
+    if (menet) window.QUEST_COURSES[slug]._pinned = true;
     temaAlkalmaz(gyors);
   }
 
@@ -167,18 +204,41 @@
      (vagy a beégetett adattal) indulunk. */
   var idozito = setTimeout(tovabb, 6000);
 
-  var nezet = elonezet ? '/v_admin_play_bundle' : '/v_play_bundle';
-  UQAPI.rest(nezet + '?select=bundle,version,version_id,course_id&slug=eq.' + encodeURIComponent(slug),
-             { anon: !elonezet && !UQAPI.user() })
-    .then(function (rows) {
-      var b = rows && rows[0] && rows[0].bundle;
+  function lekeres() {
+    if (menet) {
+      return UQAPI.rest('/rpc/play_bundle_for_session',
+                        { method: 'POST', body: { p_session: menet } })
+        .then(function (rows) {
+          var r = Array.isArray(rows) ? rows[0] : rows;
+          /* Ha a menet eltűnt vagy nem a miénk, nem hallgatunk róla: az élő
+             csomaggal megyünk tovább, mint bármelyik új játéknál. */
+          if (!r || !r.bundle) return elo();
+          return { sor: r, pinned: true };
+        })
+        .catch(function () { return elo(); });
+    }
+    return elo();
+  }
+  function elo() {
+    var nezet = elonezet ? '/v_admin_play_bundle' : '/v_play_bundle';
+    return UQAPI.rest(nezet + '?select=bundle,version,version_id,course_id&slug=eq.' + encodeURIComponent(slug),
+                      { anon: !elonezet && !UQAPI.user() })
+      .then(function (rows) { return { sor: rows && rows[0], pinned: false }; });
+  }
+
+  lekeres()
+    .then(function (t) {
+      var b = t && t.sor && t.sor.bundle;
       if (!b || !(b.stations || []).length) throw new Error('nincs publikált csomag');
       /* a verzió UUID-ját a csomagba tesszük, hogy OFFLINE (gyorstárból
          indulva) is meglegyen a szerveroldali menethez */
-      if (b.course) b.course.version_uuid = rows[0].version_id;
-      if (!elonezet) cacheIr(slug, b);
+      if (b.course) b.course.version_uuid = t.sor.version_id;
+      /* A rögzített csomag a MENET kulcsára megy, nem a pályáéra: különben
+         a következő új játék is a régi verzióval indulna offline. */
+      if (!elonezet) cacheIr(t.pinned ? cacheKulcs : slug, b);
       window.QUEST_COURSES = window.QUEST_COURSES || {};
       window.QUEST_COURSES[slug] = atalakit(b);
+      if (t.pinned) window.QUEST_COURSES[slug]._pinned = true;
       temaAlkalmaz(b);
     })
     .catch(function () {
