@@ -15,7 +15,7 @@
 (function () {
   'use strict';
 
-  var LEJATSZO = 'jatszas.js?v=15';
+  var LEJATSZO = 'jatszas.js?v=16';
   var CACHE_ELO = 'uq_bundle_';           // offline tartalék pályánként
 
   var DIFF_LABEL = { konnyu: 'Könnyű', kozepes: 'Közepes', nehez: 'Nehéz', extrem: 'Extrém' };

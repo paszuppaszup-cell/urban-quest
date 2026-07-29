@@ -166,6 +166,11 @@
           honnan._voltAg = true;
         });
         renderBranches(); renderPrev();
+        /* A TÉRKÉPET is újra kell rajzolni. A vonalak a pálya betöltésekor
+           készülnek, amikor az élek MÉG NEM érkeztek meg — enélkül a térkép
+           örökre a sorrend szerinti tartalék-útvonalat mutatta, akkor is, ha
+           a szerző mást adott meg. */
+        renderRoutes();
       })
       .catch(function () { /* offline: ágak nélkül is szerkeszthető a pálya */ });
   }
@@ -215,6 +220,17 @@
   }
 
   function dontesiPont(st) { return !!(st && st.type === 'Döntési pont'); }
+
+  /* Van-e KIFEJEZETT előzménye ennek az állomásnak (index szerint)?
+     Ha igen, a pozíció szerinti tartalék nem vezethet ide — a szerző már
+     megmondta, honnan jön. */
+  function vanElozmeny(idx) {
+    var cel = state[idx];
+    if (!cel) return false;
+    return state.some(function (p) {
+      return (p.branches || []).some(function (b) { return b && b.to === cel; });
+    });
+  }
 
   function renderPrev() {
     var box = $('#edPrevBox');
@@ -808,7 +824,19 @@
          mindig a lista következő két elemére ment vonal — olyan utakra,
          amiket senki nem adott meg. */
       const agak = (s.branches || []).filter(b => b && state.indexOf(b.to) >= 0);
-      const targets = agak.length ? agak.map(b => state.indexOf(b.to)) : [i + 1];
+      /* Pozíció szerinti tartalék CSAK oda, aminek nincs kifejezett
+         előzménye. Ha a szerző megmondta, hogy a 8. állomás az 5. után jön,
+         akkor a 7. nem eshet bele „mert épp utána van a listában" — a
+         megadott útvonal erősebb a sorrendnél. Ilyenkor a 7. a következő
+         olyan állomásra megy, amit még senki nem kötött be. */
+      const targets = agak.length
+        ? agak.map(b => state.indexOf(b.to))
+        : (function () {
+            for (let j = i + 1; j < state.length; j++) {
+              if (!vanElozmeny(j)) return [j];
+            }
+            return [];
+          })();
       targets.forEach((ti, bi) => {
         if (ti >= state.length || ti < 0) return;
         const branch = agak.length > 1 && bi > 0;

@@ -843,10 +843,21 @@
       return;
     }
 
-    /* Nincs megadva ág. Döntési pontnál sem találunk ki útvonalat: megyünk
-       tovább a sorrendben, mint bármelyik másik állomásnál. */
-    if (i + 1 < COURSE.length) return playGoto(i + 1);
+    /* Nincs megadva ág — marad a sorrend. De NEM vakon: aminek a szerző
+       kifejezett előzményt adott, oda csak azon az úton lehet bejutni.
+       Enélkül a listában előtte álló állomás „véletlenül" is odavinne, és a
+       megadott útvonal helyett megint a sorrend döntene. */
+    for (let j = i + 1; j < COURSE.length; j++) {
+      if (!vanElozmeny(j)) return playGoto(j);
+    }
     return playFinish();
+  }
+
+  /* Mutat-e valamelyik állomás ága erre (index szerint)? */
+  function vanElozmeny(idx) {
+    const cel = COURSE[idx];
+    if (!cel) return false;
+    return COURSE.some(s => (s.branches || []).some(b => b && b.to === idx));
   }
   function playTaskDone(credited, revealText, atugorva) {
     const task = play.stationTasks[play.taskIdx];
