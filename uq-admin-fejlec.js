@@ -162,5 +162,43 @@
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', indul);
   else indul();
 
+  /* ---------------------------------------------------------
+     BETÖLTÖTT VERZIÓ — az oldalsáv aljára
+
+     Itt eddig egy kitalált „Verzió 2.4.1 © 2024" állt. Ennél sokkal
+     hasznosabb, ha azt írja ki, ami TÉNYLEG fut: a lap saját szkriptjének
+     verziószámát. Kitolás után egy pillantással eldönthető, hogy a böngésző
+     a friss kódot tölti-e, vagy egy gyorstárazott régit — ez a leggyakoribb
+     ok, amiért egy javítás „nem működik".
+     --------------------------------------------------------- */
+  function verzioKiiras() {
+    var el = document.querySelector('.adm-ver');
+    if (!el) return;
+    /* A lap saját fő szkriptje: a fájlnév megegyezik az oldaléval
+       (admin.html -> admin.js). Ha nincs ilyen, a legutolsó verziózott
+       szkriptet mutatjuk. */
+    var oldal = (location.pathname.split('/').pop() || 'index.html').replace(/\.html$/, '');
+    var sajat = null, utolso = null;
+    Array.prototype.forEach.call(document.querySelectorAll('script[src*="?v="]'), function (s) {
+      var m = String(s.getAttribute('src') || '').match(/([a-z0-9-]+)\.js\?v=(\d+)/i);
+      if (!m) return;
+      utolso = m;
+      if (m[1] === oldal) sajat = m;
+    });
+    var m2 = sajat || utolso;
+    el.textContent = '';
+    var b = document.createElement('b');
+    b.textContent = m2 ? (m2[1] + '.js v' + m2[2]) : 'ismeretlen verzió';
+    el.appendChild(b);
+    el.appendChild(document.createElement('br'));
+    el.appendChild(document.createTextNode('a betöltött kód'));
+    el.title = m2
+      ? 'Ez a szkript fut most. Ha egy javítás után nem ez a szám látszik, a böngésző gyorstárazott kódot futtat — Ctrl+F5.'
+      : 'Nem találom a lap fő szkriptjét.';
+  }
+
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', verzioKiiras);
+  else verzioKiiras();
+
   window.UQAdminFejlec = { frissit: frissit, kijelentkezes: kijelentkezes, esc: esc, toast: toast };
 })();
