@@ -327,7 +327,7 @@
       uj._voltAg = true;
       uj.branches.push({ label: e.ag.label || '', to: s, key: e.ag.key || '' });
     }
-    renderPrev(); renderBranches(); renderPrev(); renderRoutes(); saveCourse();
+    renderBranches(); renderPrev(); renderRoutes(); saveCourse();
   });
 
   document.addEventListener('click', function (ev) {
@@ -340,26 +340,43 @@
       var i = (forras.branches || []).indexOf(e.ag);
       if (i > -1) forras.branches.splice(i, 1);
       forras._voltAg = true;
-      renderPrev(); renderBranches(); renderPrev(); renderRoutes(); saveCourse();
+      renderBranches(); renderPrev(); renderRoutes(); saveCourse();
       return;
     }
 
     var add = ev.target.closest ? ev.target.closest('#edAddPrev') : null;
     if (add) {
       var st = state[current]; if (!st) return;
-      /* Alapértelmezés: az ELŐZŐ állomás a listában — ez a leggyakoribb eset,
-         és így egy kattintással kész, ha csak meg akarod erősíteni a sorrendet. */
-      var alap = current > 0 ? current - 1 : (state.length > 1 ? 1 : -1);
-      if (alap < 0 || !state[alap]) { toast('Ehhez legalább két állomás kell', { type: 'warn' }); return; }
-      var p = state[alap];
-      if (elozmenyek(st).some(function (x) { return x.honnan === alap; })) {
-        toast('Ez az állomás már előzmény', { type: 'info', sub: p.name });
+
+      /* Az első SZABAD állomást ajánljuk fel, nem vakon a listában előzőt.
+         Korábban mindig a `current - 1` volt a jelölt, és ha az már előzmény
+         volt, a gomb egy villanó üzenettel nem csinált semmit — a MÁSODIK
+         előzményt (amivel a két ág összeér) így nem lehetett felvenni.
+         A sorrendben előző a legvalószínűbb, ezért azzal kezdjük a keresést,
+         de ha foglalt, továbblépünk a többire. */
+      var mar = {};
+      elozmenyek(st).forEach(function (x) { mar[x.honnan] = true; });
+
+      var jeloltek = [];
+      if (current > 0) jeloltek.push(current - 1);
+      state.forEach(function (_, i) { if (jeloltek.indexOf(i) < 0) jeloltek.push(i); });
+
+      var alap = -1;
+      for (var j = 0; j < jeloltek.length; j++) {
+        var i2 = jeloltek[j];
+        if (state[i2] !== st && !mar[i2]) { alap = i2; break; }
+      }
+
+      if (alap < 0) {
+        toast(state.length < 2 ? 'Ehhez legalább két állomás kell'
+                               : 'Már minden állomás előzmény', { type: 'warn' });
         return;
       }
+      var p = state[alap];
       p.branches = p.branches || [];
       p._voltAg = true;
       p.branches.push({ label: '', to: st, key: '' });
-      renderPrev(); renderBranches(); renderPrev(); renderRoutes(); saveCourse();
+      renderBranches(); renderPrev(); renderRoutes(); saveCourse();
     }
   });
 
