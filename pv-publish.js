@@ -493,7 +493,11 @@ window.PVP = (function () {
     return UQAPI.rest('/rpc/import_course', { method: 'POST', body: { p: payload } })
       .then(function (r) {
         var v = Array.isArray(r) ? r[0] : r;
-        /* befagyasztott verzió is készül, hogy azonnal játszható legyen */
+        /* Befagyasztott SZERKESZTÉSI verzió is készül, hogy az előnézet
+           azonnal működjön. ÉLESRE ez NEM teszi: ahhoz a Játékok (vagy a
+           Feladatok) oldal Közzététel gombja kell, ami a course_lint kapuján
+           átmenve állítja be az élő verziót. A komment korábban azt írta,
+           hogy „azonnal játszható" — ez nem volt igaz. */
         return UQAPI.rest('/rpc/publish_course', { method: 'POST', body: { p_course: v.course_id } })
           .then(function () { return v; })
           .catch(function () { return v; });   // a mentés ettől még sikeres

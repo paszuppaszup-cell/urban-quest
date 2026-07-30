@@ -1118,13 +1118,30 @@
     const cel = CEL_PALYA || (TASKS[0] || {}).courseId;
     if (!cel) { toast('Nincs mit közzétenni', { type: 'error', sub: 'Előbb válassz játékot a Játékok oldalon.' }); return; }
     const nev = (TASKS.find(t => String(t.courseId) === String(cel)) || {}).route || 'A játék';
-    UQAPI.rest('/rpc/publish_course', { method: 'POST', body: { p_course: cel } })
+
+    /* A p_go_live NEM elhagyható. Enélkül a hívás CSAK befagyaszt egy
+       szerkesztési verziót, a játékosok viszont továbbra sem látnak semmit —
+       a felület mégis „Közzétéve"-t írt ki. Ettől lett a KÖZPÉNZ NYOMÁBAN
+       pályának 146 verziója és EGYETLEN élő verziója sem: a szerző nyomta a
+       gombot, a gomb sikert jelzett, a játékban semmi nem változott. */
+    toast('Közzététel…', { type: 'info', sub: nev + ' — ellenőrzés és befagyasztás' });
+    UQAPI.rest('/rpc/publish_course', { method: 'POST', body: { p_course: cel, p_go_live: true } })
       .then(r => {
         const v = Array.isArray(r) ? r[0] : r;
         const figy = (v && v.warnings && v.warnings.length) ? ' — figyelmeztetés: ' + v.warnings.join('; ') : '';
-        toast('Közzétéve', { sub: nev + ' (v' + (v && v.version) + ')' + figy });
+        toast('Közzétéve', { sub: nev + ' (v' + (v && v.version) + ') — a játékosok is ezt látják' + figy });
       })
-      .catch(hibaToast);
+      .catch(e => {
+        /* A szerver a course_lint akadályaival utasítja el. Ezt olvashatóan
+           kell elétenni, különben a szerző csak annyit lát, hogy „nem sikerült". */
+        const m = String((e && e.message) || '');
+        const kapu = m.match(/^A pálya így nem tehető közzé:\s*([\s\S]+)$/);
+        if (!kapu) { hibaToast(e); return; }
+        const lista = kapu[1].split(' | ').map(x => x.trim()).filter(Boolean);
+        toast('A pálya még nem tehető közzé', { type: 'warn',
+          sub: lista.slice(0, 4).map(x => '• ' + x).join('\n') +
+               (lista.length > 4 ? '\n• …és még ' + (lista.length - 4) + ' dolog' : '') });
+      });
   }
   document.getElementById('btnPublish').addEventListener('click', palyatKozzetesz);
 
