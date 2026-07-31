@@ -152,6 +152,25 @@
 .jtk-fg-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .jtk-count { align-self: flex-end; font-size: 10.5px; color: var(--dim); margin-top: -1px; }
 
+/* Kapcsoló-sor a pálya-űrlapon (pl. „az állomás nagy képe látszik").
+   A .jtk-fg > label szabály minden közvetlen label-t mezőcímkének stílusoz,
+   ezért ez a sor SAJÁT szabályt kap — különben halvány, apró feliratnak
+   látszana, nem kattintható vezérlőnek. */
+.jtk-fg > label.jtk-kapcsolo {
+  font-size: 13px; color: var(--text); font-weight: 500;
+  align-items: center; gap: 10px; cursor: pointer;
+  padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px;
+  background: rgb(255 255 255 / .02);
+  transition: border-color .14s ease, background .14s ease;
+}
+.jtk-fg > label.jtk-kapcsolo:hover { border-color: var(--text-2); background: rgb(255 255 255 / .04); }
+.jtk-kapcsolo input[type="checkbox"] {
+  width: 17px; height: 17px; flex: none; margin: 0;
+  accent-color: var(--lime, #9ed52b); cursor: pointer;
+}
+.jtk-kapcsolo input:focus-visible { outline: 2px solid var(--lime, #9ed52b); outline-offset: 2px; }
+.jtk-sugo { font-size: 10.5px; line-height: 1.45; color: var(--dim); }
+
 /* a fiók-mezők az .ed-field alapstílust használják, pár kiegészítéssel */
 .jtk-drawer .ed-field { min-height: 38px; }
 .jtk-drawer .ed-field textarea { padding: 9px 0; }

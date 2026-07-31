@@ -79,6 +79,9 @@
   function clone(o) { try { return JSON.parse(JSON.stringify(o)); } catch (e) { return Object.assign({}, o); } }
 
   var COURSES_INDEX = [];       // [{id, name}]
+  /* Látszik-e a nagy állomás-képsáv a végigjátszás-előnézetben.
+     A pálya beállítása (courses.show_station_image) dönti el. */
+  var ALLOMAS_KEP = true;
   var currentCourseId = null;
   var currentGame = '';          // megjelenítendő név (a fejléchez, modalhoz)
 
@@ -603,6 +606,7 @@
         var cmName = $('#cmName'); if (cmName) cmName.value = currentGame;
         var sel = $('#admGameSelect'); if (sel) sel.value = courseId;
         allapotKiiras();
+        ALLOMAS_KEP = !(idx && idx.show_station_image === false);
         refreshActiveTab();
         if (map) {
           setTimeout(function () {
@@ -1415,7 +1419,17 @@
     const total = play.stationTasks.length;
     const tno = Math.min(play.taskIdx + 1, total);
     let h = '<div class="uq-pl-card">';
-    h += '<div class="uq-pl-hero" style="background:' + hatterAttr(s.img) + '"><span class="uq-pl-badge"><svg class="ico ico-xs" aria-hidden="true"><use href="#' + (s.type === 'Döntési pont' ? 'a-diamond' : 'a-pin') + '"/></svg>' + play.path.length + '. állomás</span><span class="uq-pl-type">' + esc(s.type) + '</span></div>';
+    /* A nagy állomás-képsáv pályánként kikapcsolható (show_station_image).
+       Az ELŐNÉZETNEK is követnie kell, különben a szerző kikapcsolja, és
+       pont azon a képernyőn nem lát változást, ami miatt kikapcsolta. */
+    var jelvenyek =
+      '<span class="uq-pl-badge"><svg class="ico ico-xs" aria-hidden="true"><use href="#' +
+        (s.type === 'Döntési pont' ? 'a-diamond' : 'a-pin') + '"/></svg>' +
+        play.path.length + '. állomás</span>' +
+      '<span class="uq-pl-type">' + esc(s.type) + '</span>';
+    h += ALLOMAS_KEP
+      ? '<div class="uq-pl-hero" style="background:' + hatterAttr(s.img) + '">' + jelvenyek + '</div>'
+      : '<div class="uq-pl-hero uq-pl-hero-kep-nelkul">' + jelvenyek + '</div>';
     h += '<div class="uq-pl-body">';
     h += '<h3>' + esc(s.name) + '</h3>';
     h += '<p class="uq-pl-desc">' + esc(s.desc || 'Nincs leírás ehhez az állomáshoz.') + '</p>';
@@ -1939,7 +1953,7 @@
 
     UQAPI.isAdmin().then(function (admin) {
       if (!admin) { hiba('Nincs jogosultság', 'Ez a fiók nem admin.'); return; }
-      return UQAPI.rest('/v_admin_courses?select=id,name,status,van_elo_verzio&order=sort_order.asc,name.asc')
+      return UQAPI.rest('/v_admin_courses?select=id,name,status,van_elo_verzio,show_station_image&order=sort_order.asc,name.asc')
         .then(function (rows) {
           COURSES_INDEX = rows || [];
           if (!COURSES_INDEX.length) {

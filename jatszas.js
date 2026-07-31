@@ -156,6 +156,7 @@
   let RAW_COURSE = null;
   let COVER = '';               // a pálya borítóképe — az összegzőn jelenik meg
   let PINNED = false;           // a futó menet saját (nem feltétlen élő) verziója
+  let STATION_IMG = true;       // látszik-e a nagy állomás-képsáv (pályánkénti)
 
   function hibaKepernyo(cim, szoveg, gomb) {
     const root = document.getElementById('playRoot');
@@ -185,6 +186,7 @@
        a pálya mai állása. Ez a folytatáshoz helyes — új játékhoz viszont már
        nem az, ezért az „elölről" gomb újratölti a lapot. */
     PINNED = !!qc._pinned;
+    STATION_IMG = qc.showStationImage !== false;
   } else if (params.get('game') || params.get('route')) {
     /* Régi admin-előnézet hivatkozás. Eddig ilyenkor indult a demó. */
     hibaKepernyo('Ez a hivatkozás elavult',
@@ -1207,16 +1209,32 @@
     /* A háttér-érték idézőjelet tartalmaz — url("https://…") —, ami a
        style="…" attribútumot elvágta volna a kép URL-je előtt. A &quot; a
        HTML-elemzőn átjut, és a CSS már valódi idézőjelet lát. */
-    let h = '<div class="uq-pl-hero" style="background:' + hatterAttr(s.img || heroHatter(i)) + '">' +
-      '<span class="uq-pl-hero-fade" aria-hidden="true"></span>' +
-      '<span class="uq-pl-hero-in">' +
-        '<span class="uq-pl-badge">' +
-          '<svg class="ico ico-xs" aria-hidden="true"><use href="#' + (s.isDecision ? 'a-diamond' : 'a-pin') + '"/></svg>' +
-          play.path.length + '. állomás' +
+    const jelvenyIkon = s.isDecision ? 'a-diamond' : 'a-pin';
+    const jelveny =
+      '<span class="uq-pl-badge">' +
+        '<svg class="ico ico-xs" aria-hidden="true"><use href="#' + jelvenyIkon + '"/></svg>' +
+        play.path.length + '. állomás' +
+      '</span>';
+
+    /* A nagy képsáv PÁLYÁNKÉNT kikapcsolható (courses.show_station_image).
+       Több feladatos állomásnál feladatonként megismétlődött, és elvitte a
+       helyet a feladat elől. Kikapcsolva a kép marad el — az állomás
+       sorszáma és neve NEM, mert azokból tudja a csapat, hol van. */
+    let h;
+    if (STATION_IMG) {
+      h = '<div class="uq-pl-hero" style="background:' + hatterAttr(s.img || heroHatter(i)) + '">' +
+        '<span class="uq-pl-hero-fade" aria-hidden="true"></span>' +
+        '<span class="uq-pl-hero-in">' +
+          jelveny +
+          '<span class="uq-pl-hero-cim">' + esc(s.name) + '</span>' +
         '</span>' +
+      '</div>';
+    } else {
+      h = '<div class="uq-pl-fejlec">' +
+        jelveny +
         '<span class="uq-pl-hero-cim">' + esc(s.name) + '</span>' +
-      '</span>' +
-    '</div>';
+      '</div>';
+    }
 
     if (total) {
       const task = play.stationTasks[play.taskIdx];

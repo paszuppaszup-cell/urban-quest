@@ -88,6 +88,8 @@
       desc: r.summary || '',
       longDesc: r.about || '',
       subtitle: r.subtitle || '',
+      /* A hiányzó mező (régi sor) az EDDIGI viselkedést jelenti: látszik. */
+      stationImg: r.show_station_image !== false,
       diff: DIFF_LBL[r.difficulty] || 'Közepes',
       dur: ora,
       loc: [r.city, r.area].filter(Boolean).join(', '),
@@ -176,6 +178,7 @@
   const fStatus = document.getElementById('fStatus');
   const fAge = document.getElementById('fAge');
   const fSubtitle = document.getElementById('fSubtitle');
+  const fStationImg = document.getElementById('fStationImg');
   const fImage = document.getElementById('fImage');
   const fRating = document.getElementById('fRating');
   const fReviews = document.getElementById('fReviews');
@@ -535,6 +538,7 @@
     fStatus.value = STATUS[g.status].label; applyStatus(STATUS[g.status].label);
     fAge.value = g.age;
     fSubtitle.value = g.subtitle || '';
+    if (fStationImg) fStationImg.checked = g.stationImg !== false;
     fImage.value = g.image || '';
     temaBetolt(g);
     tartalomLinkek(g);
@@ -616,6 +620,9 @@
          pályánál eltért. A save_course `p ? 'summary'` őre miatt a hiányzó
          kulcs érintetlenül hagyja a mezőt. Új pályánál a newGame() adja meg. */
       subtitle: fSubtitle.value.trim(),
+      /* A végigjátszásban látszik-e a nagy állomás-képsáv. A név, a
+         sorszám és a leírás ettől függetlenül marad. */
+      show_station_image: fStationImg ? !!fStationImg.checked : true,
       difficulty: DIFF_DB[fDiff.value] || 'kozepes',
       category: fCategory.value || 'varosi',
       status: STATUS_DB[STATUS_BY_LABEL[fStatus.value] || 'draft'] || 'draft',

@@ -10,8 +10,8 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&family=Inter:wght@400..700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="styles.css?v=16">
-<link rel="stylesheet" href="admin.css?v=23">
-<link rel="stylesheet" href="jatekok.css?v=8">
+<link rel="stylesheet" href="admin.css?v=24">
+<link rel="stylesheet" href="jatekok.css?v=9">
 </head>
 <body class="admin-body">
 
@@ -204,6 +204,18 @@
       <div class="jtk-fg">
         <label>Alcím</label>
         <div class="ed-field"><input type="text" id="fSubtitle" value="Fedezd fel a park rejtett kincseit." maxlength="120"></div>
+      </div>
+
+      <!-- A végigjátszás kinézete. A nagy állomás-képsáv több feladatos
+           állomásnál feladatonként megismétlődött, és elvitte a helyet a
+           feladat elől — ezért kapcsolható. -->
+      <div class="jtk-fg">
+        <label>Végigjátszás</label>
+        <label class="jtk-kapcsolo" for="fStationImg">
+          <input type="checkbox" id="fStationImg" checked>
+          <span>Az állomás nagy képe látszik a feladatoknál</span>
+        </label>
+        <span class="jtk-sugo">Kikapcsolva az állomás sorszáma, neve és leírása marad — csak a képsáv tűnik el.</span>
       </div>
 
       <div class="jtk-fg">
@@ -403,7 +415,7 @@
 <script src="uq-api.js?v=7"></script>
 <script src="uq-tema.js?v=3"></script>
 <script src="uq-imgprompt.js?v=3"></script>
-<script src="jatekok.js?v=16"></script>
+<script src="jatekok.js?v=17"></script>
 <script src="uq-admin-fejlec.js?v=2"></script>
 </body>
 </html>

@@ -15,7 +15,7 @@
 (function () {
   'use strict';
 
-  var LEJATSZO = 'jatszas.js?v=20';
+  var LEJATSZO = 'jatszas.js?v=21';
   var CACHE_ELO = 'uq_bundle_';           // offline tartalék pályánként
 
   var DIFF_LABEL = { konnyu: 'Könnyű', kozepes: 'Közepes', nehez: 'Nehéz', extrem: 'Extrém' };
@@ -117,7 +117,11 @@
       /* a szerveroldali menet-rögzítéshez (sync_batch): melyik pálya
          melyik befagyasztott verzióját játssza a csapat */
       _courseId: bundle.course && bundle.course.id,
-      _versionId: bundle.course && bundle.course.version_uuid
+      _versionId: bundle.course && bundle.course.version_uuid,
+      /* Látszik-e a nagy állomás-képsáv a végigjátszásban. A régi, még újra
+         nem publikált csomagokban nincs benne a mező — ott a korábbi
+         viselkedés marad (látszik). */
+      showStationImage: !(bundle.course && bundle.course.show_station_image === false)
     };
   }
 
