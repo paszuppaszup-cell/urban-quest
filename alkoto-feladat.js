@@ -97,15 +97,30 @@
      ütközött magával), és a szerző egy hibadobozt kapott, pedig nem csinált
      semmi rosszat. Ha közben újabb kérés kellene, csak megjegyezzük, és a futó
      után indítjuk. */
-  var elonezetFut = false, elonezetVar = false;
+  var elonezetFut = false, elonezetVar = false, piszkos = true;
 
   function keretUjratolt() {
     if (!palya) return;
     if (elonezetFut) { elonezetVar = true; return; }
+
+    /* ÚJRAFAGYASZTÁS CSAK AKKOR, HA VÁLTOZOTT VALAMI.
+
+       Minden preview_course egy TELJES új verziót ír a course_versions-be a
+       hozzá tartozó válasz- és pontozó-sorokkal együtt. Amíg minden
+       koppintásra hívtuk, egyetlen hétállomásos próbapálya 141 verziót
+       hagyott maga után — állomásváltásra és feladatváltásra is, pedig
+       olyankor egy adat sem változott. A verziószám `max(version)+1`, a
+       (course_id, version) pár pedig egyedi: két egymásra futó hívás emiatt
+       ütközik, és ez adta a mért HTTP 409-et is.
+
+       Ha nem mentettünk a legutóbbi fagyasztás óta, elég a keret címét
+       átállítani — a befagyasztott csomag változatlanul érvényes. */
+    if (!piszkos) { $('#tolt').hidden = false; $('#emulator').src = keretUrl(); return; }
+
     elonezetFut = true;
     $('#tolt').hidden = false;
     UQAPI.rest('/rpc/preview_course', { method: 'POST', body: { p_course: palya.id } })
-      .then(function () { $('#emulator').src = keretUrl(); })
+      .then(function () { piszkos = false; $('#emulator').src = keretUrl(); })
       .catch(function (e) { $('#tolt').hidden = true; hiba(e); })
       .then(function () {
         elonezetFut = false;
@@ -584,6 +599,7 @@
     var sor = el('div', 'alk-p-gombok alk-p-gombok-veg'); p.appendChild(sor);
     var t = gomb(sor, 'Feladat törlése', false, function () {
       if (!window.confirm('Törlöd ezt a feladatot? Nincs visszavonás.')) return;
+      piszkos = true;
       UQAPI.rest('/rpc/delete_task', { method: 'POST', body: { p_task: f.id } })
         .then(function () { aktivFeladat = 0; return feladatokTolt(); })
         .then(function () { feladatSav(); keretUjratolt(); panelZar(); })
@@ -743,6 +759,7 @@
      javítja, áthelyezni nem tud. Az állomást egyedül a létrehozás dönti el
      (ujFeladat), ott viszont muszáj megadni. */
   function ment(p) {
+    piszkos = true;                 // innentől kell friss előnézeti verzió
     if (p._allomas) {
       delete p._allomas;
       return UQAPI.rest('/rpc/save_station', { method: 'POST', body: { p: p } });
