@@ -716,6 +716,32 @@
     renderPlay();
   }
 
+  /* ELŐNÉZET: ugrás egy adott állomás adott feladatára.
+
+     Az Alkotó telefon-emulátora ezt használja: a szerző egy feladatot
+     szerkeszt, és rögtön AZT a képernyőt akarja látni, nem a pálya elejét.
+     Végigjátszani érte az egészet használhatatlan volna.
+
+     Csak előnézetben él, és csak megjelenítésre: pontot nem ad, a szerverre
+     nem küld eseményt (a syncInit előnézetben úgysem kapcsol be, mert a
+     csomagnak nincs élő verziója). */
+  function elonezetUgras() {
+    if (!ELONEZET) return false;
+    const a = parseInt(params.get('allomas'), 10);
+    if (!(a >= 0 && a < COURSE.length)) return false;
+
+    play.active = true; play.finished = false; play.view = 'station';
+    play.path = [a]; play.points = 0; play.hintCost = 0; play.hintsUsed = [];
+    play.solvedIds = []; play.done = 0; play.skipped = 0;
+    play.result = null; play.decOpts = []; play.pv = {};
+    play.stationTasks = stationPlayTasks(a);
+    const f = parseInt(params.get('feladat'), 10);
+    play.taskIdx = (f >= 0 && f < play.stationTasks.length) ? f : 0;
+    play.startTs = Date.now(); play.finalMs = 0;
+    renderPlay();
+    return true;
+  }
+
   /* folytatás mentett állapotból */
   function playResume(state) {
     let idx = (state.path && state.path.length) ? state.path[state.path.length - 1] : 0;
@@ -1933,6 +1959,8 @@
     return '<ol class="uq-play-steps">' + items + '</ol>';
   }
 
-  /* --- indítás: intro (a játék nevével), Indítás gombra végigjátszás --- */
-  renderPlay();
+  /* --- indítás: intro (a játék nevével), Indítás gombra végigjátszás.
+         Előnézetben, ha kértek konkrét állomást, egyből oda ugrunk — az
+         Alkotó telefon-emulátora így egy feladat képernyőjét mutatja. --- */
+  if (!elonezetUgras()) renderPlay();
 })();
