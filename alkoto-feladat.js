@@ -24,7 +24,7 @@
 
   var palya = null, allomasok = [], feladatok = [];
   var aktivAllomas = 0, aktivFeladat = 0;
-  var mentesOra = null, ujratoltOra = null, meresOra = null, figyelo = null;
+  var ujratoltOra = null, meresOra = null, toltOra = null, figyelo = null;
   var nyitottZona = null;
 
   function $(s) { return document.querySelector(s); }
@@ -80,14 +80,27 @@
 
   /* A lejátszó a BEFAGYASZTOTT verziót játssza, nem a nyers táblákat —
      ezért minden újratöltés előtt friss előnézeti verziót kérünk. Enélkül a
-     szerző a saját, két perce elmentett szövegét sem látná. */
+     szerző a saját, két perce elmentett szövegét sem látná.
+
+     EGYSZERRE CSAK EGY előnézet-kérés lehet úton. Az éles próbán két egymásra
+     futó preview_course közül a második HTTP 409-cel elszállt (a verzió-befagyasztás
+     ütközött magával), és a szerző egy hibadobozt kapott, pedig nem csinált
+     semmi rosszat. Ha közben újabb kérés kellene, csak megjegyezzük, és a futó
+     után indítjuk. */
+  var elonezetFut = false, elonezetVar = false;
+
   function keretUjratolt() {
     if (!palya) return;
+    if (elonezetFut) { elonezetVar = true; return; }
+    elonezetFut = true;
     $('#tolt').hidden = false;
-    zonakTorol();
     UQAPI.rest('/rpc/preview_course', { method: 'POST', body: { p_course: palya.id } })
       .then(function () { $('#emulator').src = keretUrl(); })
-      .catch(function (e) { $('#tolt').hidden = true; hiba(e); });
+      .catch(function (e) { $('#tolt').hidden = true; hiba(e); })
+      .then(function () {
+        elonezetFut = false;
+        if (elonezetVar) { elonezetVar = false; keretUjratolt(); }
+      });
   }
 
   function keretUjratoltKesobb() {
@@ -100,10 +113,16 @@
   }
 
   function keretKesz() {
-    $('#tolt').hidden = true;
-    meresKesobb(300);
-    /* A lejátszó a betöltés után is átrajzolja magát (válaszmező, GPS-doboz).
-       Kézi időzítés helyett figyeljük a tényleges változást. */
+    /* A betöltés-jelző CSAK akkor tűnhet el, ha a zónák már a helyükön vannak.
+       Korábban azonnal eltűnt, és maradt egy fél másodperces ablak, amikor a
+       keret látszott, de semmire nem lehetett koppintani — a szerző hiába
+       nyúlt a képhez. */
+    meresKesobb(120);
+    /* Biztonsági háló: ha valamiért egyetlen zóna sem mérhető (üres állomás,
+       hibás render), a jelző akkor se ragadjon bent örökre. */
+    if (toltOra) clearTimeout(toltOra);
+    toltOra = setTimeout(function () { $('#tolt').hidden = true; }, 6000);
+
     var doc = keretDoc();
     if (figyelo) { figyelo.disconnect(); figyelo = null; }
     if (doc && doc.body && window.MutationObserver) {
@@ -137,14 +156,13 @@
       potHely: '.uq-pl-akcio', potMagas: 44, potAlul: true }
   ];
 
-  function zonakTorol() { $('#zonak').innerHTML = ''; }
-
   function zonakRajzol() {
     var host = $('#zonak');
-    host.innerHTML = '';
     var doc = keretDoc();
     if (!doc || !doc.body) return;
     var magas = $('#emulator').clientHeight;
+    var db = 0;
+    host.innerHTML = '';
 
     ZONAK.forEach(function (z) {
       var e = doc.querySelector(z.valaszto), r = null;
@@ -163,6 +181,7 @@
       if (r.height < 4 || r.width < 4) return;
       if (r.top + r.height < 4 || r.top > magas - 4) return;   // kigörgetett
 
+      db++;
       var g = el('button', 'alk-zona alk-zona-' + z.kulcs + (nyitottZona === z.kulcs ? ' is-nyitva' : ''));
       g.type = 'button';
       g.style.top = Math.round(r.top) + 'px';
@@ -173,6 +192,10 @@
       g.addEventListener('click', function () { panelNyit(z.kulcs); });
       host.appendChild(g);
     });
+
+    /* Amíg nincs mire koppintani, maradjon fent a betöltés-jelző: jobb egy
+       őszinte „Betöltés…", mint egy kész képernyő, ami nem reagál. */
+    if (db > 0) $('#tolt').hidden = true;
   }
 
   /* A keret nem kattintható, ezért a görgetést nekünk kell továbbadni. */
@@ -318,11 +341,17 @@
   }
 
   /* Automatikus mentés — telefonon a legkönnyebb elnavigálni egy mentetlen
-     űrlapról, ezért nem bízzuk gombra. */
+     űrlapról, ezért nem bízzuk gombra.
+
+     MINDEN panel SAJÁT időzítőt kap. Korábban egy közös `mentesOra` volt, és ha
+     a szerző a kérdés begépelése után 700 ezredmásodpercen belül átment a válasz
+     panelre, a kérdés mentése törlődött, mielőtt elsült volna — a beírt szöveg
+     szó nélkül elveszett. */
   function automent(mezok, epit) {
+    var ora = null;
     function fut() {
-      if (mentesOra) clearTimeout(mentesOra);
-      mentesOra = setTimeout(function () {
+      if (ora) clearTimeout(ora);
+      ora = setTimeout(function () {
         var p = epit();
         if (!p) return;
         jelez('mentés…');
@@ -610,12 +639,21 @@
      ADATRÉTEG
      ===================================================================== */
 
+  /* MÉRT HIBA VOLT, nem elméleti: a szerkesztőmező elhagyásakor a böngésző még
+     küld egy natív `change` eseményt, az újraindítja a késleltetett mentést, és
+     az MÁR az időközben kiválasztott állomással futott le. A save_task pedig a
+     station_id-t „rakd át ide" utasításnak veszi — így a feladat átugrott a
+     szomszéd állomásra. Egy éles próbán kilencből hat feladat csúszott el.
+
+     Ezért LÉTEZŐ feladatnál nem küldünk station_id-t: a mentés csak a mezőket
+     javítja, áthelyezni nem tud. Az állomást egyedül a létrehozás dönti el
+     (ujFeladat), ott viszont muszáj megadni. */
   function ment(p) {
     if (p._allomas) {
       delete p._allomas;
       return UQAPI.rest('/rpc/save_station', { method: 'POST', body: { p: p } });
     }
-    p.station_id = allomasok[aktivAllomas].id;
+    if (!p.id) p.station_id = allomasok[aktivAllomas].id;
     return UQAPI.rest('/rpc/save_task', { method: 'POST', body: { p: p } });
   }
 
