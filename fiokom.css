@@ -706,3 +706,14 @@
   .fk-stats b { font-size: 17px; }
   .fk-greet h1, .fk-head h1 { font-size: 21px; }
 }
+
+/* Belépés az Alkotó felületre. Nem „fül": elnavigál egy másik oldalra,
+   ezért vizuálisan is elkülönül a többitől. */
+.fiok-tab-alkoto {
+  margin-top: 6px;
+  border-top: 1px solid var(--line-soft);
+  padding-top: 12px !important;
+  color: var(--lime) !important;
+}
+.fiok-tab-alkoto .ico { color: var(--lime); }
+.fiok-tab-alkoto:hover { background: rgb(var(--lime-rgb) / .08); }

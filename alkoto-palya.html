@@ -5,12 +5,13 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta name="description" content="Urban Quest – készítsd el a saját városi kalandodat.">
-<title>Alkotó – A pályáim | Urban Quest</title>
+<title>Alkotó – Állomások | Urban Quest</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&family=Inter:wght@400..700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="styles.css?v=16">
 <link rel="stylesheet" href="admin.css?v=24">
+<link rel="stylesheet" href="vendor/leaflet/leaflet.css">
 <link rel="stylesheet" href="alkoto.css?v=2">
 </head>
 <body class="admin-body alkoto-body">
@@ -106,8 +107,8 @@
   <aside class="adm-side alk-side" id="admSide">
     <button class="adm-collapse" type="button" data-side-toggle aria-label="Oldalsáv összecsukása"><svg class="ico ico-sm" aria-hidden="true"><use href="#a-menu"/></svg></button>
     <nav class="adm-nav">
-      <a class="adm-nav-item is-active" href="alkoto.html" data-label="Játékok"><svg class="ico" aria-hidden="true"><use href="#a-game"/></svg><span class="adm-nav-txt">Játékok</span></a>
-      <a class="adm-nav-item" href="alkoto-palya.html" data-label="Pályák"><svg class="ico" aria-hidden="true"><use href="#a-map"/></svg><span class="adm-nav-txt">Pályák</span></a>
+      <a class="adm-nav-item" href="alkoto.html" data-label="Játékok"><svg class="ico" aria-hidden="true"><use href="#a-game"/></svg><span class="adm-nav-txt">Játékok</span></a>
+      <a class="adm-nav-item is-active" href="alkoto-palya.html" data-label="Pályák"><svg class="ico" aria-hidden="true"><use href="#a-map"/></svg><span class="adm-nav-txt">Pályák</span></a>
       <a class="adm-nav-item" href="alkoto-feladat.html" data-label="Feladatok"><svg class="ico" aria-hidden="true"><use href="#a-task"/></svg><span class="adm-nav-txt">Feladatok</span></a>
     </nav>
     <div class="adm-side-foot">
@@ -118,91 +119,42 @@
 
     <div class="alk-fejsor">
       <div>
-        <h1 class="alk-cim">A pályáim</h1>
-        <p class="alk-alcim">Itt írhatod meg a saját városi kalandodat. Ha kész, beküldöd jóváhagyásra — utána bárki játszhatja.</p>
+        <h1 class="alk-cim">Állomások</h1>
+        <p class="alk-alcim" id="palyaNev">—</p>
       </div>
-      <button class="adm-btn adm-btn-lime" type="button" id="ujPalya">
-        <svg class="ico ico-sm" aria-hidden="true"><use href="#a-plus"/></svg>Új pálya
-      </button>
+      <div class="alk-szamlalo" id="szamlalo"><b>0</b><span>állomás</span></div>
     </div>
 
-    <div class="alk-lista" id="palyaLista"></div>
+    <div id="nincsPalya" class="alk-ures" hidden>
+      <b>Előbb válassz pályát</b>
+      <p>A Játékok menüpontban hozz létre egy kalandot, vagy válaszd ki, amelyiken dolgozni szeretnél.</p>
+      <a class="adm-btn adm-btn-lime" href="alkoto.html">Vissza a pályáimhoz</a>
+    </div>
 
-    <!-- a kiválasztott pálya adatai -->
-    <section class="alk-panel" id="palyaPanel" hidden>
-      <div class="alk-panel-fej">
-        <h2 id="panelCim">A pálya adatai</h2>
-        <span class="alk-mentve" id="mentveJelzes" hidden>elmentve</span>
-      </div>
+    <div class="alk-terkep-reteg" id="szerkeszto" hidden>
 
-      <div class="alk-mezok">
-        <label class="alk-mezo alk-szeles">
-          <span>A kaland neve</span>
-          <input type="text" id="fNev" maxlength="80" placeholder="pl. A Duna titkai" autocomplete="off">
-        </label>
-        <label class="alk-mezo alk-szeles">
-          <span>Rövid összefoglaló <small>ez látszik a küldetés kártyáján</small></span>
-          <textarea id="fOsszefoglalo" rows="2" maxlength="240" placeholder="Egy mondat arról, mire számítson a játékos."></textarea>
-        </label>
-        <label class="alk-mezo alk-szeles">
-          <span>Leírás <small>a küldetés oldalán jelenik meg</small></span>
-          <textarea id="fLeiras" rows="4" maxlength="1200" placeholder="Miről szól a kaland? Kinek ajánlod?"></textarea>
-        </label>
-        <label class="alk-mezo">
-          <span>Nehézség</span>
-          <select id="fNehezseg">
-            <option value="konnyu">Könnyű</option>
-            <option value="kozepes" selected>Közepes</option>
-            <option value="nehez">Nehéz</option>
-            <option value="extrem">Extrém</option>
-          </select>
-        </label>
-        <label class="alk-mezo">
-          <span>Kategória</span>
-          <select id="fKategoria">
-            <option value="varosi" selected>Városi</option>
-            <option value="tortenelmi">Történelmi</option>
-            <option value="kaland">Kaland</option>
-            <option value="csaladi">Családi</option>
-            <option value="horror">Horror</option>
-          </select>
-        </label>
-        <label class="alk-mezo">
-          <span>Város</span>
-          <input type="text" id="fVaros" maxlength="60" placeholder="Budapest" autocomplete="off">
-        </label>
-        <label class="alk-mezo">
-          <span>Hány fő játssza?</span>
-          <span class="alk-parban">
-            <input type="number" id="fCsapatMin" min="1" max="20" value="2" aria-label="legalább">
-            <em>–</em>
-            <input type="number" id="fCsapatMax" min="1" max="20" value="6" aria-label="legfeljebb">
-          </span>
-        </label>
-      </div>
+      <!-- kereső -->
+      <form class="alk-kereso" id="keresoUrlap" autocomplete="off">
+        <svg class="ico ico-sm" aria-hidden="true"><use href="#a-search"/></svg>
+        <input type="search" id="keresoMezo" placeholder="Keress rá egy helyre — pl. Hősök tere" aria-label="Helyszín keresése">
+        <button class="adm-btn" type="submit" id="keresoGomb">Keresés</button>
+      </form>
+      <div class="alk-talalatok" id="talalatok" hidden></div>
 
-      <div class="alk-borito">
-        <span class="alk-mezo-cim">Borítókép</span>
-        <div class="alk-borito-doboz">
-          <div class="alk-borito-kep" id="boritoKep"><span>Nincs kép</span></div>
-          <div class="alk-borito-gombok">
-            <button class="adm-btn" type="button" id="boritoFeltolt"><svg class="ico ico-sm" aria-hidden="true"><use href="#a-image"/></svg>Kép feltöltése</button>
-            <button class="adm-btn" type="button" id="boritoTorol" hidden>Törlés</button>
-            <input type="file" id="boritoInput" accept="image/jpeg,image/png,image/webp,image/avif" hidden>
-            <p class="alk-sugo">JPG, PNG vagy WEBP, legfeljebb 10 MB. A jóváhagyás előtt a szerkesztő megnézi.</p>
-          </div>
-        </div>
-      </div>
+      <p class="alk-terkep-sugo">
+        <svg class="ico ico-xs" aria-hidden="true"><use href="#a-pin"/></svg>
+        Koppints a térképre, ahol állomást szeretnél. A jelölőt utólag is odébb húzhatod.
+      </p>
 
-      <div class="alk-allapot" id="allapotSav"></div>
+      <div class="alk-terkep" id="terkep"></div>
+
+      <div class="alk-allomasok" id="allomasLista"></div>
 
       <div class="alk-muveletek">
-        <a class="adm-btn" id="tovabbPalyak" href="alkoto-palya.html"><svg class="ico ico-sm" aria-hidden="true"><use href="#a-map"/></svg>Állomások szerkesztése</a>
-        <a class="adm-btn" id="tovabbFeladatok" href="alkoto-feladat.html"><svg class="ico ico-sm" aria-hidden="true"><use href="#a-task"/></svg>Feladatok</a>
-        <a class="adm-btn" id="kiprobal" href="#" target="_blank" rel="noopener"><svg class="ico ico-sm" aria-hidden="true"><use href="#a-play"/></svg>Próbáld ki</a>
-        <button class="adm-btn adm-btn-lime" type="button" id="bekuld"><svg class="ico ico-sm" aria-hidden="true"><use href="#a-send"/></svg>Beküldés jóváhagyásra</button>
+        <a class="adm-btn" href="alkoto.html"><svg class="ico ico-sm" aria-hidden="true"><use href="#a-arrow-left"/></svg>Vissza az adatokhoz</a>
+        <a class="adm-btn adm-btn-lime" href="alkoto-feladat.html"><svg class="ico ico-sm" aria-hidden="true"><use href="#a-task"/></svg>Tovább a feladatokhoz</a>
       </div>
-    </section>
+    </div>
 
   </main>
 </div>
@@ -211,6 +163,7 @@
 <script src="uq-track.js?v=1"></script>
 <script src="uq-auth.js?v=7"></script>
 <script src="uq-admin-fejlec.js?v=1"></script>
-<script src="alkoto.js?v=1"></script>
+<script src="vendor/leaflet/leaflet.js"></script>
+<script src="alkoto-palya.js?v=1"></script>
 </body>
 </html>
