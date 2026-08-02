@@ -58,13 +58,23 @@
     { kind: 'qr',     nev: 'QR-kód',
       mit: 'A helyszínre kitett kódot kell beolvasni. A kódot NEKED kell kihelyezned.' },
     { kind: 'info',   nev: 'Csak olvasnivaló',
-      mit: 'Nincs megoldandó feladat: elolvassák, és mennek tovább. Történet elmeséléséhez való.' },
-    { kind: 'dontes', nev: 'Döntési pont',
-      mit: 'Itt kettéválik az útvonal. Ehhez az állomásból legalább két külön útnak kell indulnia — ' +
-           'azt az Állomások oldalon rajzolod meg.' }
+      mit: 'Nincs megoldandó feladat: elolvassák, és mennek tovább. Történet elmeséléséhez való.' }
+    /* „Döntési pont" SZÁNDÉKOSAN nincs a listában.
+
+       Az elágazás nem a feladat tulajdonsága, hanem az ÁLLOMÁSÉ: a lejátszó
+       kizárólag az állomás kimenő útjaiból (station_edges) dolgozik —
+       jatszas.js playAfterStation(), `const agak = (s.branches || [])`. A
+       feladat kind-ját ott semmi nem nézi.
+
+       Amíg felkínáltuk, egy ilyen feladat csak egy fölösleges „Teljesítés"
+       koppintást tett a döntés elé, és azt hitette a szerzővel, hogy ettől
+       lesz elágazás. Az éles próbán pontosan ez történt: a csapat előbb
+       lenyomott egy semmitmondó gombot, és csak utána jött a valódi
+       útválasztó képernyő. Az utakat az Állomások oldalon adja meg a szerző. */
   ];
   function tipus(k) {
     for (var i = 0; i < TIPUSOK.length; i++) if (TIPUSOK[i].kind === k) return TIPUSOK[i];
+    if (k === 'dontes') return { kind: k, nev: 'Döntési pont (elavult)', mit: '' };
     return { kind: k, nev: k || 'Feladat', mit: '' };
   }
 
@@ -326,6 +336,15 @@
       host.appendChild(el('span', 'alk-fsav-sugo',
         'Ezen az állomáson még nincs feladat — a csapat csak áthalad rajta.'));
     }
+
+    /* Döntési ponton szólunk, hogy az elágazás NEM itt készül: ez a
+       leggyakoribb félreértés, mert a szerző a feladatok között keresi. */
+    var a = allomasok[aktivAllomas];
+    if (a && a.kind === 'dontes') {
+      host.appendChild(el('span', 'alk-fsav-sugo',
+        'Ez döntési pont: az útvonalakat az Állomások oldalon adod meg, nem itt. ' +
+        'Feladat ide is tehető, de a választást az utak döntik el.'));
+    }
   }
 
   /* =====================================================================
@@ -499,8 +518,16 @@
     automent([q, pont], function () {
       var szoveg = q.value.trim();
       if (!szoveg) return null;                 // üres kérdést a szerver úgyis eldob
-      f.question = szoveg; f.points = pont.value;
-      return { id: f.id, question: szoveg, points: String(parseInt(pont.value, 10) || 0) };
+      f.question = szoveg;
+      var p = { id: f.id, question: szoveg };
+      /* A pontszámot CSAK akkor küldjük, ha tényleg van benne szám. Korábban
+         `parseInt(...) || 0` állt itt: ha a szerző kitörölte a mezőt, hogy
+         újat írjon, a közben elsülő mentés csendben NULLÁRA írta a feladat
+         értékét — és ha ott hagyta a lapot, úgy is maradt. Üres mezőnél most
+         inkább nem nyúlunk hozzá: a save_task részleges, a régi érték marad. */
+      var n = parseInt(pont.value, 10);
+      if (isFinite(n)) { f.points = n; p.points = String(Math.max(0, n)); }
+      return p;
     });
   }
 
@@ -610,9 +637,10 @@
       d.appendChild(el('p', 'alk-beall-sugo',
         'Nincs mit beállítani: a csapat elolvassa a kérdés mezőbe írt szöveget, és továbbmegy.'));
     } else if (kind === 'dontes') {
-      d.appendChild(el('p', 'alk-beall-sugo',
-        'Az útvonalakat az Állomások oldalon rajzolod meg. Ha ebből az állomásból nem indul ' +
-        'legalább két külön út, a pálya nem küldhető be jóváhagyásra.'));
+      d.appendChild(el('p', 'alk-beall-fig',
+        'Ez a feladat nem csinál semmit a játékban: az elágazást az állomás útjai döntik el, ' +
+        'nem a feladat. A csapat csak egy fölösleges gombot nyom meg tőle, mielőtt választhatna. ' +
+        'Nyugodtan töröld — az utakat az Állomások oldalon adod meg.'));
     }
 
     var mezok = [];
