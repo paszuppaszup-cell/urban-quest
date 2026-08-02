@@ -361,6 +361,10 @@
   function panelNyit(zona) {
     nyitottZona = zona;
     var p = $('#panel');
+    /* Az előző panel mezői eltűnnek, a hozzájuk tartozó függő mentések
+       időzítője viszont magától lefut — a nyilvántartást ürítjük, hogy ne
+       gyűljön. */
+    fuggoMentesek = [];
     p.innerHTML = ''; p.hidden = false; $('#panelUres').hidden = true;
     zonakRajzol();
 
@@ -409,24 +413,43 @@
      a szerző a kérdés begépelése után 700 ezredmásodpercen belül átment a válasz
      panelre, a kérdés mentése törlődött, mielőtt elsült volna — a beírt szöveg
      szó nélkül elveszett. */
+  var fuggoMentesek = [];
+
   function automent(mezok, epit) {
     var ora = null;
+    function most() {
+      if (ora) { clearTimeout(ora); ora = null; }
+      var p = epit();
+      if (!p) return;
+      jelez('mentés…');
+      ment(p).then(function () { jelez('mentve'); keretUjratoltKesobb(); })
+             .catch(function (e) { jelez(''); hiba(e); });
+    }
     function fut() {
       if (ora) clearTimeout(ora);
-      ora = setTimeout(function () {
-        var p = epit();
-        if (!p) return;
-        jelez('mentés…');
-        ment(p).then(function () { jelez('mentve'); keretUjratoltKesobb(); })
-               .catch(function (e) { jelez(''); hiba(e); });
-      }, 700);
+      ora = setTimeout(most, 700);
     }
+    /* Ha a szerző a gépelés után AZONNAL elnavigál (telefonon ez a tipikus
+       mozdulat: beír, majd koppint a „Vissza az állomásokhoz" gombra), a
+       700 ezredmásodperces várakozás sosem járna le, és a beírt szöveg szó
+       nélkül elveszne. Lapelhagyáskor elsütjük a függőben lévőt. */
+    fuggoMentesek.push(function () { if (ora) most(); });
+
     mezok.forEach(function (m) {
       if (!m) return;
       m.addEventListener('input', fut);
       m.addEventListener('change', fut);
     });
   }
+
+  function fuggokElsutese() {
+    var lista = fuggoMentesek.slice();
+    lista.forEach(function (fn) { try { fn(); } catch (e) {} });
+  }
+  window.addEventListener('pagehide', fuggokElsutese);
+  document.addEventListener('visibilitychange', function () {
+    if (document.visibilityState === 'hidden') fuggokElsutese();
+  });
 
   function jelez(szo) {
     var e = $('#mentesJelzo');

@@ -369,10 +369,14 @@
     return d;
   }
 
-  var agOrak = {};
+  var agOrak = {}, fuggoAgak = {};
   function agakUtemez(a) {
     if (agOrak[a.id]) clearTimeout(agOrak[a.id]);
-    agOrak[a.id] = setTimeout(function () { agakMent(a); }, 700);
+    fuggoAgak[a.id] = a;
+    agOrak[a.id] = setTimeout(function () {
+      delete fuggoAgak[a.id];
+      agakMent(a);
+    }, 700);
   }
 
   function agakMent(a) {
@@ -391,11 +395,39 @@
   /* ÁLLOMÁSONKÉNT külön időzítő. Egy közös időzítővel, ha a szerző az egyik
      állomás nevét írta, majd 700 ezredmásodpercen belül a másikét, az első
      mentése törlődött, mielőtt elsült volna — és szó nélkül elveszett. */
-  var mentOrak = {};
+  var mentOrak = {}, fuggoAllomasok = {};
   function utemez(a) {
     if (mentOrak[a.id]) clearTimeout(mentOrak[a.id]);
-    mentOrak[a.id] = setTimeout(function () { mentAllomas(a); }, 700);
+    fuggoAllomasok[a.id] = a;
+    mentOrak[a.id] = setTimeout(function () {
+      delete fuggoAllomasok[a.id];
+      mentAllomas(a);
+    }, 700);
   }
+
+  /* Lapelhagyáskor minden függő mentést elsütünk — állomásnevet és leírást,
+     valamint az elágazás útjait is. Enélkül, ha a szerző gépelés után azonnal
+     a „Tovább a feladatokhoz" gombra koppint, a beírt szöveg elveszik. */
+  function fuggokElsutese() {
+    Object.keys(mentOrak).forEach(function (id) {
+      if (!fuggoAllomasok[id]) return;
+      clearTimeout(mentOrak[id]);
+      var a = fuggoAllomasok[id];
+      delete fuggoAllomasok[id];
+      mentAllomas(a);
+    });
+    Object.keys(agOrak).forEach(function (id) {
+      if (!fuggoAgak[id]) return;
+      clearTimeout(agOrak[id]);
+      var a = fuggoAgak[id];
+      delete fuggoAgak[id];
+      agakMent(a);
+    });
+  }
+  window.addEventListener('pagehide', fuggokElsutese);
+  document.addEventListener('visibilitychange', function () {
+    if (document.visibilityState === 'hidden') fuggokElsutese();
+  });
 
   function mentAllomas(a) {
     return UQAPI.rest('/rpc/save_station', {

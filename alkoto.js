@@ -113,6 +113,12 @@
     $('#fNehezseg').value      = aktiv.difficulty || 'kozepes';
     $('#fKategoria').value     = aktiv.category || 'varosi';
     $('#fVaros').value         = aktiv.city || '';
+    /* A csapatlétszám eddig KIMARADT innen, a ment() viszont MINDIG elküldte a
+       két mező tartalmát. Mivel a mezők a HTML-ben beégetett 2 és 6 értékkel
+       indultak, minden automatikus mentés visszaírta a szerző beállítását
+       2–6-ra — szó nélkül. Most a valódi értéket töltjük be. */
+    if (aktiv.team_min != null) $('#fCsapatMin').value = aktiv.team_min;
+    if (aktiv.team_max != null) $('#fCsapatMax').value = aktiv.team_max;
 
     var kep = $('#boritoKep');
     kep.innerHTML = '';
@@ -189,6 +195,20 @@
     mentesOra = setTimeout(ment, 700);
   }
 
+  /* Lapelhagyáskor elsütjük a függőben lévő mentést. Enélkül, ha a szerző
+     gépelés után azonnal továbblép (telefonon ez a tipikus mozdulat), a
+     700 ezredmásodperces várakozás sosem járna le, és a beírt szöveg szó
+     nélkül elveszne. */
+  function fuggoElsutese() {
+    if (!mentesOra) return;
+    clearTimeout(mentesOra); mentesOra = null;
+    ment();
+  }
+  window.addEventListener('pagehide', fuggoElsutese);
+  document.addEventListener('visibilitychange', function () {
+    if (document.visibilityState === 'hidden') fuggoElsutese();
+  });
+
   function ment() {
     if (!aktiv) return Promise.resolve();
     var p = {
@@ -205,7 +225,11 @@
     return UQAPI.rest('/rpc/save_course', { method: 'POST', body: { p: p } })
       .then(function () {
         jelezMentve();
-        return tolt(true);
+        /* CSENDBEN gépelünk tovább: a mentés után csak a listát és az
+           állapotsávot frissítjük, az űrlapot NEM rajzoljuk újra. Korábban a
+           teljes panel újratöltődött, és a hálózati körút alatt leütött
+           betűk elvesztek, a kurzor meg a mező végére ugrott. */
+        return tolt(true, true);
       })
       .catch(function (e) { hiba(e); });
   }
@@ -251,7 +275,9 @@
 
   /* ---------- betöltés ---------- */
 
-  function tolt(csendben) {
+  /* urlapErintetlen: mentés utáni frissítésnél igaz — ilyenkor a beviteli
+     mezőkhöz nem nyúlunk, csak a listát és az állapotsávot rajzoljuk újra. */
+  function tolt(csendben, urlapErintetlen) {
     return UQAPI.rest('/v_my_courses?select=*&order=updated_at.desc')
       .then(function (sorok) {
         palyak = sorok || [];
@@ -260,7 +286,8 @@
         if (!aktiv && palyak.length && !csendben) aktiv = palyak[0];
         aktivIdMent(aktiv ? aktiv.id : null);
         renderLista();
-        renderPanel();
+        if (urlapErintetlen) renderAllapot();
+        else renderPanel();
       })
       .catch(function (e) {
         if (!csendben) {
