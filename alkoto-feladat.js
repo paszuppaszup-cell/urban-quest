@@ -177,7 +177,15 @@
       if (e) {
         var b = e.getBoundingClientRect();
         r = { top: b.top, left: b.left, width: b.width, height: b.height };
-      } else if (z.potHely) {
+      }
+
+      /* NEM elég azt nézni, hogy MEGVAN-E az elem: azt is, hogy van-e mérete.
+         Éles próbán ez pont a kvíznél harapott: egy frissen létrehozott kvíznek
+         még nincs egyetlen válaszlehetősége sem, ezért a lejátszó egy ÜRES,
+         nulla magas válaszdobozt rajzol. A zóna így ki sem került, tehát a
+         szerző nem tudta megnyitni a panelt — ahhoz, hogy megadhassa az első
+         választ, már lett volna szüksége válaszra. Ilyenkor a póthely kell. */
+      if ((!r || r.height < 24) && z.potHely) {
         var p = doc.querySelector(z.potHely);
         if (!p) return;
         var pb = p.getBoundingClientRect();
@@ -188,7 +196,8 @@
           r = { top: pb.bottom - z.potMagas - 6, left: pb.left + 12,
                 width: pb.width - 24, height: z.potMagas };
         }
-      } else { return; }
+      }
+      if (!r) return;
 
       if (r.height < 4 || r.width < 4) return;
       if (r.top > magas - 4) { lentMaradt++; return; }          // a keret alja alatt
