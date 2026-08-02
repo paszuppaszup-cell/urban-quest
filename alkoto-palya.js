@@ -324,7 +324,13 @@
       if (ag.to === s.id) o.selected = true;
       cel.appendChild(o);
     });
-    cel.addEventListener('change', function () { ag.to = cel.value; agakUtemez(a); });
+    /* Újrarajzolunk, hogy a „még N utat kell megadnod" figyelmeztetés eltűnjön,
+       amint tényleg megvan. Kint ragadva azt hitetné a szerzővel, hogy nem
+       végzett — pedig végzett. A címke-mezőnél NEM rajzolunk újra, mert az
+       gépelés közben kirántaná a fókuszt. */
+    cel.addEventListener('change', function () {
+      ag.to = cel.value; agakUtemez(a); renderLista();
+    });
     sor.appendChild(cel);
 
     var x = el('button', 'alk-ag-torol', '×');
