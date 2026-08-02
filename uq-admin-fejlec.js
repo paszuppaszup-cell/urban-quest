@@ -57,7 +57,12 @@
         s.textContent = 'Kattints a belépéshez';
       } else {
         b.textContent = nev(u) || u.email || 'Ismeretlen';
-        s.textContent = admin ? 'Adminisztrátor' : 'Nincs admin jogosultság';
+        /* Az Alkotó oldalakon a „Nincs admin jogosultság" hibaüzenetnek
+           látszik, pedig a szerző pontosan a helyén van: neki nem is kell
+           admin jog. Ott azt írjuk ki, ami igaz róla. */
+        s.textContent = admin ? 'Adminisztrátor'
+                      : (document.body.classList.contains('alkoto-body') ? 'Pályaszerző'
+                                                                         : 'Nincs admin jogosultság');
       }
       el.setAttribute('title', u ? (u.email || '') : '');
     });

@@ -5,13 +5,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta name="description" content="Urban Quest – készítsd el a saját városi kalandodat.">
-<title>Alkotó – Állomások | Urban Quest</title>
+<title>Alkotó – Feladatok | Urban Quest</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&family=Inter:wght@400..700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="styles.css?v=16">
 <link rel="stylesheet" href="admin.css?v=24">
-<link rel="stylesheet" href="vendor/leaflet/leaflet.css">
 <link rel="stylesheet" href="alkoto.css?v=3">
 </head>
 <body class="admin-body alkoto-body">
@@ -104,8 +103,8 @@
     <button class="adm-collapse" type="button" data-side-toggle aria-label="Oldalsáv összecsukása"><svg class="ico ico-sm" aria-hidden="true"><use href="#a-menu"/></svg></button>
     <nav class="adm-nav">
       <a class="adm-nav-item" href="alkoto.html" data-label="Játékok"><svg class="ico" aria-hidden="true"><use href="#a-game"/></svg><span class="adm-nav-txt">Játékok</span></a>
-      <a class="adm-nav-item is-active" href="alkoto-palya.html" data-label="Pályák"><svg class="ico" aria-hidden="true"><use href="#a-map"/></svg><span class="adm-nav-txt">Pályák</span></a>
-      <a class="adm-nav-item" href="alkoto-feladat.html" data-label="Feladatok"><svg class="ico" aria-hidden="true"><use href="#a-task"/></svg><span class="adm-nav-txt">Feladatok</span></a>
+      <a class="adm-nav-item" href="alkoto-palya.html" data-label="Pályák"><svg class="ico" aria-hidden="true"><use href="#a-map"/></svg><span class="adm-nav-txt">Pályák</span></a>
+      <a class="adm-nav-item is-active" href="alkoto-feladat.html" data-label="Feladatok"><svg class="ico" aria-hidden="true"><use href="#a-task"/></svg><span class="adm-nav-txt">Feladatok</span></a>
     </nav>
     <div class="adm-side-foot">
       <a class="alk-vissza" href="fiokom.html"><svg class="ico ico-sm" aria-hidden="true"><use href="#a-arrow-left"/></svg><span class="adm-nav-txt">Vissza a fiókomhoz</span></a>
@@ -115,40 +114,55 @@
 
     <div class="alk-fejsor">
       <div>
-        <h1 class="alk-cim">Állomások</h1>
-        <p class="alk-alcim" id="palyaNev">—</p>
+        <h1 class="alk-cim">Feladatok</h1>
+        <p class="alk-alcim">Koppints a telefonon oda, ahová tenni szeretnél valamit. Amit itt látsz, pontosan azt fogja látni a játékos.</p>
       </div>
-      <div class="alk-szamlalo" id="szamlalo"><b>0</b><span>állomás</span></div>
     </div>
 
     <div id="nincsPalya" class="alk-ures" hidden>
       <b>Előbb válassz pályát</b>
-      <p>A Játékok menüpontban hozz létre egy kalandot, vagy válaszd ki, amelyiken dolgozni szeretnél.</p>
+      <p>A Játékok menüpontban válaszd ki, melyik kalandon dolgozol, a Pályák menüpontban pedig rakj ki állomásokat.</p>
       <a class="adm-btn adm-btn-lime" href="alkoto.html">Vissza a pályáimhoz</a>
     </div>
 
-    <div class="alk-terkep-reteg" id="szerkeszto" hidden>
+    <div class="alk-fel-reteg" id="szerkeszto" hidden>
 
-      <!-- kereső -->
-      <form class="alk-kereso" id="keresoUrlap" autocomplete="off">
-        <svg class="ico ico-sm" aria-hidden="true"><use href="#a-search"/></svg>
-        <input type="search" id="keresoMezo" placeholder="Keress rá egy helyre — pl. Hősök tere" aria-label="Helyszín keresése">
-        <button class="adm-btn" type="submit" id="keresoGomb">Keresés</button>
-      </form>
-      <div class="alk-talalatok" id="talalatok" hidden></div>
+      <!-- melyik állomás -->
+      <div class="alk-allomasvalaszto" id="allomasValaszto"></div>
 
-      <p class="alk-terkep-sugo">
-        <svg class="ico ico-xs" aria-hidden="true"><use href="#a-pin"/></svg>
-        Koppints a térképre, ahol állomást szeretnél. A jelölőt utólag is odébb húzhatod.
-      </p>
+      <div class="alk-fel-racs">
 
-      <div class="alk-terkep" id="terkep"></div>
+        <!-- TELEFON -->
+        <div class="alk-telefon-oszlop">
+          <div class="alk-feladatsav" id="feladatSav"></div>
 
-      <div class="alk-allomasok" id="allomasLista"></div>
+          <div class="alk-telefon">
+            <div class="alk-telefon-ful"></div>
+            <iframe class="alk-telefon-kepernyo" id="emulator" title="A játékos képernyője"
+                    referrerpolicy="no-referrer"></iframe>
+            <div class="alk-zonak" id="zonak"></div>
+            <div class="alk-telefon-tolt" id="tolt"><span></span>Betöltés…</div>
+          </div>
+
+          <p class="alk-telefon-sugo">
+            A keret a játékos telefonját mutatja. A szaggatott területekre koppintva
+            szerkesztheted, ami ott van.
+          </p>
+        </div>
+
+        <!-- SZERKESZTŐ PANEL -->
+        <aside class="alk-panel-oszlop" id="panelOszlop">
+          <div class="alk-panel-ures" id="panelUres">
+            <b>Koppints a telefonra</b>
+            <p>Válaszd ki, melyik részt szeretnéd szerkeszteni: az állomás nevét, a képet, a kérdést vagy a választ.</p>
+          </div>
+          <div id="panel" hidden></div>
+        </aside>
+      </div>
 
       <div class="alk-muveletek">
-        <a class="adm-btn" href="alkoto.html"><svg class="ico ico-sm" aria-hidden="true"><use href="#a-arrow-left"/></svg>Vissza az adatokhoz</a>
-        <a class="adm-btn adm-btn-lime" href="alkoto-feladat.html"><svg class="ico ico-sm" aria-hidden="true"><use href="#a-task"/></svg>Tovább a feladatokhoz</a>
+        <a class="adm-btn" href="alkoto-palya.html"><svg class="ico ico-sm" aria-hidden="true"><use href="#a-arrow-left"/></svg>Vissza az állomásokhoz</a>
+        <a class="adm-btn adm-btn-lime" href="alkoto.html"><svg class="ico ico-sm" aria-hidden="true"><use href="#a-check"/></svg>Kész, vissza az adatokhoz</a>
       </div>
     </div>
 
@@ -159,7 +173,6 @@
 <script src="uq-track.js?v=1"></script>
 <script src="uq-auth.js?v=7"></script>
 <script src="uq-admin-fejlec.js?v=3"></script>
-<script src="vendor/leaflet/leaflet.js"></script>
-<script src="alkoto-palya.js?v=1"></script>
+<script src="alkoto-feladat.js?v=1"></script>
 </body>
 </html>

@@ -345,3 +345,240 @@
   .alk-kereso { flex-wrap: wrap; }
   .alk-kereso input { flex: 1 1 100%; order: 3; }
 }
+
+/* =========================================================
+   ALKOTĂ“ â€” FELADATOK (telefon-emulĂˇtor)
+
+   A keretben a valĂłdi lejĂˇtszĂł fut, ezĂ©rt a keretet NEM mĂ©retezzĂĽk
+   transzformmal: a fĂ¶lĂ© mĂ©rt zĂłnĂˇk 1:1-ben a keret pixeleire ĂĽlnek, Ă©s egy
+   scale() elcsĂşsztatnĂˇ Ĺ‘ket. SzĹ±k kijelzĹ‘n sem kicsinyĂ­tĂĽnk â€” hagyjuk, hogy
+   a lejĂˇtszĂł a sajĂˇt reszponzĂ­v elrendezĂ©sĂ©t adja.
+   ========================================================= */
+
+.alk-fel-reteg { display: flex; flex-direction: column; gap: 14px; }
+.alk-fel-reteg[hidden] { display: none !important; }
+
+/* ---------- ĂˇllomĂˇsvĂˇlasztĂł ---------- */
+.alk-allomasvalaszto {
+  display: flex; gap: 7px; overflow-x: auto; padding-bottom: 4px;
+  scrollbar-width: thin;
+}
+.alk-achip {
+  flex: none; display: inline-flex; align-items: center; gap: 7px;
+  padding: 7px 11px 7px 7px; max-width: 190px;
+  font: inherit; font-size: 12.5px; color: var(--text-2);
+  background: var(--bg-elev); border: 1px solid var(--line); border-radius: 999px;
+  cursor: pointer; transition: border-color .15s, color .15s;
+}
+.alk-achip:hover { border-color: rgb(var(--lime-rgb) / .45); color: var(--text); }
+.alk-achip.is-active { border-color: var(--lime); color: #fff; background: rgb(var(--lime-rgb) / .08); }
+.alk-achip:focus-visible { outline: 2px solid var(--lime); outline-offset: 2px; }
+.alk-achip-n {
+  flex: none; width: 21px; height: 21px; border-radius: 50%;
+  display: grid; place-items: center;
+  font-size: 11px; font-weight: 800; color: #0a0d0a; background: var(--lime);
+}
+.alk-achip-nev { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* ---------- rĂˇcs: telefon + panel ---------- */
+.alk-fel-racs {
+  display: grid; grid-template-columns: 410px minmax(0, 1fr);
+  gap: 18px; align-items: start;
+}
+.alk-telefon-oszlop { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+
+/* ---------- feladat-sĂˇv ---------- */
+.alk-feladatsav { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.alk-fchip {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 6px 10px 6px 6px;
+  font: inherit; font-size: 11.5px; color: var(--text-2);
+  background: var(--bg-elev); border: 1px solid var(--line); border-radius: 8px;
+  cursor: pointer;
+}
+.alk-fchip small { font-size: 11.5px; }
+.alk-fchip:hover { border-color: rgb(var(--lime-rgb) / .45); color: var(--text); }
+.alk-fchip.is-active { border-color: var(--lime); color: #fff; background: rgb(var(--lime-rgb) / .08); }
+.alk-fchip:focus-visible { outline: 2px solid var(--lime); outline-offset: 2px; }
+.alk-fchip-n {
+  flex: none; width: 19px; height: 19px; border-radius: 5px;
+  display: grid; place-items: center;
+  font-size: 11px; font-weight: 800; color: #0a0d0a; background: var(--lime);
+}
+.alk-fchip-uj { border-style: dashed; }
+.alk-fchip-uj .alk-fchip-n { background: rgb(255 255 255 / .1); color: var(--text); }
+.alk-fsav-sugo { flex: 1 1 100%; font-size: 11.5px; color: var(--dim); }
+.alk-mentes-jelzo {
+  display: inline-flex; align-items: center;
+  margin-left: auto; padding: 4px 8px;
+  font-size: 11px; color: var(--lime);
+  background: rgb(var(--lime-rgb) / .1); border-radius: 999px;
+}
+.alk-mentes-jelzo[hidden] { display: none !important; }
+
+/* ---------- a telefon ---------- */
+.alk-telefon {
+  position: relative;
+  width: 410px; max-width: 100%; height: 720px;
+  background: #05070a;
+  border: 10px solid #14181c; border-radius: 30px;
+  box-shadow: 0 20px 50px rgb(0 0 0 / .55), 0 0 0 1px rgb(255 255 255 / .05);
+  overflow: hidden;
+}
+.alk-telefon-ful {
+  position: absolute; top: 0; left: 50%; transform: translateX(-50%); z-index: 3;
+  width: 118px; height: 20px;
+  background: #14181c; border-radius: 0 0 12px 12px;
+  pointer-events: none;
+}
+.alk-telefon-kepernyo {
+  display: block; width: 100%; height: 100%; border: 0; background: #0a0d0a;
+  /* A szerzĹ‘ ne tudja vĂ©letlenĂĽl vĂ©gigjĂˇtszani a sajĂˇt elĹ‘nĂ©zetĂ©t. */
+  pointer-events: none;
+}
+.alk-telefon-sugo { font-size: 11.5px; color: var(--dim); line-height: 1.6; max-width: 410px; }
+
+/* ---------- koppintĂł-zĂłnĂˇk ---------- */
+.alk-zonak { position: absolute; inset: 0; z-index: 2; }
+.alk-zona {
+  position: absolute; margin: 0; padding: 0;
+  background: rgb(var(--lime-rgb) / .07);
+  border: 1.5px dashed rgb(var(--lime-rgb) / .55); border-radius: 8px;
+  cursor: pointer; transition: background .15s, border-color .15s;
+}
+.alk-zona:hover { background: rgb(var(--lime-rgb) / .2); border-color: var(--lime); }
+.alk-zona.is-nyitva { background: rgb(var(--lime-rgb) / .24); border-style: solid; border-color: var(--lime); }
+.alk-zona:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+.alk-zona-cimke {
+  position: absolute; top: -9px; left: 6px;
+  padding: 1px 6px; border-radius: 999px;
+  font-size: 9.5px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase;
+  color: #0a0d0a; background: var(--lime); white-space: nowrap;
+}
+
+.alk-telefon-tolt {
+  position: absolute; inset: 0; z-index: 4;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  font-size: 12px; color: var(--muted);
+  background: rgb(10 13 10 / .82);
+}
+.alk-telefon-tolt[hidden] { display: none !important; }
+.alk-telefon-tolt span {
+  width: 14px; height: 14px; border-radius: 50%;
+  border: 2px solid rgb(var(--lime-rgb) / .3); border-top-color: var(--lime);
+  animation: alkPorog .8s linear infinite;
+}
+@keyframes alkPorog { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .alk-telefon-tolt span { animation: none; } }
+
+/* ---------- szerkesztĹ‘ panel ---------- */
+.alk-panel-oszlop { position: sticky; top: 14px; min-width: 0; }
+.alk-panel-ures {
+  padding: 26px 18px; text-align: center;
+  background: var(--bg-elev); border: 1px dashed var(--line); border-radius: 14px;
+}
+.alk-panel-ures[hidden] { display: none !important; }
+.alk-panel-ures b { display: block; font-size: 13.5px; color: var(--text); margin-bottom: 6px; }
+.alk-panel-ures p { font-size: 12.5px; color: var(--muted); line-height: 1.6; max-width: 42ch; margin: 0 auto; }
+
+#panel {
+  padding: 16px; max-height: calc(100vh - 120px); overflow-y: auto;
+  background: var(--bg-elev); border: 1px solid var(--line); border-radius: 14px;
+}
+#panel[hidden] { display: none !important; }
+
+.alk-p-fej { display: flex; align-items: center; gap: 10px; }
+.alk-p-fej h3 {
+  flex: 1 1 auto; margin: 0;
+  font-family: var(--font-display, 'Archivo'), sans-serif;
+  font-size: 15px; font-weight: 800; color: #fff;
+}
+.alk-p-x {
+  flex: none; width: 26px; height: 26px; border-radius: 7px;
+  font-size: 17px; line-height: 1; color: var(--muted);
+  background: none; border: 1px solid var(--line); cursor: pointer;
+}
+.alk-p-x:hover { color: #fff; border-color: rgb(255 255 255 / .3); }
+.alk-p-alcim { margin: 6px 0 0; font-size: 12px; color: var(--muted); line-height: 1.55; }
+
+.alk-p-mezo { display: block; margin-top: 12px; }
+.alk-p-mezo > span {
+  display: block; margin-bottom: 5px;
+  font-size: 10.5px; font-weight: 700; letter-spacing: .06em;
+  text-transform: uppercase; color: var(--dim);
+}
+.alk-p-mezo input, .alk-p-mezo textarea {
+  width: 100%; padding: 9px 10px;
+  font: inherit; font-size: 13px; color: var(--text); line-height: 1.55;
+  background: #0e120d; border: 1px solid var(--line); border-radius: 8px;
+  resize: vertical;
+}
+.alk-p-mezo input:focus-visible, .alk-p-mezo textarea:focus-visible {
+  outline: 2px solid var(--lime); outline-offset: 1px; border-color: transparent;
+}
+.alk-p-sugo { display: block; margin-top: 5px; font-size: 11px; color: var(--dim); line-height: 1.5; }
+
+.alk-p-gombok { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.alk-p-gombok-veg { margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--line); }
+.alk-p-torol { color: #ff9d8f; border-color: rgba(255,122,107,.35); }
+.alk-p-torol:hover { border-color: rgba(255,122,107,.6); }
+
+.alk-p-kep {
+  margin-top: 12px; border: 1px solid var(--line); border-radius: 10px; overflow: hidden;
+  background: #0e120d;
+}
+.alk-p-kep img { display: block; width: 100%; max-height: 190px; object-fit: cover; }
+
+.alk-p-hiba {
+  padding: 10px 12px; margin-bottom: 12px; border-radius: 9px;
+  background: rgba(255,122,107,.12); border: 1px solid rgba(255,122,107,.34);
+}
+.alk-p-hiba b { display: block; font-size: 12.5px; color: #ff9d8f; margin-bottom: 3px; }
+.alk-p-hiba p { margin: 0; font-size: 12px; color: var(--text-2); line-height: 1.5; }
+
+/* ---------- tĂ­pusvĂˇlasztĂł ---------- */
+.alk-tipusok { display: grid; gap: 7px; margin-top: 12px; }
+.alk-tipus {
+  display: block; width: 100%; text-align: left;
+  padding: 9px 11px;
+  font: inherit; color: var(--text-2);
+  background: #0e120d; border: 1px solid var(--line); border-radius: 9px;
+  cursor: pointer; transition: border-color .15s;
+}
+.alk-tipus:hover { border-color: rgb(var(--lime-rgb) / .45); }
+.alk-tipus.is-active { border-color: var(--lime); background: rgb(var(--lime-rgb) / .08); }
+.alk-tipus:focus-visible { outline: 2px solid var(--lime); outline-offset: 2px; }
+.alk-tipus b { display: block; font-size: 12.5px; color: #fff; margin-bottom: 2px; }
+.alk-tipus small { display: block; font-size: 11px; color: var(--muted); line-height: 1.5; }
+
+.alk-beallito { margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--line); }
+.alk-beall-cim {
+  display: block; font-size: 10.5px; font-weight: 700; letter-spacing: .06em;
+  text-transform: uppercase; color: var(--lime);
+}
+.alk-beall-sugo { margin: 10px 0 0; font-size: 12px; color: var(--muted); line-height: 1.6; }
+.alk-beall-fig {
+  margin: 10px 0 0; padding: 9px 11px; border-radius: 8px;
+  font-size: 11.5px; line-height: 1.55; color: #ffd28f;
+  background: rgba(255,196,105,.1); border: 1px solid rgba(255,196,105,.3);
+}
+
+@media (max-width: 1080px) {
+  .alk-fel-racs { grid-template-columns: 1fr; }
+  .alk-panel-oszlop { position: static; }
+  #panel { max-height: none; }
+}
+@media (max-width: 460px) {
+  .alk-telefon { height: 620px; border-width: 6px; border-radius: 22px; }
+}
+
+
+/* A fejlĂ©c jobb oldalĂˇn egy cĂ­mke Ăˇll a holt â€žMentĂ©s" gomb helyĂ©n: ez nem
+   admin-felĂĽlet, hanem az alkotĂłĂ©. */
+.alk-top-cimke {
+  padding: 4px 10px; border-radius: 999px;
+  font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
+  color: var(--lime); background: rgb(var(--lime-rgb) / .12);
+  border: 1px solid rgb(var(--lime-rgb) / .28);
+}
+
