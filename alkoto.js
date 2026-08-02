@@ -133,7 +133,11 @@
     renderAllapot();
     $('#tovabbPalyak').href    = 'alkoto-palya.html';
     $('#tovabbFeladatok').href = 'alkoto-feladat.html';
-    $('#kiprobal').href        = 'jatszas.html?quest=' + encodeURIComponent(aktiv.slug || '') + '&elonezet=1';
+    /* A „Próbáld ki" nem sima link: a lejátszó a BEFAGYASZTOTT csomagot
+       játssza, azt pedig a mentés nem hozza létre. Kattintáskor előbb
+       készítünk egy friss előnézetet, csak utána nyitjuk meg — különben a
+       szerző az előző állapotot látná, vagy semmit. */
+    $('#kiprobal').href = 'jatszas.html?quest=' + encodeURIComponent(aktiv.slug || '') + '&elonezet=1';
   }
 
   function renderAllapot() {
@@ -288,6 +292,25 @@
         return tolt(false);
       })
       .catch(function (e) { hiba(e); });
+  });
+
+  /* Előnézet: előbb befagyasztunk egy friss csomagot, csak utána nyitunk lapot.
+     A megnyitást a kattintásból indított láncban tartjuk, mert a böngészők a
+     felhasználói szándéktól elszakadt window.open()-t felugró ablaknak veszik
+     — ezért nyitunk azonnal, és a címet utólag töltjük bele. */
+  $('#kiprobal').addEventListener('click', function (ev) {
+    ev.preventDefault();
+    if (!aktiv) return;
+    var lap = window.open('', '_blank');
+    var cim = 'jatszas.html?quest=' + encodeURIComponent(aktiv.slug || '') + '&elonezet=1';
+    UQAPI.rest('/rpc/preview_course', { method: 'POST', body: { p_course: aktiv.id } })
+      .then(function () {
+        if (lap) lap.location = cim; else window.location = cim;
+      })
+      .catch(function (e) {
+        if (lap) lap.close();
+        hiba(e);
+      });
   });
 
   $('#boritoFeltolt').addEventListener('click', function () { $('#boritoInput').click(); });
