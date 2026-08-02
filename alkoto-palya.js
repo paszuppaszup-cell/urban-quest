@@ -20,7 +20,7 @@
   var KULCS = 'uq_alkoto_palya';
 
   var palya = null, allomasok = [], map = null, jelolok = [], utvonal = null;
-  var mentesOra = null, utolsoKereses = 0;
+  var utolsoKereses = 0;
 
   function $(s) { return document.querySelector(s); }
   function el(tag, cls, txt) {
@@ -248,6 +248,7 @@
         lab.appendChild(le);
       }
       sor.appendChild(lab);
+      if ((a.kind || 'feladat') === 'dontes') sor.appendChild(agSzerkeszto(a));
       host.appendChild(sor);
     });
   }
@@ -270,11 +271,124 @@
     }).catch(uzenetHiba);
   }
 
+  /* =========================================================
+     ELÁGAZÁS — döntési pont útjai
+
+     Az eleket eddig CSAK az admin tudta megadni (admin.js), az Alkotó egyik
+     oldala sem. Emiatt a szerző fel tudta venni a „Döntési pont" állomást és a
+     hozzá tartozó feladatot, de a pályát utána SOHA nem tudta beküldeni: a
+     course_lint jogosan visszadobta, hogy „a döntési pontnak 0 folytatása van",
+     és nem volt képernyő, ahol megjavíthatta volna. Zsákutca.
+
+     A mentés a save_station_edges RPC-vel megy, ami az assert_can_edit_station-t
+     hívja — a szerzőnek tehát már eddig is joga volt hozzá, csak felülete nem.
+     ========================================================= */
+
+  function agakBetolt() {
+    if (!palya) return Promise.resolve();
+    return UQAPI.rest('/station_edges?select=from_station,to_station,label,branch_key,sort_order' +
+                      '&course_id=eq.' + encodeURIComponent(palya.id) + '&order=sort_order.asc')
+      .then(function (sorok) {
+        var re = {};
+        allomasok.forEach(function (s) { s.agak = []; re[s.id] = s; });
+        (sorok || []).forEach(function (r) {
+          var h = re[r.from_station];
+          if (!h || !re[r.to_station]) return;
+          h.agak.push({ label: r.label || '', to: r.to_station, key: r.branch_key || '' });
+        });
+        renderLista();
+      })
+      .catch(function () { /* elágazás nélkül is szerkeszthető a pálya */ });
+  }
+
+  function agSor(a, ag, idx) {
+    var sor = el('div', 'alk-ag');
+
+    var cimke = document.createElement('input');
+    cimke.type = 'text'; cimke.className = 'alk-ag-cimke'; cimke.maxLength = 60;
+    cimke.placeholder = idx === 0 ? 'pl. Balra, a lépcsőn' : 'pl. Jobbra, a kapu felé';
+    cimke.value = ag.label || '';
+    cimke.addEventListener('input', function () { ag.label = cimke.value; agakUtemez(a); });
+    sor.appendChild(cimke);
+
+    var cel = document.createElement('select');
+    cel.className = 'alk-ag-cel';
+    var ures = document.createElement('option');
+    ures.value = ''; ures.textContent = '— hova visz? —';
+    cel.appendChild(ures);
+    allomasok.forEach(function (s, i) {
+      if (s.id === a.id) return;               // önmagára nem mutathat
+      var o = document.createElement('option');
+      o.value = s.id;
+      o.textContent = (i + 1) + '. ' + (s.name || 'Névtelen');
+      if (ag.to === s.id) o.selected = true;
+      cel.appendChild(o);
+    });
+    cel.addEventListener('change', function () { ag.to = cel.value; agakUtemez(a); });
+    sor.appendChild(cel);
+
+    var x = el('button', 'alk-ag-torol', '×');
+    x.type = 'button'; x.setAttribute('aria-label', 'Út törlése');
+    x.addEventListener('click', function () {
+      a.agak.splice(idx, 1); agakMent(a); renderLista();
+    });
+    sor.appendChild(x);
+    return sor;
+  }
+
+  function agSzerkeszto(a) {
+    var d = el('div', 'alk-agak');
+    d.appendChild(el('b', null, 'Melyik út hová visz?'));
+    d.appendChild(el('p', null,
+      'Ez döntési pont: innen legalább KÉT külön útnak kell indulnia. ' +
+      'A címke az, amit a csapat választani fog.'));
+
+    if (!a.agak || !a.agak.length) a.agak = [{ label: '', to: '' }, { label: '', to: '' }];
+    a.agak.forEach(function (ag, i) { d.appendChild(agSor(a, ag, i)); });
+
+    var kesz = (a.agak || []).filter(function (g) { return g.to; }).length;
+    if (kesz < 2) {
+      d.appendChild(el('p', 'alk-ag-fig',
+        'Még ' + (2 - kesz) + ' utat kell megadnod, különben a pálya nem küldhető be.'));
+    }
+
+    if (a.agak.length < 4) {
+      var plusz = el('button', 'alk-linkgomb', '+ még egy út');
+      plusz.type = 'button';
+      plusz.addEventListener('click', function () {
+        a.agak.push({ label: '', to: '' }); renderLista();
+      });
+      d.appendChild(plusz);
+    }
+    return d;
+  }
+
+  var agOrak = {};
+  function agakUtemez(a) {
+    if (agOrak[a.id]) clearTimeout(agOrak[a.id]);
+    agOrak[a.id] = setTimeout(function () { agakMent(a); }, 700);
+  }
+
+  function agakMent(a) {
+    var lista = (a.agak || [])
+      .filter(function (g) { return g.to; })
+      .map(function (g, i) {
+        return { to: g.to, label: g.label || '', branch_key: g.key || ('ag' + (i + 1)) };
+      });
+    return UQAPI.rest('/rpc/save_station_edges', {
+      method: 'POST', body: { p_station: a.id, p_edges: lista }
+    }).then(jelezMentve).catch(uzenetHiba);
+  }
+
   /* ---------- mentés ---------- */
 
+  /* ÁLLOMÁSONKÉNT külön időzítő. Egy közös időzítővel, ha a szerző az egyik
+     állomás nevét írta, majd 700 ezredmásodpercen belül a másikét, az első
+     mentése törlődött, mielőtt elsült volna — és szó nélkül elveszett. */
+  var mentOrak = {};
   function utemez(a) {
-    if (mentesOra) clearTimeout(mentesOra);
-    mentesOra = setTimeout(function () { mentAllomas(a); }, 700);
+    if (mentOrak[a.id]) clearTimeout(mentOrak[a.id]);
+    mentOrak[a.id] = setTimeout(function () { mentAllomas(a); }, 700);
   }
 
   function mentAllomas(a) {
@@ -357,11 +471,12 @@
         if (!r) return;
         allomasok = (r || []).map(function (s) {
           return { id: s.id, name: s.name, kind: s.kind, description: s.description,
-                   lat: s.lat, lng: s.lng };
+                   lat: s.lat, lng: s.lng, agak: [] };
         });
         renderLista();
         jelolokFrissit();
         terkepIgazit();
+        return agakBetolt();
       })
       .catch(function (e) {
         $('#nincsPalya').hidden = false;

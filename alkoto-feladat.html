@@ -11,7 +11,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&family=Inter:wght@400..700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="styles.css?v=16">
 <link rel="stylesheet" href="admin.css?v=24">
-<link rel="stylesheet" href="alkoto.css?v=3">
+<link rel="stylesheet" href="alkoto.css?v=5">
 </head>
 <body class="admin-body alkoto-body">
 
@@ -141,6 +141,10 @@
             <iframe class="alk-telefon-kepernyo" id="emulator" title="A játékos képernyője"
                     referrerpolicy="no-referrer"></iframe>
             <div class="alk-zonak" id="zonak"></div>
+            <!-- Ha egy szerkeszthető rész a keret alja alá esik, ez a sáv szól
+                 róla, és rákoppintva legörget. Enélkül a szerző azt hinné,
+                 hogy ott nincs is semmi. -->
+            <button class="alk-lentebb" id="lentebb" type="button" hidden></button>
             <div class="alk-telefon-tolt" id="tolt"><span></span>Betöltés…</div>
           </div>
 
@@ -173,6 +177,6 @@
 <script src="uq-track.js?v=1"></script>
 <script src="uq-auth.js?v=7"></script>
 <script src="uq-admin-fejlec.js?v=3"></script>
-<script src="alkoto-feladat.js?v=2"></script>
+<script src="alkoto-feladat.js?v=3"></script>
 </body>
 </html>

@@ -582,3 +582,66 @@
   border: 1px solid rgb(var(--lime-rgb) / .28);
 }
 
+
+/* A â€žmeg nincs kep" pothely kis gomb, nem sav: sav alakban ravolt a
+   valaszmezore, es a koppintas mindig a rossz panelt nyitotta. */
+.alk-zona-kicsi {
+  background: rgb(var(--lime-rgb) / .22);
+  border-style: solid;
+}
+.alk-zona-kicsi .alk-zona-cimke {
+  position: static; display: block;
+  padding: 0; border-radius: 0;
+  line-height: 22px; text-align: center;
+  background: none; color: #0a0d0a;
+}
+
+/* Ami a keret alja ala esett, arrol szolni kell. */
+.alk-lentebb {
+  position: absolute; left: 0; right: 0; bottom: 0; z-index: 3;
+  padding: 7px 10px;
+  font: inherit; font-size: 11px; font-weight: 700;
+  letter-spacing: .03em; color: #0a0d0a;
+  background: linear-gradient(to top, var(--lime), rgb(var(--lime-rgb) / .82));
+  border: 0; cursor: pointer;
+}
+.alk-lentebb[hidden] { display: none !important; }
+.alk-lentebb::after { content: ' â†“'; }
+.alk-lentebb:hover { filter: brightness(1.08); }
+.alk-lentebb:focus-visible { outline: 2px solid #fff; outline-offset: -3px; }
+
+
+/* ---------- elagazas: a dontesi pont utjai ---------- */
+.alk-agak {
+  margin-top: 9px; padding: 10px 11px;
+  background: rgb(var(--lime-rgb) / .05);
+  border: 1px dashed rgb(var(--lime-rgb) / .35); border-radius: 9px;
+}
+.alk-agak > b { display: block; font-size: 12px; color: var(--lime); margin-bottom: 3px; }
+.alk-agak > p { margin: 0 0 9px; font-size: 11.5px; color: var(--muted); line-height: 1.5; }
+.alk-ag { display: flex; align-items: center; gap: 7px; margin-bottom: 7px; }
+.alk-ag-cimke, .alk-ag-cel {
+  flex: 1 1 0; min-width: 0; padding: 7px 9px;
+  font: inherit; font-size: 12.5px; color: var(--text);
+  background: #0e120d; border: 1px solid var(--line); border-radius: 7px;
+}
+.alk-ag-cel { appearance: none; -webkit-appearance: none; cursor: pointer; }
+.alk-ag-cel option { background: var(--bg-elev); color: var(--text); }
+.alk-ag-cimke:focus-visible, .alk-ag-cel:focus-visible {
+  outline: 2px solid var(--lime); outline-offset: 1px; border-color: transparent;
+}
+.alk-ag-torol {
+  flex: none; width: 26px; height: 26px; border-radius: 7px;
+  font-size: 16px; line-height: 1; color: var(--muted);
+  background: none; border: 1px solid var(--line); cursor: pointer;
+}
+.alk-ag-torol:hover { color: #ff9d8f; border-color: rgba(255,122,107,.4); }
+.alk-ag-fig {
+  margin: 2px 0 8px; font-size: 11.5px; line-height: 1.5; color: #ffd28f;
+}
+
+@media (max-width: 560px) {
+  .alk-ag { flex-wrap: wrap; }
+  .alk-ag-cimke { flex: 1 1 100%; }
+}
+

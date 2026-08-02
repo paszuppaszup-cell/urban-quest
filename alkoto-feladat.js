@@ -144,16 +144,24 @@
 
      A választók a lejátszó valódi osztálynevei. Ha egy elem nincs ott
      (például még nincs kép), a zóna akkor is kell — különben képet SOHA nem
-     lehetne hozzáadni. Ilyenkor a kérdés fölé teszünk egy üres sávot.
+     lehetne hozzáadni.
+
+     A PÓTHELY NEM LEHET SÁV. Éles próbán a „még nincs kép" sávot a kérdés alá
+     tettük, oda, ahol a válaszmező kezdődik — a két zóna egymásra csúszott, és
+     a koppintás mindig a válasz panelt nyitotta. Vagyis képet egyáltalán nem
+     lehetett feltölteni olyan feladathoz, amelyiknek még nem volt. Ezért a
+     póthely most egy kis gomb a kérdés-kártya jobb felső sarkában: sehol nem
+     ér hozzá máshoz.
      ===================================================================== */
 
   var ZONAK = [
     { kulcs: 'cim',    valaszto: '.uq-pl-hero-cim',                felirat: 'Állomás neve' },
     { kulcs: 'kerdes', valaszto: '.uq-pl-qtext',                   felirat: 'A kérdés szövege' },
-    { kulcs: 'media',  valaszto: '.uq-pl-taskimg, .uq-pl-taskvid', felirat: 'Kép vagy videó',
-      potHely: '.uq-pl-qtext', potMagas: 46 },
     { kulcs: 'valasz', valaszto: '#uqPlayAnswer, .uq-pl-notask',   felirat: 'A válasz módja',
-      potHely: '.uq-pl-akcio', potMagas: 44, potAlul: true }
+      potHely: '.uq-pl-akcio', potMagas: 44, potAlul: true },
+    /* utoljára, hogy a kis gomb a nagy zónák FÖLÉ kerüljön, ne alá */
+    { kulcs: 'media',  valaszto: '.uq-pl-taskimg, .uq-pl-taskvid', felirat: 'Kép vagy videó',
+      potHely: '.uq-pl-akcio', potGomb: true, rovidFelirat: '+ kép' }
   ];
 
   function zonakRajzol() {
@@ -161,11 +169,11 @@
     var doc = keretDoc();
     if (!doc || !doc.body) return;
     var magas = $('#emulator').clientHeight;
-    var db = 0;
+    var db = 0, lentMaradt = 0;
     host.innerHTML = '';
 
     ZONAK.forEach(function (z) {
-      var e = doc.querySelector(z.valaszto), r = null;
+      var e = doc.querySelector(z.valaszto), r = null, rovid = false;
       if (e) {
         var b = e.getBoundingClientRect();
         r = { top: b.top, left: b.left, width: b.width, height: b.height };
@@ -173,25 +181,46 @@
         var p = doc.querySelector(z.potHely);
         if (!p) return;
         var pb = p.getBoundingClientRect();
-        r = z.potAlul
-          ? { top: pb.bottom - z.potMagas - 6, left: pb.left + 12, width: pb.width - 24, height: z.potMagas }
-          : { top: pb.bottom + 4,              left: pb.left,      width: pb.width,      height: z.potMagas };
+        if (z.potGomb) {
+          r = { top: pb.top + 8, left: pb.right - 86, width: 74, height: 26 };
+          rovid = true;
+        } else {
+          r = { top: pb.bottom - z.potMagas - 6, left: pb.left + 12,
+                width: pb.width - 24, height: z.potMagas };
+        }
       } else { return; }
 
       if (r.height < 4 || r.width < 4) return;
-      if (r.top + r.height < 4 || r.top > magas - 4) return;   // kigörgetett
+      if (r.top > magas - 4) { lentMaradt++; return; }          // a keret alja alatt
+      if (r.top + r.height < 4) return;                          // a keret teteje fölött
 
       db++;
-      var g = el('button', 'alk-zona alk-zona-' + z.kulcs + (nyitottZona === z.kulcs ? ' is-nyitva' : ''));
+      var g = el('button', 'alk-zona alk-zona-' + z.kulcs +
+                 (rovid ? ' alk-zona-kicsi' : '') +
+                 (nyitottZona === z.kulcs ? ' is-nyitva' : ''));
       g.type = 'button';
       g.style.top = Math.round(r.top) + 'px';
       g.style.left = Math.round(r.left) + 'px';
       g.style.width = Math.round(Math.max(r.width, 44)) + 'px';
-      g.style.height = Math.round(Math.max(r.height, 34)) + 'px';
-      g.appendChild(el('span', 'alk-zona-cimke', z.felirat));
+      g.style.height = Math.round(Math.max(r.height, rovid ? 24 : 34)) + 'px';
+      g.appendChild(el('span', 'alk-zona-cimke',
+                       rovid ? (z.rovidFelirat || z.felirat) : z.felirat));
+      g.title = z.felirat;
       g.addEventListener('click', function () { panelNyit(z.kulcs); });
       host.appendChild(g);
     });
+
+    /* Ami a keret alja alá esett, az NEM tűnhet el szó nélkül: a szerző azt
+       hinné, nincs is ott semmi. Éles próbán pont a „válasz módja" zóna került
+       a hajtás alá, és emiatt egy kvíz válaszait sem lehetett megadni. */
+    var sav = $('#lentebb');
+    if (sav) {
+      sav.hidden = lentMaradt === 0;
+      if (lentMaradt) {
+        sav.textContent = 'Lentebb még van ' + lentMaradt +
+                          (lentMaradt > 1 ? ' szerkeszthető rész' : ' szerkeszthető rész') + ' — koppints ide';
+      }
+    }
 
     /* Amíg nincs mire koppintani, maradjon fent a betöltés-jelző: jobb egy
        őszinte „Betöltés…", mint egy kész képernyő, ami nem reagál. */
@@ -201,6 +230,11 @@
   /* A keret nem kattintható, ezért a görgetést nekünk kell továbbadni. */
   function gorgetesBekot() {
     var host = $('#zonak');
+    var sav = $('#lentebb');
+    if (sav) sav.addEventListener('click', function () {
+      var doc = keretDoc();
+      if (doc && doc.defaultView) doc.defaultView.scrollBy(0, Math.round($('#emulator').clientHeight * 0.7));
+    });
     host.addEventListener('wheel', function (ev) {
       var doc = keretDoc();
       if (!doc || !doc.defaultView) return;
