@@ -561,9 +561,16 @@
       el.route.selectedIndex = 0; cur.route = el.route.value;
     }
     szurtAllomasok(cur.route);
-    el.station.value = cur.station;
+    /* A választó azonosítóval dolgozik; a NÉV csak felirat és megjelenítés.
+       Régebbi sorból (vagy mélylinkből) még jöhet csak név — olyankor
+       feloldjuk, de a beállított érték attól még az azonosító lesz. */
+    el.station.value = cur.stationId || allomasIdNevbol(cur.station, cur.route) || '';
     if (el.station.selectedIndex < 0 && el.station.options.length) {
-      el.station.selectedIndex = 0; cur.station = el.station.value;
+      el.station.selectedIndex = 0;
+    }
+    if (el.station.selectedIndex >= 0) {
+      cur.stationId = el.station.value;
+      cur.station = el.station.options[el.station.selectedIndex].textContent;
     }
     el.diff.value = cur.diff; applyDiffDot();
     el.points.value = cur.points;
@@ -657,7 +664,7 @@
     const elsoAllomas = (CEL_PALYA
       ? STATIONS_OPT.find(s => String(s.course_id) === CEL_PALYA)
       : STATIONS_OPT[0]) || STATIONS_OPT[0] || {};
-    cur = src ? clone(src) : { question: '', station: elsoAllomas.name || '', route: elsoAllomas.course_name || '', type: 'kviz', points: 30, diff: 'Könnyű', status: 'draft', media: '', image: '', video: '', hints: [], badge: '', relay: { on: false }, cfg: defaultCfg('kviz') };
+    cur = src ? clone(src) : { question: '', stationId: elsoAllomas.id || null, station: elsoAllomas.name || '', route: elsoAllomas.course_name || '', type: 'kviz', points: 30, diff: 'Könnyű', status: 'draft', media: '', image: '', video: '', hints: [], badge: '', relay: { on: false }, cfg: defaultCfg('kviz') };
     if (!cur.cfg) cur.cfg = defaultCfg(cur.type);
     if (!cur.relay) cur.relay = { on: false };
     el.title.textContent = curId ? 'Feladat szerkesztése' : 'Új feladat';
@@ -694,8 +701,13 @@
     /* A VÁLASZTOTT állomás nyer, nem az eredeti: a fordított sorrend miatt
        létező feladatnál a rövidzár mindig a régi station_id-t adta vissza,
        ezért a feladatot nem lehetett másik állomáshoz átrakni — a mentés
-       sikert jelzett, a sor mégsem változott. */
-    const stId = allomasIdNevbol(cur.station, cur.route) ||
+       sikert jelzett, a sor mégsem változott.
+
+       A legördülő MOST AZONOSÍTÓT ad, ezért azt vesszük először. A névből
+       való feloldás csak tartalék (régi mélylink), és az mindig az elsőt
+       találja el az azonos nevűek közül — épp ezért nem szabad rá építeni. */
+    const stId = cur.stationId ||
+                 allomasIdNevbol(cur.station, cur.route) ||
                  (curId != null ? (byId(curId) || {}).stationId : null);
     if (!stId) {
       toast('Nincs meg az állomás', { type: 'error',
@@ -781,11 +793,18 @@
     szurtAllomasok(cur.route);
     if (el.station.options.length) {
       el.station.selectedIndex = 0;
-      cur.station = el.station.value;
+      cur.stationId = el.station.value;
+      cur.station = el.station.options[0].textContent;
       const s = document.querySelector('.pv-station'); if (s) s.innerHTML = ico('a-pin') + esc(cur.station);
     }
   });
-  el.station.addEventListener('change', () => { cur.station = el.station.value; const s = document.querySelector('.pv-station'); if (s) s.innerHTML = ico('a-pin') + esc(cur.station); });
+  el.station.addEventListener('change', () => {
+    cur.stationId = el.station.value;
+    const o = el.station.options[el.station.selectedIndex];
+    cur.station = o ? o.textContent : '';
+    const s = document.querySelector('.pv-station');
+    if (s) s.innerHTML = ico('a-pin') + esc(cur.station);
+  });
   el.diff.addEventListener('change', () => { cur.diff = el.diff.value; applyDiffDot(); });
   el.points.addEventListener('input', () => { cur.points = Math.max(0, parseInt(el.points.value, 10) || 0); el.rewardXp.value = cur.points + ' XP'; const x = document.querySelector('.pv-badge.xp'); if (x) x.textContent = cur.points + ' XP'; });
   el.status.addEventListener('change', () => { cur.status = STATUS_BY_LABEL[el.status.value] || 'draft'; applyStatusDot(); });
@@ -1171,8 +1190,12 @@
     const lista = palyaNev
       ? STATIONS_OPT.filter(s => s.course_name === palyaNev)
       : STATIONS_OPT;
+    /* Az option ÉRTÉKE az állomás azonosítója, nem a neve. Névvel két azonos
+       nevű állomás közül mindig az elsőt találta el az allomasIdNevbol(), és
+       a feladat némán a MÁSIK állomásra mentődött. Az Alkotó minden új
+       állomást „Új állomás"-nak nevez, tehát ez könnyen előáll. */
     el.station.innerHTML = lista
-      .map(s => `<option value="${esc(s.name)}">${esc(s.name)}</option>`).join('');
+      .map(s => `<option value="${esc(String(s.id))}">${esc(s.name)}</option>`).join('');
   }
 
   function toltAllomasValaszto() {
@@ -1210,11 +1233,23 @@
     const h = location.hash;
     if (h === '#new') {
       openEditor(null);
+      /* A mélylink jöhet azonosítóval és névvel is. A legördülő azonosítóval
+         dolgozik, ezért a nevet előbb feloldjuk — különben a paraméter némán
+         hatástalan maradna, és a feladat az első állomásra menne. */
       const st = new URLSearchParams(location.search).get('station');
       if (st) {
-        cur.station = st;
-        if (el.station && Array.prototype.some.call(el.station.options, o => o.value === st)) el.station.value = st;
-        const ps = document.querySelector('.pv-station'); if (ps) ps.innerHTML = ico('a-pin') + esc(st);
+        const talalt = STATIONS_OPT.find(s => String(s.id) === st) ||
+                       STATIONS_OPT.find(s => s.name === st);
+        if (talalt && el.station &&
+            Array.prototype.some.call(el.station.options, o => o.value === String(talalt.id))) {
+          el.station.value = String(talalt.id);
+          cur.stationId = String(talalt.id);
+          cur.station = talalt.name;
+        } else {
+          cur.station = st;
+        }
+        const ps = document.querySelector('.pv-station');
+        if (ps) ps.innerHTML = ico('a-pin') + esc(cur.station);
       }
     } else if (/^#edit-[0-9a-f-]{36}$/i.test(h)) {
       const id = h.slice(6);

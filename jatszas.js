@@ -345,7 +345,13 @@
   }
   function stationPlayTasks(i) {
     const s = COURSE[i];
-    const linked = readTasks().filter(t => t.station === s.name);
+    /* AZONOSÍTÓ SZERINT, ha van. Korábban kizárólag a NÉV döntött, ezért két
+       azonos nevű állomás mindkettőn megmutatta a másik feladatait is: dupla
+       pont, és a feladat-számláló is duplán számolt. Feladatonként esünk
+       vissza névre, mert a régi, beégetett pályák állomásainak nincs
+       azonosítójuk — így a két adatforrás egymás mellett is helyes marad. */
+    const linked = readTasks().filter(t =>
+      (t.station_id && s.id) ? t.station_id === s.id : t.station === s.name);
     if (linked.length) return linked.map(t => ({
       id: t.id, question: t.question, type: t.type, cfg: t.cfg || {},
       points: t.points || 0, reveal: revealFor(t.type, t.cfg),

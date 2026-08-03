@@ -15,7 +15,7 @@
 (function () {
   'use strict';
 
-  var LEJATSZO = 'jatszas.js?v=22';
+  var LEJATSZO = 'jatszas.js?v=23';
   var CACHE_ELO = 'uq_bundle_';           // offline tartalék pályánként
 
   var DIFF_LABEL = { konnyu: 'Könnyű', kozepes: 'Közepes', nehez: 'Nehéz', extrem: 'Extrém' };
@@ -62,7 +62,21 @@
       (s.tasks || []).forEach(function (t) {
         feladatok.push({
           id: t.id,
-          station: s.name,                       // a lejátszó NÉV szerint párosít
+          /* AZONOSÍTÓ szerint párosítunk, nem név szerint.
+
+             A lejátszó eddig a `station` NEVET hasonlította össze
+             (jatszas.js stationPlayTasks). Két azonos nevű állomás esetén
+             MINDKETTŐN megjelent az összes feladatuk, a pont duplán járt, és
+             a „hányból hány feladat" számláló is duplán számolt. Ez nem
+             elméleti: az Alkotó minden új állomást „Új állomás"-nak nevez, a
+             beküldést a course_lint megfogja ugyan, de az ELŐNÉZET nincs
+             kapuzva — a szerző ott már összekeveredve látta volna.
+
+             A `station` nevet meghagyjuk: a régi, beégetett quest-courses.js
+             pályáinak nincs állomás-azonosítójuk, ott továbbra is a név
+             marad az egyetlen kapocs. */
+          station_id: s.id || null,
+          station: s.name,
           question: t.question,
           type: t.kind,
           points: t.points || 0,
