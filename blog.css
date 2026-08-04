@@ -1,0 +1,102 @@
+/* =========================================================
+   URBAN QUEST — blog
+
+   A bejegyzések maguk a `szoveges-oldal.css` `.szoveg-lap` osztályát
+   használják, hogy a tipográfia egyezzen a GYIK-kal és a jogi oldalakkal.
+   Ez a fájl CSAK azt teszi hozzá, ami a bloghoz kell: a bejegyzés-lista
+   kártyáit és a főoldali blokkot.
+   ========================================================= */
+
+/* ---------- bejegyzés-lista (blog.html) ---------- */
+.blog-lista {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 16px;
+  margin-top: 26px;
+}
+
+.blog-kartya {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  padding: 20px 20px 22px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background:
+    radial-gradient(115% 70% at 50% 0%, rgb(var(--lime-rgb) / .07), transparent 72%),
+    var(--bg-card);
+  transition: border-color .18s, transform .18s;
+}
+.blog-kartya:hover { border-color: rgb(var(--lime-rgb) / .5); transform: translateY(-2px); }
+
+.blog-cimke {
+  align-self: flex-start;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--lime);
+  padding: 3px 9px;
+  border-radius: 99px;
+  border: 1px solid rgb(var(--lime-rgb) / .35);
+}
+
+.blog-kartya h2 {
+  font-size: 18px;
+  line-height: 1.28;
+  margin: 0;
+}
+
+/* A `.szoveg-lap a` aláhúzza a szövegközi hivatkozásokat — cikkben ez helyes,
+   kártyacímen viszont zajos. Itt magasabb fajsúlyú szabállyal vesszük le. */
+.blog-kartya h2 a { color: #fff; text-decoration: none; }
+.blog-kartya:hover h2 a { color: var(--lime); }
+
+.blog-kartya p { font-size: 13px; line-height: 1.6; color: var(--text-2); margin: 0; }
+
+.blog-meta {
+  display: flex; align-items: center; gap: 8px;
+  margin-top: auto; padding-top: 6px;
+  font-size: 11px; color: var(--muted);
+}
+
+/* ---------- főoldali blokk ----------
+   Alapból LÁTHATÓ. A bejelentkezett játékos elől a uq-blog.js rejti el —
+   fordítva nem lehet: ha alapból rejtett lenne, a keresők és a megosztás-
+   előnézetek sem látnák, pedig épp nekik szól. */
+.fooldal-blog { margin-top: 8px; }
+.fooldal-blog[hidden] { display: none; }
+
+.fooldal-blog .blog-lista { margin-top: 18px; }
+
+/* ---------- bejegyzés-oldal ---------- */
+/* A `.szoveg-lap` osztálylistája alá kerül, ezért itt is fajsúly kell:
+   a `.szoveg-lap a` (0,1,1) különben aláhúzná. */
+.szoveg-lap .blog-vissza {
+  display: inline-flex; align-items: center; gap: 7px;
+  margin-bottom: 18px;
+  font-size: 12.5px; color: var(--muted);
+  text-decoration: none;
+}
+.szoveg-lap .blog-vissza:hover { color: var(--lime); }
+.blog-vissza .ico { width: 14px; height: 14px; }
+
+/* A bejegyzés végén álló, küldetésre vezető doboz. Szándékosan visszafogott:
+   a cikk a fő tartalom, ez csak egy ajánlat a végén. */
+.blog-hid {
+  margin-top: 34px;
+  padding: 22px 24px;
+  border: 1px solid rgb(var(--lime-rgb) / .32);
+  border-radius: 14px;
+  background: rgb(var(--lime-rgb) / .05);
+}
+.blog-hid h2 { margin: 0 0 8px; font-size: 17px; border: 0; padding: 0; }
+.blog-hid p { margin: 0 0 14px; font-size: 13.5px; color: var(--text-2); }
+.blog-hid .btn { margin-top: 2px; text-decoration: none; }
+
+@media (max-width: 620px) {
+  .blog-lista { grid-template-columns: 1fr; gap: 13px; }
+  .blog-kartya { padding: 17px 17px 19px; }
+  .blog-kartya h2 { font-size: 16.5px; }
+  .blog-hid { padding: 18px 18px 20px; }
+}

@@ -6,15 +6,71 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<meta name="description" content="Urban Quest – izgalmas szabadtéri játékok és városi küldetések csapatoknak, pároknak, családoknak és céges csapatépítésre.">
+<meta name="description" content="Városi küldetések és nyomozós séták Budapesten. Fogd a telefonod, hívd a barátaidat, és fejtsétek meg a város rejtvényeit. Ingyenes, regisztrációval.">
 <title>Urban Quest – Kalandok. Küldetések. Élmények.</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&family=Inter:wght@400..700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="styles.css?v=17">
 <link rel="stylesheet" href="uq-auth.css?v=6">
+<link rel="stylesheet" href="blog.css?v=1">
 <link rel="stylesheet" href="uq-account.css?v=3">
 <link rel="stylesheet" href="fooldal-szakaszok.css?v=1">
+<!-- uq-seo -->
+<link rel="canonical" href="https://urbanquest.hu/">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Urban Quest">
+<meta property="og:locale" content="hu_HU">
+<meta property="og:url" content="https://urbanquest.hu/">
+<meta property="og:title" content="Urban Quest — városi küldetések Budapesten">
+<meta property="og:description" content="Városi küldetések és nyomozós séták Budapesten. Fogd a telefonod, hívd a barátaidat, és fejtsétek meg a város rejtvényeit. Ingyenes, regisztrációval.">
+<meta property="og:image" content="https://urbanquest.hu/assets/og-kartya.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Urban Quest — a város a játéktér, a telefonod a térkép">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Urban Quest — városi küldetések Budapesten">
+<meta name="twitter:description" content="Városi küldetések és nyomozós séták Budapesten. Fogd a telefonod, hívd a barátaidat, és fejtsétek meg a város rejtvényeit. Ingyenes, regisztrációval.">
+<meta name="twitter:image" content="https://urbanquest.hu/assets/og-kartya.png">
+<!-- /uq-seo -->
+<!-- uq-jsonld -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": "https://urbanquest.hu/#szervezet",
+      "name": "Urban Quest",
+      "url": "https://urbanquest.hu/",
+      "logo": "https://urbanquest.hu/assets/og-kartya.png",
+      "description": "Városi küldetések és nyomozós séták Budapesten.",
+      "email": "info@urbanquest.hu",
+      "areaServed": { "@type": "City", "name": "Budapest" }
+    },
+    {
+      "@type": "WebSite",
+      "@id": "https://urbanquest.hu/#weboldal",
+      "url": "https://urbanquest.hu/",
+      "name": "Urban Quest",
+      "inLanguage": "hu-HU",
+      "publisher": { "@id": "https://urbanquest.hu/#szervezet" }
+    },
+    {
+      "@type": "Service",
+      "name": "Városi küldetés",
+      "serviceType": "Szabadtéri élményjáték",
+      "provider": { "@id": "https://urbanquest.hu/#szervezet" },
+      "areaServed": { "@type": "City", "name": "Budapest" },
+      "audience": { "@type": "Audience", "audienceType": "Baráti társaságok, családok, csapatok" },
+      "offers": { "@type": "Offer", "price": "0", "priceCurrency": "HUF",
+                  "description": "A küldetések ingyenesen játszhatók regisztráció után." }
+    }
+  ]
+}
+</script>
+<!-- /uq-jsonld -->
 </head>
 <body>
 
@@ -411,6 +467,58 @@
       </ul>
     </div>
   </section>
+
+  <!-- ===================== PROGRAMAJÁNLÓ (blog) =====================
+       Alapból LÁTHATÓ. A bejelentkezett látogató elől a uq-blog.js rejti el.
+       Fordítva nem lehet: ha alapból rejtett lenne, a keresőrobotok sem látnák,
+       pedig épp nekik szól — a blog feladata, hogy keresésből hozzon új embert. -->
+  <section class="section fooldal-blog" id="fooldalBlog">
+    <div class="container">
+      <div class="section-head">
+        <h2 class="section-title">Mit csináljatok Budapesten?</h2>
+        <a class="section-link" href="blog.html">
+          Összes cikk
+          <svg class="ico ico-sm" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-chevron-right"/></svg>
+        </a>
+      </div>
+
+      <div class="blog-lista">
+        <article class="blog-kartya">
+          <span class="blog-cimke">Programajánló</span>
+          <h2><a href="blog/mit-csinaljunk-hetvegen-budapesten.html">Mit csináljunk hétvégén Budapesten?</a></h2>
+          <p>Ingyenes séták, piacok, kilátók, gyerekbarát helyek és mozgós programok kerületre bontva — párnak, baráti körnek, családnak.</p>
+          <p class="blog-meta">
+            <svg class="ico ico-xs" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-clock"/></svg>
+            <time datetime="2026-08-04">2026. augusztus 4.</time>
+            <span>&middot;</span>
+            <span>5 perc</span>
+          </p>
+        </article>
+        <article class="blog-kartya">
+          <span class="blog-cimke">Programajánló</span>
+          <h2><a href="blog/program-esos-napra-budapesten.html">Program esős napra Budapesten</a></h2>
+          <p>Elmosta az eső a budapesti terved? Fedett programok, múzeumok, fürdő, és pár dolog, ami esőben is működik kint. Konkrét ötletek mai napra.</p>
+          <p class="blog-meta">
+            <svg class="ico ico-xs" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-clock"/></svg>
+            <time datetime="2026-08-04">2026. augusztus 4.</time>
+            <span>&middot;</span>
+            <span>5 perc</span>
+          </p>
+        </article>
+        <article class="blog-kartya">
+          <span class="blog-cimke">Társaság</span>
+          <h2><a href="blog/programok-barati-tarsasaggal-budapesten.html">Programok baráti társasággal Budapesten</a></h2>
+          <p>Miért néz mindenki a telefonját fél óra után, és milyen program köti össze a társaságot? Séta, közös főzés, játék — szerkezet szerint, nem helyszínlistaként.</p>
+          <p class="blog-meta">
+            <svg class="ico ico-xs" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-clock"/></svg>
+            <time datetime="2026-08-04">2026. augusztus 4.</time>
+            <span>&middot;</span>
+            <span>5 perc</span>
+          </p>
+        </article>
+      </div>
+    </div>
+  </section>
 </main>
 
 <!-- ===================== LÁBLÉC ===================== -->
@@ -444,6 +552,7 @@
 <script src="i18n/index.js?v=2"></script>
 <script src="uq-lablec.js?v=1"></script>
 <script src="uq-tabbar.js?v=1"></script>
+<script src="uq-blog.js?v=1"></script>
 <script src="uq-i18n.js?v=2"></script>
 </body>
 </html>

@@ -6,32 +6,92 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<meta name="description" content="Urban Quest térkép – hol indulnak a küldetések a városban? Nézd meg térképen, és válassz.">
-<title>Térkép – Urban Quest</title>
+<meta name="description" content="Programajánlók Budapestre: mit csináljatok hétvégén, esős napon vagy baráti társasággal. Konkrét ötletek, kerületre bontva.">
+<title>Programajánló blog — mit csináljatok Budapesten – Urban Quest</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&family=Inter:wght@400..700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="vendor/leaflet/leaflet.css">
 <link rel="stylesheet" href="styles.css?v=17">
 <link rel="stylesheet" href="uq-auth.css?v=6">
-<link rel="stylesheet" href="terkep.css?v=1">
+<link rel="stylesheet" href="szoveges-oldal.css?v=1">
+<link rel="stylesheet" href="blog.css?v=1">
 <!-- uq-seo -->
-<link rel="canonical" href="https://urbanquest.hu/terkep.html">
+<link rel="canonical" href="https://urbanquest.hu/blog.html">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Urban Quest">
 <meta property="og:locale" content="hu_HU">
-<meta property="og:url" content="https://urbanquest.hu/terkep.html">
-<meta property="og:title" content="Térkép — Urban Quest">
-<meta property="og:description" content="Az összes városi küldetés a térképen. Keresd meg, melyik kaland van hozzád a legközelebb Budapesten.">
+<meta property="og:url" content="https://urbanquest.hu/blog.html">
+<meta property="og:title" content="Programajánló blog — mit csináljatok Budapesten">
+<meta property="og:description" content="Programajánlók Budapestre: mit csináljatok hétvégén, esős napon vagy baráti társasággal. Konkrét ötletek, kerületre bontva.">
 <meta property="og:image" content="https://urbanquest.hu/assets/og-kartya.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
-<meta property="og:image:alt" content="Urban Quest — a város a játéktér, a telefonod a térkép">
+<meta property="og:image:alt" content="Urban Quest programajánló blog">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Térkép — Urban Quest">
-<meta name="twitter:description" content="Az összes városi küldetés a térképen. Keresd meg, melyik kaland van hozzád a legközelebb Budapesten.">
+<meta name="twitter:title" content="Programajánló blog — mit csináljatok Budapesten">
+<meta name="twitter:description" content="Programajánlók Budapestre: mit csináljatok hétvégén, esős napon vagy baráti társasággal. Konkrét ötletek, kerületre bontva.">
 <meta name="twitter:image" content="https://urbanquest.hu/assets/og-kartya.png">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Blog",
+      "@id": "https://urbanquest.hu/blog.html#blog",
+      "name": "Urban Quest blog",
+      "description": "Programajánlók Budapestre: mit csináljatok hétvégén, esős napon vagy baráti társasággal.",
+      "inLanguage": "hu-HU",
+      "url": "https://urbanquest.hu/blog.html",
+      "publisher": {
+        "@type": "Organization",
+        "name": "Urban Quest",
+        "url": "https://urbanquest.hu/"
+      },
+      "blogPost": [
+        {
+          "@type": "BlogPosting",
+          "headline": "Mit csináljunk hétvégén Budapesten? Konkrét ötletek",
+          "description": "Ingyenes séták, piacok, kilátók, gyerekbarát helyek és mozgós programok kerületre bontva — párnak, baráti körnek, családnak.",
+          "datePublished": "2026-08-04",
+          "url": "https://urbanquest.hu/blog/mit-csinaljunk-hetvegen-budapesten.html"
+        },
+        {
+          "@type": "BlogPosting",
+          "headline": "Program esős napra Budapesten: mit csinálj ma?",
+          "description": "Elmosta az eső a budapesti terved? Fedett programok, múzeumok, fürdő, és pár dolog, ami esőben is működik kint. Konkrét ötletek mai napra.",
+          "datePublished": "2026-08-04",
+          "url": "https://urbanquest.hu/blog/program-esos-napra-budapesten.html"
+        },
+        {
+          "@type": "BlogPosting",
+          "headline": "Programok baráti társasággal Budapesten, amiktől nem esik szét az este",
+          "description": "Miért néz mindenki a telefonját fél óra után, és milyen program köti össze a társaságot? Séta, közös főzés, játék — szerkezet szerint, nem helyszínlistaként.",
+          "datePublished": "2026-08-04",
+          "url": "https://urbanquest.hu/blog/programok-barati-tarsasaggal-budapesten.html"
+        }
+      ]
+    },
+    {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Főoldal",
+          "item": "https://urbanquest.hu/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Blog",
+          "item": "https://urbanquest.hu/blog.html"
+        }
+      ]
+    }
+  ]
+}
+</script>
 <!-- /uq-seo -->
 </head>
 <body>
@@ -111,33 +171,55 @@
   </div>
 </header>
 
-<main class="terkep-lap">
-  <section class="terkep-fejlec">
-    <h1>Hol indulnak a küldetések?</h1>
-    <p class="terkep-alcim">Koppints egy tűre, és megnézheted a küldetést. A tű az indulási pontot mutatja.</p>
-  </section>
+<main class="szoveg-lap">
+  <h1>Programajánló</h1>
+  <p class="szoveg-bevezeto">Mit csináljatok Budapesten? Konkrét ötletek hétvégére, esős napra
+     és baráti társaságnak — helyszínekkel, kerületekkel, buktatókkal.</p>
 
-  <div class="terkep-keret">
-    <div id="terkep" role="application" aria-label="A küldetések indulási pontjai térképen"></div>
-    <div class="terkep-allapot" id="terkepAllapot" aria-live="polite"></div>
+  <div class="blog-lista">
+      <article class="blog-kartya">
+        <span class="blog-cimke">Programajánló</span>
+        <h2><a href="blog/mit-csinaljunk-hetvegen-budapesten.html">Mit csináljunk hétvégén Budapesten?</a></h2>
+        <p>Ingyenes séták, piacok, kilátók, gyerekbarát helyek és mozgós programok kerületre bontva — párnak, baráti körnek, családnak.</p>
+        <p class="blog-meta">
+          <svg class="ico ico-xs" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-clock"/></svg>
+          <time datetime="2026-08-04">2026. augusztus 4.</time>
+          <span>&middot;</span>
+          <span>5 perc</span>
+        </p>
+      </article>
+      <article class="blog-kartya">
+        <span class="blog-cimke">Programajánló</span>
+        <h2><a href="blog/program-esos-napra-budapesten.html">Program esős napra Budapesten</a></h2>
+        <p>Elmosta az eső a budapesti terved? Fedett programok, múzeumok, fürdő, és pár dolog, ami esőben is működik kint. Konkrét ötletek mai napra.</p>
+        <p class="blog-meta">
+          <svg class="ico ico-xs" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-clock"/></svg>
+          <time datetime="2026-08-04">2026. augusztus 4.</time>
+          <span>&middot;</span>
+          <span>5 perc</span>
+        </p>
+      </article>
+      <article class="blog-kartya">
+        <span class="blog-cimke">Társaság</span>
+        <h2><a href="blog/programok-barati-tarsasaggal-budapesten.html">Programok baráti társasággal Budapesten</a></h2>
+        <p>Miért néz mindenki a telefonját fél óra után, és milyen program köti össze a társaságot? Séta, közös főzés, játék — szerkezet szerint, nem helyszínlistaként.</p>
+        <p class="blog-meta">
+          <svg class="ico ico-xs" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-clock"/></svg>
+          <time datetime="2026-08-04">2026. augusztus 4.</time>
+          <span>&middot;</span>
+          <span>5 perc</span>
+        </p>
+      </article>
   </div>
-
-  <section class="terkep-lista" id="terkepLista" aria-label="Küldetések listája"></section>
 </main>
 
-<script src="vendor/leaflet/leaflet.js"></script>
-<script src="data.js?v=12"></script>
 <script src="uq-api.js?v=7"></script>
 <script src="uq-track.js?v=1"></script>
   <script src="uq-auth.js?v=7"></script>
-<script src="uq-account.js?v=7"></script>
-<script src="uq-catalog.js?v=4"></script>
-<script src="terkep.js?v=1"></script>
 <script src="uq-fejlec.js?v=1"></script>
 <script src="uq-lablec.js?v=1"></script>
 <script src="uq-tabbar.js?v=1"></script>
-<script src="i18n/kozos.js?v=2"></script>
-<script src="i18n/terkep.js?v=1"></script>
+<script src="i18n/kozos.js?v=3"></script>
 <script src="uq-i18n.js?v=2"></script>
 </body>
 </html>

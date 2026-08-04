@@ -1,0 +1,45 @@
+# Urban Quest — https://urbanquest.hu
+#
+# A publikus oldalak szabadon indexelhetők. Az admin- és alkotói felületek
+# nem: azok bejelentkezéshez kötöttek, és semmi keresnivalójuk a találatok
+# között. A tiltás mellett minden ilyen oldal <meta name="robots" content=
+# "noindex"> jelzést is visel — a kettő együtt véd, mert a robots.txt csak
+# a bejárást kéri, az indexelést nem tiltja önmagában.
+
+User-agent: *
+Allow: /
+
+# admin felület
+Disallow: /admin.html
+Disallow: /iranyitopult.html
+Disallow: /feladatok.html
+Disallow: /allomasok.html
+Disallow: /media.html
+Disallow: /csapatok.html
+Disallow: /idozitesek.html
+Disallow: /beallitasok.html
+Disallow: /jovahagyas.html
+Disallow: /latogatok.html
+Disallow: /jatekok.html
+Disallow: /atkoltoztetes.html
+
+# pálya-varázsló (admin eszköz)
+Disallow: /palya-varazslo.html
+Disallow: /palya-varazslo-vaz.html
+Disallow: /palya-varazslo-feladatok.html
+Disallow: /palya-varazslo-sztori.html
+Disallow: /palya-varazslo-ellenorzes.html
+
+# alkotói szerkesztő és személyes felületek
+Disallow: /alkoto.html
+Disallow: /alkoto-palya.html
+Disallow: /alkoto-feladat.html
+Disallow: /fiokom.html
+Disallow: /bejelentkezes.html
+Disallow: /jatszas.html
+
+# fejlesztői maradékok
+Disallow: /wireframe.html
+Disallow: /mobil-elonezet.html
+
+Sitemap: https://urbanquest.hu/sitemap.xml

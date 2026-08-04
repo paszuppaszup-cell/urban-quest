@@ -52,6 +52,51 @@
     page.style.setProperty('--lime-rgb', t.rgb.join(' '));
   }
 
+  /* ---------- kereső- és megosztás-jelzések ----------
+     Ez az oldal adatvezérelt: a valódi címek `kuldetes.html?id=…`, a HTML-ben
+     viszont csak EGY, csupasz canonical állhat. Ha az úgy marad, minden
+     küldetés ugyanarra a címre mutat kanonikusként, tehát egyikük sem
+     indexelődik külön — pedig az oldaltérkép pont a `?id=`-s címeket sorolja.
+     Ezért a canonicalt és a megosztás-mezőket a betöltött pálya alapján
+     írjuk felül. */
+  function fejMezo(valaszto, attr, ertek) {
+    let el = document.head.querySelector(valaszto);
+    if (!el) {
+      el = document.createElement(valaszto.startsWith('link') ? 'link' : 'meta');
+      const m = valaszto.match(/\[(name|property|rel)="([^"]+)"\]/);
+      if (m) el.setAttribute(m[1], m[2]);
+      document.head.appendChild(el);
+    }
+    el.setAttribute(attr, ertek);
+  }
+
+  function seoFrissit() {
+    if (!q) return;
+    const cim = q.heroTitle || q.title || 'Küldetés';
+    const url = 'https://urbanquest.hu/kuldetes.html?id=' + encodeURIComponent(id);
+    /* A katalógus `desc`/`about`/`subtitle` mezőket ad; az elsőt vesszük, ami
+       van, és kereső-barát hosszra vágjuk. */
+    let leiras = String(q.desc || q.about || q.subtitle || '').replace(/\s+/g, ' ').trim();
+    if (leiras.length > 160) leiras = leiras.slice(0, 157).replace(/[\s,;:.-]+$/, '') + '…';
+    if (!leiras) leiras = `${cim} — városi küldetés Budapesten. Végigjárható útvonal, helyszíni feladatok, ingyenes.`;
+
+    document.title = `${cim} – Urban Quest`;
+    fejMezo('meta[name="description"]', 'content', leiras);
+    fejMezo('link[rel="canonical"]', 'href', url);
+    fejMezo('meta[property="og:url"]', 'content', url);
+    fejMezo('meta[property="og:title"]', 'content', cim + ' — Urban Quest');
+    fejMezo('meta[property="og:description"]', 'content', leiras);
+    fejMezo('meta[name="twitter:title"]', 'content', cim + ' — Urban Quest');
+    fejMezo('meta[name="twitter:description"]', 'content', leiras);
+    /* Ha a pályának van saját borítóképe, az a megosztás képe is. Csak abszolút
+       címet fogadunk el: a relatív út a megosztó oldalán nem oldódna fel. */
+    const kep = q.image || '';
+    if (/^https?:\/\//.test(kep)) {
+      fejMezo('meta[property="og:image"]', 'content', kep);
+      fejMezo('meta[name="twitter:image"]', 'content', kep);
+    }
+  }
+
   function ujraOlvas() {
     QUESTS = window.QUESTS || QUESTS;
     ORDER = window.QUEST_ORDER || ORDER;
@@ -61,7 +106,7 @@
     if (page && ujAcc !== accKey) { page.classList.remove('acc-' + accKey); page.classList.add('acc-' + ujAcc); }
     accKey = ujAcc;
     temaAlkalmaz();
-    document.title = `${q.heroTitle || q.title} – Urban Quest`;
+    seoFrissit();
     return true;
   }
 
