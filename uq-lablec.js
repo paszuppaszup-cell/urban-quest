@@ -12,9 +12,6 @@
        a ténylegesen működő oldalak kerültek.
      - Közösségi ikonok — még nincsenek fiókok. Egy sehova nem vezető
        ikon rosszabb, mint a hiánya: azt sugallja, elhanyagolt az oldal.
-     - ÁSZF — az valódi jogi dokumentum, a vállalkozás saját feltételeivel.
-       Amíg minden küldetés ingyenes, nincs mihez kötni; amint fizetős
-       pálya indul, ez a link kell.
 
    Az évszám futásidőben áll be. A korábbi lábléc „© 2024"-et írt 2026-ban.
    ========================================================= */
@@ -37,6 +34,7 @@
 
   var INFO = [
     ['gyik.html', 'GYIK'],
+    ['aszf.html', 'Általános Szerződési Feltételek'],
     ['adatvedelem.html', 'Adatvédelmi tájékoztató']
   ];
 

@@ -1,6 +1,6 @@
 /* automatikusan generált fordítás-szótár */
 /* közös elemek: fejléc, lábléc, mobil fül-navigáció, fiók-felület (uq-auth.js, uq-account.js), csapat-modal (uq-team.js) */
-/* kulcsok száma: 104 */
+/* kulcsok száma: 109 */
 window.UQI18N = window.UQI18N || {};
 Object.assign(window.UQI18N, {
 
@@ -8,6 +8,11 @@ Object.assign(window.UQI18N, {
   "Küldetések": { en: "Quests", de: "Missionen", fr: "Missions", es: "Misiones", it: "Missioni" },
   "Hogyan működik?": { en: "How it works", de: "So funktioniert's", fr: "Comment ça marche ?", es: "¿Cómo funciona?", it: "Come funziona" },
   "Árak": { en: "Prices", de: "Preise", fr: "Tarifs", es: "Precios", it: "Prezzi" },
+  "Megnézem térképen": { en: "View on the map", de: "Auf der Karte ansehen", fr: "Voir sur la carte", es: "Ver en el mapa", it: "Guarda sulla mappa" },
+  "Városi": { en: "Urban", de: "Stadt", fr: "Urbain", es: "Urbana", it: "Urbana" },
+  "Történelmi": { en: "Historical", de: "Historisch", fr: "Historique", es: "Histórica", it: "Storica" },
+  "Családi": { en: "Family", de: "Familie", fr: "Famille", es: "Familiar", it: "Famiglia" },
+  "Céges": { en: "Corporate", de: "Firmen", fr: "Entreprise", es: "Empresas", it: "Aziendale" },
   "Térkép": { en: "Map", de: "Karte", fr: "Carte", es: "Mapa", it: "Mappa" },
   "Kedvencek": { en: "Favourites", de: "Favoriten", fr: "Favoris", es: "Favoritos", it: "Preferiti" },
   "Ranglista": { en: "Leaderboard", de: "Bestenliste", fr: "Classement", es: "Clasificación", it: "Classifica" },
