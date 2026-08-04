@@ -61,6 +61,17 @@
     q.fromDb = true;
     q.version = row.version;
 
+    /* A SZERZŐ. A v_catalog nézetből jön, nem a befagyasztott public_card-ból:
+       ha az alkotó megváltoztatja a nevét vagy a Patreon-linkjét, az azonnal
+       látszik, anélkül hogy minden pályát újra kellene publikálni. */
+    q.szerzoId = row.author_id || null;
+    q.szerzoNev = row.author_name || '';
+    q.szerzoKep = row.author_avatar || '';
+    /* Csak patreon.com cím kerülhet ide — a korlátot az adatbázis
+       kényszeríti ki (profiles_patreon_url_check), mert ez a mező egy
+       NYILVÁNOS oldalon jelenik meg hivatkozásként. */
+    q.szerzoPatreon = row.author_patreon || '';
+
     /* A kártya-renderelő ezeket is használja — enélkül „UNDEFINED" jelent
        meg a nehézség-jelvényen és „(undefined)" az értékeléseknél. */
     q.diffLabel = DIFF_LABEL[q.diff] || 'Közepes';

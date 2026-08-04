@@ -100,6 +100,15 @@ window.questCardHTML = function (id) {
       <div class="quest-stats">${statsHTML}</div>
 
       ${q.startPoint ? `<p class="quest-start">${ico('i-pin', 'ico ico-xs')}<span>Indulás: <b>${esc(q.startPoint)}</b>${q.locCity ? ' · ' + esc(q.locCity) : ''}</span></p>` : ''}
+
+      <!-- A SZERZŐ. Közösségi alkotói platformon a névnek látszania kell:
+           ez az egyetlen elismerés, amit a rendszer adni tud, és ez viszi
+           a látogatót az alkotó saját támogatói oldalára.
+           A szerzoNev a v_catalog nézetből ÉLŐBEN jön, nem a befagyasztott
+           kártyából — így a névváltozás azonnal látszik, újrapublikálás
+           nélkül. (Megjegyzésbe NEM kerülhet visszaidézőjel: ez az egész
+           kártya egy template-literál, és lezárná a sztringet.) -->
+      ${q.szerzoNev ? `<p class="quest-author">${ico('i-user-circle', 'ico ico-xs')}<span>Készítette: <b>${esc(q.szerzoNev)}</b></span></p>` : ''}
     </div>
   </article>`;
 };

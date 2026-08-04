@@ -497,6 +497,30 @@ alkotói út.
 
 ---
 
+## 13/c. Területfelosztás — két munkamenet dolgozik
+
+2026-08-04-én kiderült, hogy **két munkamenet szerkeszti ugyanezt a mappát**,
+és ugyanazokhoz a fájlokhoz nyúl. Hogy ne írjuk felül egymást, a felosztás:
+
+| Terület | Fájlok |
+|---|---|
+| **Adat és szerveroldal** | minden SQL-migráció, `uq-api.js`, `uq-catalog.js`, `uq-play-src.js`, `uq-relay.js`, `ROADMAP.md` |
+| **Megjelenés és szövegek** | `*.css`, `i18n/*`, `uq-fejlec.js`, `uq-lablec.js`, a jogi HTML-ek |
+| **Alkotói felület** | `alkoto*.html`, `alkoto*.js`, `jovahagyas.*` |
+| **Lejátszó** | `jatszas.js`, `jatszas.css` |
+
+**Szabály mindkét oldalnak:** munka előtt `git log` a deploy-mappában, és
+kitolás előtt **diff a kitolt változat ellen** — ha a saját fájlod csak
+hozzáadást tartalmaz, biztonságos. Ma ezt megtettem: mind a 34 érintett
+fájlnál csak verziószám változott, tartalom nem veszett el.
+
+> A párhuzamos munkamenet a kategória-sorokat **jobbra cserélte**: ha minden
+> kategóriába egyetlen pálya esik, egy rácsba teszi az egészet, mert a bontás
+> ilyenkor csak széteső, üres benyomást kelt. Ahogy nő a kínálat, a bontás
+> magától visszatér. Ezt szándékosan nem állítottam vissza.
+
+---
+
 ## 14. Nyitott döntések
 
 *(nincs — minden eldöntve)*

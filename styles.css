@@ -1502,6 +1502,20 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
   line-height: 1.35;
 }
 
+/* A kártya szerzője.
+   Halványabb, mint az indulási hely: a küldetés a főszereplő, nem az alkotó.
+   De ott van — egy közösségi alkotói platformon a név az egyetlen elismerés,
+   amit a rendszer adni tud. */
+.quest-author {
+  display: flex; align-items: center; gap: 6px;
+  margin-top: 5px;
+  font-size: 11px; color: var(--muted);
+  min-width: 0;
+}
+.quest-author .ico { color: var(--muted); flex: none; }
+.quest-author b { color: var(--text-2); font-weight: 600; }
+.quest-author span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
 /* lenti fül-navigáció (csak mobilon) */
 .mobile-tabbar { display: none; }
 
