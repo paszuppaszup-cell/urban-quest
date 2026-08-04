@@ -1,6 +1,6 @@
 /* automatikusan generált fordítás-szótár */
 /* közös elemek: fejléc, lábléc, mobil fül-navigáció, fiók-felület (uq-auth.js, uq-account.js), csapat-modal (uq-team.js) */
-/* kulcsok száma: 102 */
+/* kulcsok száma: 104 */
 window.UQI18N = window.UQI18N || {};
 Object.assign(window.UQI18N, {
 
@@ -8,6 +8,8 @@ Object.assign(window.UQI18N, {
   "Küldetések": { en: "Quests", de: "Missionen", fr: "Missions", es: "Misiones", it: "Missioni" },
   "Hogyan működik?": { en: "How it works", de: "So funktioniert's", fr: "Comment ça marche ?", es: "¿Cómo funciona?", it: "Come funziona" },
   "Árak": { en: "Prices", de: "Preise", fr: "Tarifs", es: "Precios", it: "Prezzi" },
+  "Térkép": { en: "Map", de: "Karte", fr: "Carte", es: "Mapa", it: "Mappa" },
+  "Kedvencek": { en: "Favourites", de: "Favoriten", fr: "Favoris", es: "Favoritos", it: "Preferiti" },
   "Ranglista": { en: "Leaderboard", de: "Bestenliste", fr: "Classement", es: "Clasificación", it: "Classifica" },
   "Rólunk": { en: "About us", de: "Über uns", fr: "À propos", es: "Sobre nosotros", it: "Chi siamo" },
   "Kapcsolat": { en: "Contact", de: "Kontakt", fr: "Contact", es: "Contacto", it: "Contatti" },
