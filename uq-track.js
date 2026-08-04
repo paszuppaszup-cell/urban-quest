@@ -40,6 +40,21 @@
     return d === '1' || d === 'yes';
   }
 
+  /* A FEJLESZTŐI FORGALOM NEM LÁTOGATÓ.
+     A helyi kiszolgálón futó ellenőrzések (headless böngésző, mobil-átvilágítás,
+     konzol-söprés) minden indításkor FRISS profilt kapnak, tehát új eszköz-
+     azonosítót is — így néhány próbafutás alatt tucatnyi „látogató" keletkezik.
+     Mérve: 598 esemény, 92 eszköz, ebből 75-nél az első és utolsó esemény
+     között kevesebb mint egy perc telt el. Ezek nélkül a kimutatás bármit
+     mutathat, csak a valóságot nem.
+     A ?nomeas=1 kapcsoló kézi kizáráshoz kell (pl. saját nézelődéshez élesben). */
+  function fejlesztoiHoszt() {
+    var h = location.hostname;
+    if (h === 'localhost' || h === '127.0.0.1' || h === '::1' || h === '' ||
+        /\.local$/.test(h) || location.protocol === 'file:') return true;
+    return /[?&]nomeas=1\b/.test(location.search);
+  }
+
   function eszkoz() {
     try {
       var d = localStorage.getItem(KULCS);
@@ -55,7 +70,7 @@
     } catch (e) { return null; }   // letiltott tároló: nem mérünk, nem hibázunk
   }
 
-  var KIKAPCSOLVA = adminOldal() || nemAkarja();
+  var KIKAPCSOLVA = adminOldal() || nemAkarja() || fejlesztoiHoszt();
 
   /* A beküldés tudatosan NEM a UQAPI.queue() sorát használja — lásd a fenti
      2. elvet. Közvetlen, eldobható kérés. */
