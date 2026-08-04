@@ -632,3 +632,41 @@
   object-fit: contain;      /* álló videó se nagyítódjon szét */
   background: #05070a;
 }
+
+/* =========================================================
+   A HAT KICSI â€” a lejatszo visszajelzese
+
+   1) Harmadik eredmeny-kartya: a tevedes nem "Atugorva".
+   2) A razas TIPUSFUGGO: eddig csak az input mezot erte, tehat a szamzarnal
+      es a sorbarakasnal fizikailag nema volt a hiba.
+   3) A szamzar "Nyitas" gombja teli kodig letiltva.
+   ========================================================= */
+
+/* tevedes-kartya â€” kulon a lemondastol */
+.uq-pl-res.bad{
+  background:rgb(var(--warn-rgb, 224 115 58) / .10);
+  border:1px solid rgb(var(--warn-rgb, 224 115 58) / .38);
+}
+.uq-pl-res.bad .ico{ color:var(--warn, #e0733a); }
+.uq-pl-res.bad b{ color:var(--warn, #e0733a); }
+
+/* a razas minden valaszdobozra vonatkozik, nem csak a beiro mezore */
+.uq-pl-code.shake,
+.uq-pl-puzzle.shake,
+.uq-pl-opts.shake{ animation:uqShake .35s; }
+
+/* a szamzar nyugtazoja: teli kodig nem nyomhato */
+.uq-pl-pad button.ok[disabled]{
+  opacity:.42; cursor:default; color:var(--muted);
+  border-color:var(--line); background:rgb(255 255 255 / .02);
+}
+.uq-pl-pad button.ok[disabled]:hover{
+  border-color:var(--line); background:rgb(255 255 255 / .02);
+}
+
+@media (prefers-reduced-motion: reduce){
+  .uq-pl-code.shake,
+  .uq-pl-puzzle.shake,
+  .uq-pl-opts.shake{ animation:none; }
+}
+

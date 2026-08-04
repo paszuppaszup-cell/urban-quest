@@ -645,3 +645,37 @@
   .alk-ag-cimke { flex: 1 1 100%; }
 }
 
+
+/* ---------- ELLENORZES: mi menne igy elesre ---------- */
+.alk-hibasav {
+  margin: 0; padding: 9px 12px; border-radius: 9px;
+  font-size: 12.5px; line-height: 1.5; font-weight: 600;
+  color: var(--hint, #e8c15a);
+  background: rgb(232 193 90 / .1);
+  border: 1px solid rgb(232 193 90 / .32);
+}
+.alk-hibasav[hidden] { display: none !important; }
+
+.alk-fchip.is-baj { border-color: rgb(232 193 90 / .55); }
+.alk-fchip-pont {
+  flex: none; width: 15px; height: 15px; border-radius: 50%;
+  display: grid; place-items: center;
+  font-size: 10px; font-weight: 800; line-height: 1;
+  color: #0a0d0a; background: var(--hint, #e8c15a);
+}
+
+.alk-fsav-baj {
+  flex: 1 1 100%; font-size: 11.5px; line-height: 1.5;
+  color: var(--hint, #e8c15a);
+}
+
+.alk-baj {
+  margin-top: 12px; padding: 10px 12px; border-radius: 9px;
+  background: rgb(232 193 90 / .09);
+  border: 1px solid rgb(232 193 90 / .3);
+}
+.alk-baj b { display: block; font-size: 12.5px; color: var(--hint, #e8c15a); margin-bottom: 5px; }
+.alk-baj ul { margin: 0; padding-left: 17px; }
+.alk-baj li { font-size: 12px; line-height: 1.55; color: var(--text-2); margin-bottom: 3px; }
+.alk-baj li:last-child { margin-bottom: 0; }
+

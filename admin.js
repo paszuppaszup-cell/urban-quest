@@ -4,6 +4,30 @@
 (function () {
   'use strict';
 
+  /* Fisher-Yates. A regi `sort(() => Math.random() - 0.5)` nem egyenletes
+     kevers: az osszehasonlito veletlensege miatt az EREDETI sorrend atut
+     rajta, es a szerzo altal elore irt helyes valasz aranytalanul sokszor
+     maradt elol. Ugyanez a fuggveny fut a lejatszoban is. */
+  function uqKeverve(t) {
+    const a = t.slice();
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      const x = a[i]; a[i] = a[j]; a[j] = x;
+    }
+    return a;
+  }
+  /* Sorbarakasnal a kevert kezdoallas nem lehet kesz megoldas: a szerkesztoi
+     elonezetben az `items` meg a HELYES sorrendben all. */
+  function uqKeverveNemAzonos(t) {
+    if (t.length < 2) return t.slice();
+    for (let p = 0; p < 12; p++) {
+      const a = uqKeverve(t);
+      if (a.reduce((n, x, i) => n + (x === t[i] ? 1 : 0), 0) * 2 <= t.length) return a;
+    }
+    return t.slice(1).concat(t.slice(0, 1));
+  }
+
+
   /* ---------- segédek ---------- */
   const $ = (sel, ctx) => (ctx || document).querySelector(sel);
   const $$ = (sel, ctx) => Array.from((ctx || document).querySelectorAll(sel));
@@ -1482,7 +1506,7 @@
     }));
   }
   function drawPuzzle(box, c, done) {
-    if (!play.pv.order) play.pv.order = (c.items || []).map((_, i) => i).sort(() => Math.random() - 0.5);
+    if (!play.pv.order) play.pv.order = uqKeverveNemAzonos((c.items || []).map((_, i) => i));
     const draw = () => {
       box.innerHTML = '<div class="uq-pl-puzzle">' + play.pv.order.map((idx, pos) => '<div class="uq-pl-pz"><span class="n">' + (pos + 1) + '</span><span class="t">' + esc(c.items[idx]) + '</span><span class="mv"><button type="button" data-mv="up" data-pos="' + pos + '">▲</button><button type="button" data-mv="dn" data-pos="' + pos + '">▼</button></span></div>').join('') + '</div><button class="uq-pl-go uq-pl-wide" type="button" id="uqPlayGo">Ellenőrzés</button>';
       box.querySelectorAll('[data-mv]').forEach(b => b.addEventListener('click', () => {
@@ -1507,7 +1531,7 @@
 
     if (task.type === 'kviz') {
       let opts = (c.options || []).map((o, i) => ({ o: o, i: i }));
-      if (c.shuffle) opts = opts.sort(() => Math.random() - 0.5);
+      if (c.shuffle) opts = uqKeverve(opts);
       box.innerHTML = '<div class="uq-pl-opts">' + opts.map(x => '<button class="uq-pl-opt" type="button" data-i="' + x.i + '">' + esc(x.o.text || '—') + '</button>').join('') + '</div>';
       box.querySelectorAll('.uq-pl-opt').forEach(b => b.addEventListener('click', () => {
         const ok = c.options[+b.dataset.i] && c.options[+b.dataset.i].correct;

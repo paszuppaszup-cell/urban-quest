@@ -928,7 +928,10 @@
       });
     }
     play.lastAnswer = null;
-    play.result = { ok: credited, reveal: revealText || null, task: task, ujra: ujra && credited };
+    /* Az ÁTUGRÁS és a TÉVEDÉS két külön dolog — a szerver felé eddig is az volt
+       (`skipped`), a felület viszont ugyanazt a kártyát mutatta rájuk. */
+    play.result = { ok: credited, reveal: revealText || null, task: task,
+                    ujra: ujra && credited, atugorva: !!atugorva };
     saveSnapshot();
     renderPlay();
   }
@@ -1232,6 +1235,32 @@
   };
   function akcioFelirat(tipus) { return AKCIO_FELIRAT[tipus] || 'Feladat'; }
 
+  /* A SIKER felirata is típusfüggő. A fotónál és a nyugtázós feladatnál nincs
+     mit „eltalálni" — ott a „Helyes!" vizsgáztat egy olyan mozdulatot, amit
+     senki nem bírált el. A GPS-nél viszont van mit ünnepelni: megérkeztek. */
+  const SIKER_FELIRAT = {
+    kviz: 'Helyes!', szoveg: 'Helyes!', kod: 'Nyílik a zár!', puzzle: 'Helyes sorrend!',
+    foto: 'Megvan a kép!', gps: 'Megérkeztetek!', qr: 'Beolvasva!', info: 'Mehettek tovább'
+  };
+
+  /* A feladat alatti apróbetűs sor.
+
+     Eddig MINDEN típus alá ugyanaz került: „A válasz beküldéséhez a helyszínen
+     kell lennetek." Ez csak a helyszín-igazolásnál igaz — semmi más típusnál
+     nincs helymérés a beküldés előtt (lásd renderGpsFeladat: egyedül ott fut
+     `navigator.geolocation`). A többinél tehát a felület olyan szabályt
+     ígért, amit nem tart be; egy pálya hitele ilyen apróságokon múlik. */
+  const ALJSZOVEG = {
+    gps:    { ikon: 'a-lock', szoveg: 'A telefon megméri a helyzeteteket — a ponthoz tényleg oda kell érnetek.' },
+    qr:     { ikon: 'a-pin',  szoveg: 'A kódot a helyszínen találjátok meg.' },
+    foto:   { ikon: 'a-pin',  szoveg: 'A képet a helyszínen készítsétek el.' },
+    kviz:   { ikon: 'a-pin',  szoveg: 'A válasz a helyszínen van — nézzetek körül.' },
+    szoveg: { ikon: 'a-pin',  szoveg: 'A válasz a helyszínen van — nézzetek körül.' },
+    kod:    { ikon: 'a-pin',  szoveg: 'A kód a helyszínen van — nézzetek körül.' },
+    puzzle: { ikon: 'a-pin',  szoveg: 'A sorrendhez a helyszín ad támpontot.' },
+    info:   null
+  };
+
   function playStationHTML() {
     const i = playCurIdx(); const s = COURSE[i];
     const total = play.stationTasks.length;
@@ -1314,7 +1343,11 @@
             '<span class="uq-pl-rw-txt"><b>' + tippDb + ' tipp</b><span>Ha elakadtok</span></span></div>'
           : '') +
       '</div>';
-      h += '<p class="uq-pl-onsite"><svg class="ico ico-xs" aria-hidden="true"><use href="#a-lock"/></svg>A válasz beküldéséhez a helyszínen kell lennetek.</p>';
+      const alj = ALJSZOVEG[task.type];
+      if (alj) {
+        h += '<p class="uq-pl-onsite"><svg class="ico ico-xs" aria-hidden="true"><use href="#' +
+             alj.ikon + '"/></svg>' + esc(alj.szoveg) + '</p>';
+      }
     } else {
       h += '<div class="uq-pl-card uq-pl-akcio">';
       if (s.desc) h += '<p class="uq-pl-desc">' + esc(s.desc) + '</p>';
@@ -1458,12 +1491,59 @@
     setTimeout(kerd, 2500);
   }
 
-  function playWrong() {
+  /* =========================================================
+     KEVERÉS — Fisher–Yates, nem `sort(() => Math.random() - 0.5)`
+
+     A régi egysoros nem egyenletes keverés: az összehasonlító függvény
+     véletlenszerű, ezért a rendezés eredménye az EREDETI sorrendtől függ,
+     és az átüt rajta. A szerző pedig rendszerint az első sorba írja a
+     csillagos helyes választ — így az aránytalanul sokszor maradt elöl,
+     vagyis a felület idővel kiismerhetőbb lett, mint a helyszín.
+     ========================================================= */
+  function keverve(tomb) {
+    const a = tomb.slice();
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      const t = a[i]; a[i] = a[j]; a[j] = t;
+    }
+    return a;
+  }
+
+  /* Sorbarakásnál a kevert kezdőállás nem lehet KÉSZ MEGOLDÁS. A publikált
+     csomagban a szerver már megkeverte az elemeket, de a szerkesztő
+     előnézetében és a régi, beégetett pályákon az `items` a helyes
+     sorrendben áll — ott az azonosság-permutáció ingyen pont lenne. */
+  function keverveNemAzonos(tomb) {
+    if (tomb.length < 2) return tomb.slice();
+    for (let proba = 0; proba < 12; proba++) {
+      const a = keverve(tomb);
+      const helyen = a.reduce((n, x, i) => n + (x === tomb[i] ? 1 : 0), 0);
+      if (helyen * 2 <= tomb.length) return a;      // legalább a fele mozduljon
+    }
+    return tomb.slice(1).concat(tomb.slice(0, 1));  // végszükség: egy forgatás
+  }
+
+  /* A rossz válasz jelzése TÍPUSFÜGGŐ.
+
+     Eddig csak az `input` mezőt rázta meg — vagyis a számzárnál és a
+     sorbarakásnál fizikailag néma volt: a csapat a napon állva, zsebre tett
+     telefonnal semmit nem érzékelt a tévedésből. A rezgés a legolcsóbb
+     csatorna odakint. A beragadt kódot is itt ürítjük: enélkül a teli
+     kijelzőre hiába nyomtak új számot, nem történt semmi. */
+  function playWrong(opts) {
+    opts = opts || {};
     const box = $('#uqPlayAnswer'); if (!box) return;
     let m = box.querySelector('.uq-pl-wrong');
     if (!m) { m = document.createElement('div'); m.className = 'uq-pl-wrong'; box.appendChild(m); }
-    m.innerHTML = '<svg class="ico ico-xs" aria-hidden="true"><use href="#a-x"/></svg>Nem talált — próbáld újra, vagy ugord át.';
-    const inp = box.querySelector('input'); if (inp) { inp.classList.remove('shake'); void inp.offsetWidth; inp.classList.add('shake'); inp.focus(); }
+    m.innerHTML = '<svg class="ico ico-xs" aria-hidden="true"><use href="#a-x"/></svg>' +
+                  esc(opts.szoveg || 'Nem talált — próbáld újra, vagy ugord át.');
+
+    try { if (navigator.vibrate) navigator.vibrate([30, 60, 30]); } catch (e) {}
+
+    const cel = box.querySelector(opts.valaszto || 'input') ||
+                box.querySelector('.uq-pl-code, .uq-pl-puzzle, .uq-pl-opts, input');
+    if (cel) { cel.classList.remove('shake'); void cel.offsetWidth; cel.classList.add('shake'); }
+    const inp = box.querySelector('input'); if (inp) inp.focus();
   }
   /* Az adatbázisból letöltött csomag megoldása CSAK sózott hash — ezért a
      kiértékelés aszinkron. A beégetett (régi) adatnál marad a korábbi,
@@ -1503,27 +1583,64 @@
     const v = c.tolerant ? playNorm(val) : String(val).trim();
     return (c.accepted || []).some(x => { const xx = c.tolerant ? playNorm(x) : String(x).trim(); return c.keyword ? (xx && v.includes(xx)) : v === xx; });
   }
+  /* =========================================================
+     SZÁMZÁR
+
+     Egy valódi zár akkor nyílik, amikor az utolsó számjegy a helyére kerül —
+     nem akkor, amikor még megnyomsz egy „OK"-t. Eddig a nyugtázó gomb üres
+     kóddal is beküldött, teli kódnál pedig egy fölösleges koppintás ékelődött
+     a megfejtés és a jutalom közé; rossz kód után a kijelző beragadt, mert a
+     teli `play.pv.code` nem ürült, és a következő számjegy nem történt meg.
+     ========================================================= */
   function drawCodePad(box, c, done, task) {
     /* A csomagban nincs nyers kód, csak a hossza (codeLen) — enélkül nem
        tudnánk hány mezőt rajzolni. */
     const len = (c.code || '').length || Number(c.codeLen) || 4;
     const disp = () => '<div class="uq-pl-code">' + Array.from({ length: len }).map((_, i) => '<span>' + (play.pv.code[i] || '') + '</span>').join('') + '</div>';
-    box.innerHTML = disp() + '<div class="uq-pl-pad">' + [1, 2, 3, 4, 5, 6, 7, 8, 9].map(n => '<button type="button" data-k="' + n + '">' + n + '</button>').join('') + '<button type="button" data-k="del">⌫</button><button type="button" data-k="0">0</button><button type="button" data-k="ok" class="ok">OK</button></div>';
+    box.innerHTML = disp() + '<div class="uq-pl-pad">' + [1, 2, 3, 4, 5, 6, 7, 8, 9].map(n => '<button type="button" data-k="' + n + '">' + n + '</button>').join('') + '<button type="button" data-k="del">⌫</button><button type="button" data-k="0">0</button><button type="button" data-k="ok" class="ok">Nyitás</button></div>';
+
+    let birál = false;
+    const okGomb = () => box.querySelector('.uq-pl-pad [data-k="ok"]');
+    const frissit = () => {
+      const d = box.querySelector('.uq-pl-code'); if (d) d.outerHTML = disp();
+      const g = okGomb(); if (g) g.disabled = play.pv.code.length < len || birál;
+    };
+
+    const nyit = () => {
+      if (birál || play.pv.code.length < len) return;
+      birál = true;
+      const g = okGomb(); if (g) g.disabled = true;
+      return ertekel(task, play.pv.code, String(play.pv.code) === String(c.code))
+        .then(ok => {
+          if (ok) return done(true);
+          birál = false;
+          play.pv.code = '';                 // a beragadt kód ürül, jöhet az új
+          frissit();
+          playWrong({ valaszto: '.uq-pl-code' });
+        });
+    };
+
     box.querySelectorAll('.uq-pl-pad button').forEach(b => b.addEventListener('click', () => {
       const k = b.dataset.k;
       if (k === 'del') play.pv.code = play.pv.code.slice(0, -1);
-      else if (k === 'ok') {
-        return ertekel(task, play.pv.code, String(play.pv.code) === String(c.code))
-          .then(ok => ok ? done(true) : playWrong());
-      }
+      else if (k === 'ok') return nyit();
       else if (play.pv.code.length < len) play.pv.code += k;
-      const d = box.querySelector('.uq-pl-code'); if (d) d.outerHTML = disp();
+      frissit();
+      /* Teli kódnál magától nyílik — ahogy egy zár. A rövid szünet azért kell,
+         hogy az utolsó számjegy még megjelenjen a kijelzőn. */
+      if (play.pv.code.length === len) setTimeout(nyit, 280);
     }));
+    frissit();
   }
   function drawPuzzle(box, c, done, task) {
-    if (!play.pv.order) play.pv.order = (c.items || []).map((_, i) => i).sort(() => Math.random() - 0.5);
+    if (!play.pv.order) play.pv.order = keverveNemAzonos((c.items || []).map((_, i) => i));
     const draw = () => {
-      box.innerHTML = '<div class="uq-pl-puzzle">' + play.pv.order.map((idx, pos) => '<div class="uq-pl-pz"><span class="n">' + (pos + 1) + '</span><span class="t">' + esc(c.items[idx]) + '</span><span class="mv"><button type="button" data-mv="up" data-pos="' + pos + '">▲</button><button type="button" data-mv="dn" data-pos="' + pos + '">▼</button></span></div>').join('') + '</div><button class="uq-pl-go uq-pl-wide" type="button" id="uqPlayGo">Ellenőrzés</button>';
+      /* A hibaüzenet TÚLÉLI az átrendezést. Eddig az első nyíl-koppintás
+         újrarajzolta a dobozt, és ezzel letörölte a „Nem talált" jelzést —
+         épp abban a pillanatban, amikor a csapat elkezdett rá reagálni. */
+      const regiHiba = box.querySelector('.uq-pl-wrong');
+      const hibaHtml = regiHiba ? regiHiba.outerHTML : '';
+      box.innerHTML = '<div class="uq-pl-puzzle">' + play.pv.order.map((idx, pos) => '<div class="uq-pl-pz"><span class="n">' + (pos + 1) + '</span><span class="t">' + esc(c.items[idx]) + '</span><span class="mv"><button type="button" data-mv="up" data-pos="' + pos + '">▲</button><button type="button" data-mv="dn" data-pos="' + pos + '">▼</button></span></div>').join('') + '</div><button class="uq-pl-go uq-pl-wide" type="button" id="uqPlayGo">Ellenőrzés</button>' + hibaHtml;
       box.querySelectorAll('[data-mv]').forEach(b => b.addEventListener('click', () => {
         const pos = +b.dataset.pos, dir = b.dataset.mv === 'up' ? -1 : 1, np = pos + dir;
         if (np < 0 || np >= play.pv.order.length) return;
@@ -1539,7 +1656,8 @@
            Az index-egyezés így már nem dönthet — a tartalék csak a régi,
            még újra nem publikált csomagoknak szól. */
         const regiOk = play.pv.order.every((idx, pos) => idx === pos);
-        ertekel(task, valasz, regiOk).then(ok => ok ? done(true) : playWrong());
+        ertekel(task, valasz, regiOk)
+          .then(ok => ok ? done(true) : playWrong({ valaszto: '.uq-pl-puzzle' }));
       });
     };
     draw();
@@ -1677,7 +1795,7 @@
 
     if (task.type === 'kviz') {
       let opts = (c.options || []).map((o, i) => ({ o: o, i: i }));
-      if (c.shuffle) opts = opts.sort(() => Math.random() - 0.5);
+      if (c.shuffle) opts = keverve(opts);
       h += '<div class="uq-pl-opts">' + opts.map(x =>
         '<button class="uq-pl-opt" type="button" data-v="' + esc(x.o.text || '') + '">' +
         esc(x.o.text || '—') + '</button>').join('') + '</div>';
@@ -1763,15 +1881,27 @@
 
     if (task.type === 'kviz') {
       let opts = (c.options || []).map((o, i) => ({ o: o, i: i }));
-      if (c.shuffle) opts = opts.sort(() => Math.random() - 0.5);
+      if (c.shuffle) opts = keverve(opts);
       box.innerHTML = '<div class="uq-pl-opts">' + opts.map(x => '<button class="uq-pl-opt" type="button" data-i="' + x.i + '">' + esc(x.o.text || '—') + '</button>').join('') + '</div>';
       box.querySelectorAll('.uq-pl-opt').forEach(b => b.addEventListener('click', () => {
         const opt = c.options[+b.dataset.i] || {};
         box.querySelectorAll('.uq-pl-opt').forEach(x => { x.disabled = true; });
         ertekel(task, opt.text, !!opt.correct).then(ok => {
           b.classList.add(ok ? 'ok' : 'bad');
-          if (!ok) jeloldHelyesOpciot(box, c, task);
-          setTimeout(() => done(!!ok), 420);
+          if (ok) { setTimeout(() => done(true), 480); return; }
+
+          /* ROSSZ VÁLASZ: a jelölés a képernyőn MARAD, amíg a csapat tovább
+             nem lép. Eddig 420 ezredmásodperc múlva egy `setTimeout` lecserélte
+             az egész válaszdobozt — vagyis a zöld pipa a helyes válasz mellett
+             villant egyet, és eltűnt, mielőtt bárki elolvasta volna. Az egyetlen
+             pillanat, amiben a kvíz tanítani tud, így üresen maradt. */
+          jeloldHelyesOpciot(box, c, task);
+          playWrong({ valaszto: '.uq-pl-opts', szoveg: 'Nem talált — a zölddel jelölt volt a helyes.' });
+          if (act) {
+            act.innerHTML = '<button class="adm-btn adm-btn-lime" type="button" id="uqPlayTovabb">' +
+              '<svg class="ico ico-sm" aria-hidden="true"><use href="#a-check"/></svg>Értem, tovább</button>';
+            $('#uqPlayTovabb').addEventListener('click', () => done(false));
+          } else { setTimeout(() => done(false), 1600); }
         });
       }));
     } else if (task.type === 'szoveg') {
@@ -1821,9 +1951,20 @@
     const last = play.taskIdx >= play.stationTasks.length - 1;
     /* Ha ezt a feladatot már megoldottátok (folytatás után újra elétek
        került), a válasz helyes marad, de pont nem jár érte másodszor. */
-    if (r.ok && r.ujra) box.innerHTML = '<div class="uq-pl-res good"><svg class="ico" aria-hidden="true"><use href="#a-check-c"/></svg><div><b>Helyes!</b><small>Ezt a feladatot már megoldottátok — a pont egyszer jár.</small></div></div>';
-    else if (r.ok) box.innerHTML = '<div class="uq-pl-res good"><svg class="ico" aria-hidden="true"><use href="#a-check-c"/></svg><div><b>Helyes!</b><small>+' + (r.task.points || 0) + ' pont' + (tippKoltseg(r.task) ? ' · −' + tippKoltseg(r.task) + ' tippért' : '') + '</small></div></div>';
-    else box.innerHTML = '<div class="uq-pl-res skip"><svg class="ico" aria-hidden="true"><use href="#a-collapse"/></svg><div><b>Átugorva</b>' + (r.reveal ? '<small>Megoldás: ' + esc(r.reveal) + '</small>' : '') + '</div></div>';
+    /* HÁROM állapot, nem kettő. A tévedés eddig ugyanazt az „Átugorva" címkét
+       kapta, mint a lemondás: egy végiggondolt, megbeszélt rossz válaszra azt
+       írta ki a telefon, hogy feladták. A csúcs-vég szabály miatt épp ez az
+       utolsó képernyő marad meg az állomásról. */
+    const siker = SIKER_FELIRAT[r.task.type] || 'Helyes!';
+    /* A `revealFor()` gondolatjelet ad vissza, ha nincs mit felfedni (például
+       a publikált csomagban nincs benne a helyes kvíz-válasz). Azt NEM írjuk
+       ki: „A helyes válasz: —" rosszabb, mint a hallgatás. */
+    const felfed = (r.reveal && String(r.reveal).trim() && String(r.reveal).trim() !== '—')
+                   ? String(r.reveal).trim() : null;
+    if (r.ok && r.ujra) box.innerHTML = '<div class="uq-pl-res good"><svg class="ico" aria-hidden="true"><use href="#a-check-c"/></svg><div><b>' + esc(siker) + '</b><small>Ezt a feladatot már megoldottátok — a pont egyszer jár.</small></div></div>';
+    else if (r.ok) box.innerHTML = '<div class="uq-pl-res good"><svg class="ico" aria-hidden="true"><use href="#a-check-c"/></svg><div><b>' + esc(siker) + '</b><small>+' + (r.task.points || 0) + ' pont' + (tippKoltseg(r.task) ? ' · −' + tippKoltseg(r.task) + ' tippért' : '') + '</small></div></div>';
+    else if (r.atugorva) box.innerHTML = '<div class="uq-pl-res skip"><svg class="ico" aria-hidden="true"><use href="#a-collapse"/></svg><div><b>Átugorva</b>' + (felfed ? '<small>Megoldás: ' + esc(felfed) + '</small>' : '') + '</div></div>';
+    else box.innerHTML = '<div class="uq-pl-res bad"><svg class="ico" aria-hidden="true"><use href="#a-x"/></svg><div><b>Nem talált</b><small>' + (felfed ? 'A helyes válasz: ' + esc(felfed) : 'Ez a válasz nem volt jó — a következő állomás viszi tovább a történetet.') + '</small></div></div>';
     act.innerHTML = '<button class="adm-btn adm-btn-lime" type="button" id="uqPlayNext"><svg class="ico ico-sm" aria-hidden="true"><use href="#a-check"/></svg>' + (last ? 'Állomás kész — tovább' : 'Következő feladat') + '</button>';
     $('#uqPlayNext').addEventListener('click', playNextTask);
   }

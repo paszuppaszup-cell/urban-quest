@@ -323,17 +323,24 @@
     var host = $('#feladatSav');
     host.innerHTML = '';
 
+    var hibasDb = 0;
     feladatok.forEach(function (f, i) {
-      var b = el('button', 'alk-fchip' + (i === aktivFeladat ? ' is-active' : ''));
+      var bajok = feladatBaj(f);
+      if (bajok.length) hibasDb++;
+      var b = el('button', 'alk-fchip' + (i === aktivFeladat ? ' is-active' : '') +
+                           (bajok.length ? ' is-baj' : ''));
       b.type = 'button';
+      if (bajok.length) b.title = bajok.join(' ');
       b.appendChild(el('span', 'alk-fchip-n', String(i + 1)));
       b.appendChild(el('small', null, tipus(f.kind).nev));
+      if (bajok.length) b.appendChild(el('span', 'alk-fchip-pont', '!'));
       b.addEventListener('click', function () {
         if (i === aktivFeladat) return;
         aktivFeladat = i; panelZar(); feladatSav(); keretUjratolt();
       });
       host.appendChild(b);
     });
+    hibaSav(hibasDb);
 
     var uj = el('button', 'alk-fchip alk-fchip-uj');
     uj.type = 'button';
@@ -355,6 +362,10 @@
     /* Döntési ponton szólunk, hogy az elágazás NEM itt készül: ez a
        leggyakoribb félreértés, mert a szerző a feladatok között keresi. */
     var a = allomasok[aktivAllomas];
+    if (a && a.kind === 'feladat' && !feladatok.length) {
+      host.appendChild(el('span', 'alk-fsav-baj',
+        'Ez „Feladat” típusú állomás, de nincs rajta feladat — így a pálya nem küldhető be.'));
+    }
     if (a && a.kind === 'dontes') {
       host.appendChild(el('span', 'alk-fsav-sugo',
         'Ez döntési pont: az útvonalakat az Állomások oldalon adod meg, nem itt. ' +
@@ -365,6 +376,18 @@
   /* =====================================================================
      SZERKESZTŐ PANEL
      ===================================================================== */
+
+  /* Összegző sáv a telefon fölött: hány feladat menne így élesre hibásan. */
+  function hibaSav(db) {
+    var sav = $('#hibaSav');
+    if (!sav) return;
+    sav.hidden = !db;
+    if (db) {
+      sav.textContent = db === 1
+        ? 'Egy feladat így nem fog működni — a sárga „!” jelzi, melyik.'
+        : db + ' feladat így nem fog működni — a sárga „!” jelzi, melyek.';
+    }
+  }
 
   function panelZar() {
     nyitottZona = null;
@@ -550,6 +573,7 @@
       return;
     }
     panelFej(p, 'A kérdés szövege', 'Ezt olvassa a csapat a helyszínen.');
+    var d0 = bajDoboz(feladatBaj(f)); if (d0) p.appendChild(d0);
     var q = mezo(p, 'Kérdés', f.question, 3);
     var pont = mezo(p, 'Hány pontot ér?', f.points == null ? 20 : f.points);
     pont.type = 'number'; pont.min = '0'; pont.max = '200';
@@ -581,6 +605,7 @@
     if (!f) return panelUjFeladat(p);
 
     panelFej(p, 'A válasz módja', 'Ez dönti el, mit lát és mit csinál a csapat.');
+    var d1 = bajDoboz(feladatBaj(f)); if (d1) p.appendChild(d1);
     p.appendChild(tipusLista(f.kind, function (kind) {
       /* Típusváltáskor a régi típus beállítása nem menthető át — egy kvíz
          válaszaiból nem lesz számzár-kód. Ezért megkérdezzük: egy félrenyúlás
@@ -606,6 +631,61 @@
         .catch(hiba);
     });
     t.classList.add('alk-p-torol');
+  }
+
+  /* =====================================================================
+     ELLENŐRZÉS — mi az, ami így élesre menne
+
+     A szerver `course_lint`-je csak a BEKÜLDÉST fogja meg, az előnézetet nem.
+     Egy éles próbán ez oda vezetett, hogy a pálya négy néma hibát vitt volna
+     ki: egy csillag nélküli kvíz (ott MINDEN válasz rossz), és két feladat,
+     aminek a kérdése maradt a „Írd ide a kérdést" helykitöltő — a csapat szó
+     szerint ezt olvasta volna a helyszínen.
+
+     Ezért a szerkesztő maga szól, ott, ahol a hiba van: a feladat csipjén, a
+     panelben és egy összegző sávban.
+     ===================================================================== */
+  var HELYKITOLTO = 'Írd ide a kérdést';
+
+  function feladatBaj(f) {
+    if (!f) return [];
+    var bajok = [];
+    var k = String(f.question || '').trim();
+    if (!k) bajok.push('Nincs kérdés.');
+    else if (k === HELYKITOLTO) bajok.push('A kérdés még a helykitöltő — a csapat szó szerint ezt fogja olvasni.');
+
+    var cfg = f.cfg || {};
+    var acc = (f.megoldas && f.megoldas.accepted) || [];
+
+    if (f.kind === 'kviz') {
+      var opt = (cfg.options || []).filter(function (o) { return o && String(o.text || '').trim(); });
+      if (opt.length < 2) bajok.push('Legalább két válaszlehetőség kell.');
+      if (!acc.length) bajok.push('Nincs megjelölve a helyes válasz — csillag nélkül MINDEN válasz rossz lesz.');
+    } else if (f.kind === 'szoveg') {
+      if (!acc.length) bajok.push('Nincs elfogadott válasz — a feladat megoldhatatlan.');
+    } else if (f.kind === 'kod') {
+      if (!acc.length) bajok.push('Nincs megadva a kód — a zár nem nyílik ki.');
+    } else if (f.kind === 'puzzle') {
+      if ((cfg.items || []).length < 2) bajok.push('Legalább két elem kell a sorbarakáshoz.');
+    } else if (f.kind === 'gps') {
+      var a = allomasok[aktivAllomas];
+      if (a && (a.lat == null || a.lng == null)) {
+        bajok.push('Ennek az állomásnak nincs koordinátája — a helyszín nem igazolható.');
+      }
+    } else if (f.kind === 'dontes') {
+      bajok.push('Ez a típus nem csinál semmit a játékban — az elágazás az állomás útjaiból jön.');
+    }
+    return bajok;
+  }
+
+  function bajDoboz(bajok) {
+    if (!bajok.length) return null;
+    var d = el('div', 'alk-baj');
+    d.appendChild(el('b', null, bajok.length > 1 ? 'Így nem fog működni' : 'Így nem fog működni'));
+    var ul = el('ul');
+    bajok.forEach(function (b) { ul.appendChild(el('li', null, b)); });
+    d.appendChild(ul);
+    return d;
   }
 
   /* Van-e olyan beírt tartalom, ami egy típusváltáson elveszne? */
