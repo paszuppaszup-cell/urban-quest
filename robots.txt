@@ -38,6 +38,9 @@ Disallow: /fiokom.html
 Disallow: /bejelentkezes.html
 Disallow: /jatszas.html
 
+# generátorok (nem oldal, csak a cikkek forrása és a kapu)
+Disallow: /tools/
+
 # fejlesztői maradékok
 Disallow: /wireframe.html
 Disallow: /mobil-elonezet.html
