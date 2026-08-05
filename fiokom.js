@@ -347,6 +347,16 @@
           langOpt('HU', lang) + langOpt('EN', lang) + langOpt('DE', lang) +
         '</div>' +
       '</div>' +
+      /* Patreon-cím. Ez a MEZŐ az egyetlen módja, hogy egy alkotó pénzhez
+         jusson: a platform nem oszt bevételt, a Patreon pedig nem tud
+         piactérként működni. Ha üresen marad, a támogatás-gomb sehol nem
+         jelenik meg a pályáinál. */
+      '<label class="fk-field-row">' +
+        '<span class="fk-label">' + ico('i-heart', 'ico ico-sm') + 'Patreon-oldalad <em>(nem kötelező)</em></span>' +
+        '<input type="url" name="patreon" maxlength="120" placeholder="https://www.patreon.com/…" ' +
+               'value="" autocomplete="off" spellcheck="false" id="patreonInput">' +
+        '<span class="fk-hint">Ha megadod, a pályáid végén megjelenik egy gomb, amivel a játékosok támogathatnak. Csak patreon.com cím fogadható el.</span>' +
+      '</label>' +
       '<div class="fk-form-foot">' +
         '<button class="btn btn-lime" type="submit">' + ico('i-check', 'ico ico-sm') + 'Mentés</button>' +
         '<span class="fk-msg" id="profMsg" hidden></span>' +
@@ -411,6 +421,20 @@
     // profil mentése
     var form = document.getElementById('profForm');
     var msg = document.getElementById('profMsg');
+    /* A Patreon-cím a profiles táblában él (onnan olvassa a katalógus és a
+       befejezés-képernyő), nem a munkamenet metaadataiban. Ezért külön
+       töltjük be — és külön is mentjük, lásd alább. */
+    var patreonInput = document.getElementById('patreonInput');
+    var patreonEredeti = '';
+    if (patreonInput && window.UQAPI && UQAPI.user()) {
+      UQAPI.rest('/profiles?select=patreon_url&user_id=eq.' + UQAPI.user().id)
+        .then(function (sor) {
+          patreonEredeti = (sor && sor[0] && sor[0].patreon_url) || '';
+          patreonInput.value = patreonEredeti;
+        })
+        .catch(function () { /* offline: a mező üresen marad, mentéskor kiderül */ });
+    }
+
     form.addEventListener('submit', function (e) {
       e.preventDefault();
       var name = form.name.value.trim();
@@ -421,7 +445,32 @@
         phone: form.phone.value.trim(),
         lang: selLang ? selLang.getAttribute('data-lang') : 'HU'
       });
-      showMsg(msg, 'Adatok elmentve!');
+
+      /* A Patreon-cím mentése KÜLÖN fut, és a hibáját KIMONDJUK.
+         A profil-mentés szándékosan elnyeli a hálózati hibát, hogy a felület
+         ne akadjon el — itt viszont ez félrevezető lenne: a szerver formai
+         korlátja elutasíthatja a címet, és ilyenkor a „mentve" üzenet azt
+         hazudná, hogy megvan. */
+      var ujPatreon = patreonInput ? patreonInput.value.trim() : '';
+      if (!patreonInput || ujPatreon === patreonEredeti) {
+        showMsg(msg, 'Adatok elmentve!');
+        return;
+      }
+      if (ujPatreon && !/^https:\/\/(www\.)?patreon\.com\/[A-Za-z0-9_.\-]{1,64}\/?$/.test(ujPatreon)) {
+        patreonInput.focus();
+        showMsg(msg, 'A Patreon-cím nem jó. Ilyen alakú kell: https://www.patreon.com/nevem', true);
+        return;
+      }
+      UQAPI.rest('/profiles?user_id=eq.' + UQAPI.user().id, {
+        method: 'PATCH',
+        body: { patreon_url: ujPatreon || null },
+        prefer: 'return=minimal'
+      }).then(function () {
+        patreonEredeti = ujPatreon;
+        showMsg(msg, ujPatreon ? 'Adatok elmentve, a Patreon-linked él.' : 'Adatok elmentve, a Patreon-link törölve.');
+      }).catch(function (err) {
+        showMsg(msg, 'A név elmentve, de a Patreon-cím nem: ' + String((err && err.message) || 'ismeretlen hiba'), true);
+      });
     });
 
     // adatletöltés (JSON Blob) — a szerveren lévő adatok is bekerülnek,

@@ -2065,13 +2065,58 @@
         '</div>' +
         '<div class="uq-pl-sum-bar"><span>Teljesítési arány</span><div class="uq-pl-sum-track"><div style="width:' + rate + '%"></div></div><b>' + rate + '%</b></div>' +
         (PUBLIC ? '<p class="uq-play-note">Az eredményed elmentve a fiókodba. 🏅</p>' : '') +
+        alkotoTamogatasHTML() +
         '<div class="uq-pl-sum-actions">' + actions + '</div>' +
       '</div>' +
       '</div>';
   }
+
+  /* ---------- az alkotó támogatása ----------
+
+     Ez az EGYETLEN hely a játékban, ahol pénzről szó esik, és szándékosan a
+     legvégén van: itt a legnagyobb a jóindulat, mert a játékos épp most élt át
+     valamit, és tudja, ki írta. Ugyanezért kell visszafogottnak lennie —
+     ha rátelepszik a sikerélményre, elrontja azt, amiért fizetnének.
+
+     A link a KATALÓGUSBÓL jön (v_catalog.author_patreon), nem a befagyasztott
+     pálya-csomagból. Ha az alkotó holnap adja meg vagy veszi le a linkjét,
+     annak azonnal érvényesülnie kell — nem annak, ami a verzió rögzítésekor
+     igaz volt.
+
+     Ha nincs link, az egész blokk kimarad: üres „támogatás" doboz rosszabb,
+     mint a semmi. */
+  function alkotoTamogatasHTML() {
+    if (!PUBLIC) return '';                       // szerkesztői előnézetben nincs értelme
+    const q = (window.QUESTS && window.QUESTS[QUEST_ID]) || null;
+    const url = q && q.szerzoPatreon;
+    if (!url) return '';
+    const nev = String((q && q.szerzoNev) || '').trim();
+    return '<div class="uq-pl-tamogat">' +
+        '<p class="uq-pl-tamogat-szoveg">' +
+          (nev ? 'Ezt a pályát <b>' + esc(nev) + '</b> írta.' : 'Ezt a pályát egy alkotó írta.') +
+          ' Ha jól szórakoztatok, megköszönheted neki.' +
+        '</p>' +
+        /* rel: nofollow, mert ez nem szerkesztői ajánlás, hanem a felhasználó
+           saját linkje; noopener, mert új lapra nyílik */
+        '<a class="uq-pl-tamogat-btn" href="' + esc(url) + '" target="_blank" ' +
+           'rel="noopener noreferrer nofollow" data-uq-patreon="alkoto">' +
+          '<svg class="ico ico-sm" aria-hidden="true"><use href="#a-star"/></svg>' +
+          'Támogatom az alkotót' +
+        '</a>' +
+      '</div>';
+  }
+
   function wirePlaySummary() {
     const r = $('#uqPlayRestart'); if (r) r.addEventListener('click', () => { if (PUBLIC && window.UQAccount && window.UQAccount.clearProgress) window.UQAccount.clearProgress(QUEST_ID); playStart(); });
     const x = $('#uqPlayExitSum'); if (x) x.addEventListener('click', playExit);
+
+    /* A kattintás mérése. A ROADMAP tölcsére eddig a Patreon-kattintásig tart,
+       de eddig semmi nem mérte — enélkül nem tudnánk meg, hogy jó helyre
+       tettük-e a gombot. A mérés nem blokkolja a linket. */
+    const t = $('.uq-pl-tamogat-btn');
+    if (t) t.addEventListener('click', () => {
+      try { if (window.UQTrack) UQTrack.esemeny('patreon_kattintas', 'alkoto', { quest: QUEST_ID }); } catch (e) {}
+    });
   }
 
   /* --- mini-térkép + lépéslista (jobb oszlop) --- */

@@ -215,6 +215,7 @@
       accent: sw ? sw.dataset.color : null,
       theme: th ? th.dataset.theme : null,
       webhook_url: $('setWebhook') ? $('setWebhook').value.trim() : '',
+      patreon_url: $('setPatreon') ? $('setPatreon').value.trim() : '',
       currency: selectErtek($('setCurrency')),
       vat_percent: $('setVat') ? $('setVat').value.trim() : null,
       price_mode: selectErtek($('setPriceMode')),
@@ -232,6 +233,7 @@
     selectBeallit($('setPriceMode'), s.price_mode);
     if (s.vat_percent != null && $('setVat')) $('setVat').value = s.vat_percent;
     if ($('setWebhook')) $('setWebhook').value = s.webhook_url || '';
+    if ($('setPatreon')) $('setPatreon').value = s.patreon_url || '';
 
     if (s.accent) {
       document.querySelectorAll('#setSwatches .set-swatch').forEach(function (b) {

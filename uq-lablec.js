@@ -34,6 +34,11 @@
 
   var INFO = [
     ['gyik.html', 'GYIK'],
+    /* A támogatás-oldal akkor is elérhető, ha még nincs Patreon-címünk: ott
+       az derül ki, miért ingyenesek a küldetések és hogyan jut pénzhez az
+       alkotó. A Patreon-GOMB az oldalon belül jelenik meg, és csak akkor,
+       ha a cím be van állítva — üres gomb rosszabb, mint semmi. */
+    ['tamogatas.html', 'Támogatás'],
     ['aszf.html', 'Általános Szerződési Feltételek'],
     ['adatvedelem.html', 'Adatvédelmi tájékoztató']
   ];

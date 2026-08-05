@@ -670,3 +670,52 @@
   .uq-pl-opts.shake{ animation:none; }
 }
 
+
+/* =========================================================
+   AZ ALKOTÓ TÁMOGATÁSA — a befejezés-képernyő alján
+
+   Szándékosan visszafogott: nincs lime kitöltés, nincs nagy méret.
+   A pénzkérés a legjobb pillanatban is elronthatja a sikerélményt, ha
+   hangosabb, mint maga az eredmény. Ez egy ajánlat, nem felszólítás.
+   ========================================================= */
+.uq-pl-tamogat {
+  margin-top: 18px;
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: rgb(255 255 255 / .03);
+  text-align: left;
+}
+.uq-pl-tamogat-szoveg {
+  margin: 0 0 11px;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--text-2);
+}
+.uq-pl-tamogat-szoveg b { color: #fff; font-weight: 700; }
+
+.uq-pl-tamogat-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 15px;
+  border: 1px solid rgb(var(--lime-rgb) / .45);
+  border-radius: 9px;
+  background: rgb(var(--lime-rgb) / .08);
+  color: #fff;
+  font-size: 12.5px;
+  font-weight: 700;
+  letter-spacing: .02em;
+  text-decoration: none;
+  transition: background .18s, border-color .18s;
+}
+.uq-pl-tamogat-btn:hover {
+  background: rgb(var(--lime-rgb) / .16);
+  border-color: rgb(var(--lime-rgb) / .7);
+}
+.uq-pl-tamogat-btn .ico { color: var(--lime); }
+
+@media (max-width: 560px) {
+  .uq-pl-tamogat { padding: 12px 13px; }
+  .uq-pl-tamogat-btn { width: 100%; justify-content: center; }
+}

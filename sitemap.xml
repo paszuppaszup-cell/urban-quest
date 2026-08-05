@@ -58,6 +58,12 @@
     <priority>0.8</priority>
   </url>
   <url>
+    <loc>https://urbanquest.hu/tamogatas.html</loc>
+    <lastmod>2026-08-05</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
     <loc>https://urbanquest.hu/gyik.html</loc>
     <lastmod>2026-08-04</lastmod>
     <changefreq>monthly</changefreq>
