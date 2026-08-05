@@ -1,10 +1,24 @@
 /* =========================================================
    URBAN QUEST — bejelentkezés / regisztráció
-   (asztalon egy képernyőre fér, görgetés nélkül)
+   (asztalon egy képernyőre fér — de ha nem fér, akkor GÖRGET)
    ========================================================= */
+
+/* Korábban `height: 100vh; overflow: hidden` volt itt, a kártyán pedig
+   `max-height: 100%; overflow-y: auto` REJTETT görgetősávval. Amíg a kártya
+   alacsony volt, ez működött. Amikor viszont a Google-gomb, az elválasztó és
+   az ikonsor bekerült, a kártya megnőtt — és alacsony nézeten némán levágta a
+   saját tartalmát, a Bejelentkezés gombbal együtt. Nyoma sem volt: a lap nem
+   görgetett, a kártya görgetősávja pedig el volt rejtve.
+
+   Mérve 1280 px széles nézeten: 850 px magasságtól kezd vágni, 780 px-nél a
+   Google-gomb tűnik el, 650 px-nél már a Bejelentkezés gomb is.
+
+   Most a lap legalább teljes magasságú (a jobb oldali kép így továbbra is
+   kitölti a képernyőt), de ha a tartalom magasabb, akkor egyszerűen görget.
+   Egy görgetősáv csúnyább, mint egy tökéletes képernyő — egy elérhetetlen
+   bejelentkezés gomb viszont használhatatlan. */
 .auth-page {
-  height: 100vh;
-  overflow: hidden;
+  min-height: 100vh;
   display: flex;
   flex-direction: column;
   background: var(--bg);
@@ -58,11 +72,9 @@
     var(--bg-elev);
   border: 1px solid var(--line);
   border-radius: 16px;
-  max-height: 100%;
-  overflow-y: auto;
-  scrollbar-width: none;
+  /* Se `max-height`, se `overflow` — a kártya sosem vághatja le a saját
+     tartalmát. Ha nem fér ki, a LAP görget. */
 }
-.auth-card::-webkit-scrollbar { display: none; }
 
 .auth-title {
   font-family: var(--font-display);
