@@ -16,6 +16,7 @@ Object.assign(window.UQI18N, {
   "Térkép": { en: "Map", de: "Karte", fr: "Carte", es: "Mapa", it: "Mappa" },
   "Kedvencek": { en: "Favourites", de: "Favoriten", fr: "Favoris", es: "Favoritos", it: "Preferiti" },
   "Ranglista": { en: "Leaderboard", de: "Bestenliste", fr: "Classement", es: "Clasificación", it: "Classifica" },
+  "Programajánló": { en: "Things to do", de: "Ausflugstipps", fr: "Idées de sorties", es: "Qué hacer", it: "Cosa fare" },
   "Rólunk": { en: "About us", de: "Über uns", fr: "À propos", es: "Sobre nosotros", it: "Chi siamo" },
   "Kapcsolat": { en: "Contact", de: "Kontakt", fr: "Contact", es: "Contacto", it: "Contatti" },
   "Belépés": { en: "Log in", de: "Anmelden", fr: "Connexion", es: "Iniciar sesión", it: "Accedi" },
