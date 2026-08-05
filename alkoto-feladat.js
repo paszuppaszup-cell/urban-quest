@@ -165,6 +165,51 @@
   }
 
   /* =====================================================================
+     A KERET MAGASSÁGA
+
+     A telefon-keret CSS-ből 720 px magas volt, fixen. Alacsonyabb képernyőn
+     ettől kilógott a nézetből: az alja — épp a „Tovább" gomb környéke —
+     csak görgetéssel látszott, pedig az emulátor lényege, hogy egyben lásd,
+     amit a játékos lát.
+
+     Skálázni NEM szabad: a koppintó-zónák a lejátszó valódi elemeire
+     mérődnek rá, egy `transform: scale` elcsúsztatná őket a kattintástól.
+     Attrapét rajzolni sem — akkor nem azt látnád, ami a játékosnál lesz.
+
+     Ehelyett a keret kiméri, mennyi hely maradt neki, és annyit vesz el.
+     Bűvös szám nincs benne: a saját tetejét és az alatta álló súgó
+     magasságát méri, tehát akkor is helyes marad, ha a körítés változik.
+     A tartalom a kereten BELÜL görget — pontosan úgy, ahogy egy valódi
+     telefonon. */
+  var KERET_MAX = 720;    // a tervezett magasság; ennél nagyobb sosem lesz
+  var KERET_MIN = 420;    // ez alatt az emulátor már nem mutat használhatót
+
+  function keretMagassag() {
+    var tel = document.querySelector('.alk-telefon');
+    if (!tel) return;
+
+    /* A keret TETEJE nem függ a saját magasságától — azt a fölötte álló
+       elemek határozzák meg. Ezért nem kell visszaállítani az alapot a
+       méréshez; ha visszaállítanánk, a hirtelen 720 px megugrathatná a
+       görgetést. */
+    var teto = tel.getBoundingClientRect().top;
+
+    var sugo = document.querySelector('.alk-telefon-sugo');
+    var alatta = sugo ? sugo.getBoundingClientRect().height + 10 : 0;
+
+    var elerheto = window.innerHeight - teto - alatta - 12;   /* 12: alsó levegő */
+    var uj = Math.max(KERET_MIN, Math.min(KERET_MAX, Math.round(elerheto)));
+    tel.style.height = uj + 'px';
+  }
+
+  /* A magasság változása után a zónákat ÚJRA kell mérni, különben a régi
+     helyükön maradnának. */
+  function keretIgazit() {
+    keretMagassag();
+    meresKesobb(60);
+  }
+
+  /* =====================================================================
      KOPPINTÓ-ZÓNÁK
 
      A választók a lejátszó valódi osztálynevei. Ha egy elem nincs ott
@@ -942,9 +987,13 @@
       .catch(function (e) { ures('Nem sikerült betölteni', (e && e.message) || 'Próbáld újra.'); });
   }
 
-  $('#emulator').addEventListener('load', keretKesz);
-  window.addEventListener('resize', function () { meresKesobb(200); });
+  $('#emulator').addEventListener('load', function () { keretIgazit(); keretKesz(); });
+  window.addEventListener('resize', function () { keretIgazit(); meresKesobb(200); });
   gorgetesBekot();
+  /* A szerkesztő panel csak a betöltés után válik láthatóvá, és amíg rejtve
+     van, a keret teteje 0 — ezért az első igazítás nem elég a szkript
+     futásakor. Az iframe `load`-ja és az ablak átméretezése lefedi a többit. */
+  keretIgazit();
 
   function indul() {
     if (!window.UQAPI || !UQAPI.user()) {

@@ -417,6 +417,11 @@
 .alk-mentes-jelzo[hidden] { display: none !important; }
 
 /* ---------- a telefon ---------- */
+/* A 720 px a TERVEZETT magasság, nem a végleges: az alkoto-feladat.js
+   futásidőben kiméri, mennyi hely maradt a keretnek, és ennél kisebbre
+   veszi, ha kell — különben alacsony képernyőn kilóg a nézetből.
+   Skálázni tilos: a koppintó-zónák a lejátszó valódi elemeire mérődnek,
+   egy transform elcsúsztatná őket a kattintástól. */
 .alk-telefon {
   position: relative;
   width: 410px; max-width: 100%; height: 720px;
