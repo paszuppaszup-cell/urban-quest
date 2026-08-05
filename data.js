@@ -41,10 +41,12 @@ window.questCardHTML = function (id) {
   const f = q.filters || {};
   const favCls = q.fav ? ' is-on' : '';
 
-  /* „8+" helyett „8 éves kortól" — a kártyán van hely a teljes mondatra,
-     és így nem kell fejben feloldani egy rövidítést. */
+  /* „8+" helyett „8 évtől" — nem rövidítés, tehát nem kell fejben feloldani,
+     de elfér a háromhasábos adatrácsban is. (Korábban „8 éves kortól" volt;
+     az a hosszabb alak kényszerítette ki a két hasábot, és attól lett a
+     kártya egy egész sorral magasabb.) */
   const korM = String(q.age || '').match(/^(\d+)\s*\+?$/);
-  const korText = korM ? korM[1] + ' éves kortól' : (q.age || '');
+  const korText = korM ? korM[1] + ' évtől' : (q.age || '');
 
   /* Az adatok TÖMBKÉNT állnak össze, nem kézzel felsorolva.
 
@@ -94,9 +96,13 @@ window.questCardHTML = function (id) {
       <p class="quest-desc">${esc(q.desc)}</p>
       ${ratingHTML}
 
-      <!-- Adatrács: KÉT hasáb. Háromban a „90–120 perc" és a
-           „12 éves kortól" nem fér ki, és pont az az adat vágódik le,
-           amiért a doboz ott van. -->
+      <!-- Adatrács: HÁROM hasáb asztalon, kettő telefonon (styles.css).
+           Korábban mindenhol kettő volt, mert a hosszú feliratok („90–120
+           perc", „12 éves kortól") nem fértek ki háromban, és pont az az adat
+           vágódott le, amiért a doboz ott van. Azóta a feliratok rövidebbek
+           („1–2 óra", „12 évtől"), ezért a három hasáb elfér — és a kártya egy
+           egész sorral rövidebb lett. Ha új, hosszabb feliratot vezetsz be,
+           ELŐBB mérd meg, hogy elfér-e. -->
       <div class="quest-stats">${statsHTML}</div>
 
       ${q.startPoint ? `<p class="quest-start">${ico('i-pin', 'ico ico-xs')}<span>Indulás: <b>${esc(q.startPoint)}</b>${q.locCity ? ' · ' + esc(q.locCity) : ''}</span></p>` : ''}

@@ -624,10 +624,13 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
   box-shadow: 0 22px 46px -22px rgb(0 0 0 / .95), 0 0 30px -14px var(--card-accent);
 }
 
+/* Laposabb borítókép: 3:2 helyett 2:1. Egy 400 px széles kártyán ez ~63 px-szel
+   rövidebb kártyát jelent, és a borítókon jellemzően úgyis a felső kétharmad
+   hordozza a hangulatot. */
 .quest-media {
   position: relative;
   margin: 12px 12px 0;
-  aspect-ratio: 3 / 2;
+  aspect-ratio: 2 / 1;
   border-radius: 14px;
   overflow: hidden;
   background: #0e120d;
@@ -1456,28 +1459,37 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
 .quest-card .stars { gap: 5px; }
 .quest-card .star { width: 18px; height: 18px; }
 
+/* Három oszlop, nem kettő. Hat adat két oszlopban három sor volt, ami a
+   kártya legmagasabb egybefüggő blokkja — háromban két sor. A szűkebb cella
+   miatt a belső térköz és a betűméret is kisebb, különben a hosszabb címke
+   („12 éves kortól") tördelne, és a megtakarítás elveszne. */
 .quest-card .quest-stats {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
   margin-top: 13px;
   padding-top: 0;
   border-top: 0;
 }
 .quest-card .quest-stat {
-  gap: 10px;
-  padding: 15px 15px;
-  border-radius: 12px;
+  gap: 7px;
+  padding: 10px 9px;
+  border-radius: 11px;
+  /* A címke egy sorban marad; ha nagyon szűk a hely, inkább zsugorodik.
+     Tördelve visszahozná azt a magasságot, amit a harmadik oszloppal
+     megspóroltunk. */
+  white-space: nowrap;
+  min-width: 0;
   /* Az adatdobozok is a küldetés SAJÁT színét viszik, halványan — semleges
      fehér foltokként ülnének a színezett háttéren. Ez a szabály erősebb a
      fenti .quest-stat-nál, tehát a tényleges megjelenést ez dönti el. */
   background: rgb(var(--lime-rgb) / .06);
   border: 1px solid color-mix(in srgb, rgb(var(--lime-rgb)) 18%, var(--line-soft));
-  font-size: 12.5px;
+  font-size: 11.5px;
   font-weight: 600;
   color: #fff;
 }
-.quest-card .quest-stat .ico { color: var(--card-accent); }
+.quest-card .quest-stat .ico { color: var(--card-accent); width: 15px; height: 15px; }
 /* A nyelv egész sort kap. */
 .quest-card .quest-stat-wide { grid-column: 1 / -1; }
 
@@ -1566,7 +1578,11 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
   .quest-card .quest-title { font-size: 19px; }
   .quest-card .quest-tagline { font-size: 12.5px; }
   .quest-card .quest-desc { font-size: 12.5px; -webkit-line-clamp: 3; }
-  .quest-card .quest-stat { padding: 12px 13px; font-size: 12px; }
+  /* Telefonon a kártya legfeljebb 360 px széles — ott a három oszlop már
+     olvashatatlanul szűk lenne, ezért marad a kettő. */
+  .quest-card .quest-stats { grid-template-columns: 1fr 1fr; gap: 9px; }
+  .quest-card .quest-stat { padding: 12px 13px; font-size: 12px; white-space: normal; }
+  .quest-card .quest-stat .ico { width: 17px; height: 17px; }
   .quest-card .quest-stat-lang .flag { width: 15px; height: 10px; }
   .quest-card:hover { transform: none; }
 
