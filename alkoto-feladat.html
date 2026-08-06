@@ -11,7 +11,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&family=Inter:wght@400..700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="styles.css?v=18">
 <link rel="stylesheet" href="admin.css?v=24">
-<link rel="stylesheet" href="alkoto.css?v=6">
+<link rel="stylesheet" href="alkoto.css?v=8">
 <!-- uq-seo -->
 <meta name="robots" content="noindex, nofollow">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
@@ -143,6 +143,16 @@
           <p class="alk-hibasav" id="hibaSav" hidden></p>
           <div class="alk-feladatsav" id="feladatSav"></div>
 
+          <!-- KÉPERNYŐ- ÉS ÁLLAPOT-VÁLASZTÓ.
+
+               Külön sor, nem a feladatsávban: az egy tördelő sor, amiben már
+               négyféle elem versenyez (feladat-chipek, „+ Új feladat”,
+               mentés-jelző, súgósáv). Ötödik fajtát odatéve tördeléskor
+               összekeveredne a feladat-chipekkel.
+
+               A szűkülő sorrend: állomás → feladat → képernyő → állapot. -->
+          <div class="alk-nezetsav" id="nezetSav"></div>
+
           <div class="alk-telefon">
             <div class="alk-telefon-ful"></div>
             <iframe class="alk-telefon-kepernyo" id="emulator" title="A játékos képernyője"
@@ -184,6 +194,6 @@
 <script src="uq-track.js?v=1"></script>
 <script src="uq-auth.js?v=7"></script>
 <script src="uq-admin-fejlec.js?v=3"></script>
-<script src="alkoto-feladat.js?v=9"></script>
+<script src="alkoto-feladat.js?v=11"></script>
 </body>
 </html>

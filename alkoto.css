@@ -679,3 +679,44 @@
 .alk-baj li { font-size: 12px; line-height: 1.55; color: var(--text-2); margin-bottom: 3px; }
 .alk-baj li:last-child { margin-bottom: 0; }
 
+
+/* =========================================================
+   KÉPERNYŐ- ÉS ÁLLAPOT-VÁLASZTÓ
+
+   Külön sor a feladatsáv alatt. A szűkülő sorrend: állomás → feladat →
+   képernyő → állapot. Szándékosan halványabb a feladat-chipeknél: az a
+   fontosabb választás, ez csak nézőpont.
+   ========================================================= */
+.alk-nezetsav {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 5px;
+  max-width: 410px;
+}
+.alk-nchip {
+  padding: 5px 10px;
+  font: inherit; font-size: 11px; font-weight: 600; color: var(--muted);
+  background: transparent; border: 1px solid var(--line); border-radius: 7px;
+  cursor: pointer; white-space: nowrap;
+}
+.alk-nchip:hover:not(:disabled) { border-color: rgb(var(--lime-rgb) / .45); color: var(--text); }
+.alk-nchip.is-active { border-color: var(--lime); color: #fff; background: rgb(var(--lime-rgb) / .10); }
+.alk-nchip:focus-visible { outline: 2px solid var(--lime); outline-offset: 2px; }
+/* A tiltott chip NEM tűnik el: attól tanul a szerző, hogy létezik ilyen
+   képernyő, csak ezen az állomáson nincs neki útja. A cím elárulja, miért. */
+.alk-nchip.is-tiltva { opacity: .38; cursor: not-allowed; }
+
+/* Az állapot-chipek elválasztása a képernyő-chipektől. */
+.alk-nchip-valaszto {
+  width: 1px; height: 18px; margin: 0 3px;
+  background: var(--line);
+}
+.alk-nchip-allapot { font-weight: 500; }
+
+.alk-nchip-fig {
+  flex: 1 0 100%;
+  margin-top: 2px;
+  font-size: 10.5px; line-height: 1.5; color: var(--dim);
+}
+
+@media (max-width: 760px) {
+  .alk-nezetsav { max-width: none; }
+}

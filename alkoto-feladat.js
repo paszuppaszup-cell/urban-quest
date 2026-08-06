@@ -85,6 +85,8 @@
   function keretUrl() {
     return 'jatszas.html?quest=' + encodeURIComponent(palya.slug || '') +
            '&elonezet=1&allomas=' + aktivAllomas + '&feladat=' + aktivFeladat +
+           '&nezet=' + encodeURIComponent(aktivNezet) +
+           '&allapot=' + encodeURIComponent(aktivAllapot) +
            '&cb=' + Date.now();
   }
 
@@ -179,15 +181,187 @@
      ér hozzá máshoz.
      ===================================================================== */
 
+  /* A `nezet` mező NEM dísz: mind a négy zóna az ÁLLOMÁS-képernyő
+     osztályneveire mérődik. Az introón, az útválasztón és az összegzőn
+     ezek közül egy sem létezik, tehát ott egyetlen zónát sem szabad
+     megpróbálni kirajzolni — különben a szerző néma keretet kapna. */
   var ZONAK = [
-    { kulcs: 'cim',    valaszto: '.uq-pl-hero-cim',                felirat: 'Állomás neve' },
-    { kulcs: 'kerdes', valaszto: '.uq-pl-qtext',                   felirat: 'A kérdés szövege' },
-    { kulcs: 'valasz', valaszto: '#uqPlayAnswer, .uq-pl-notask',   felirat: 'A válasz módja',
+    { kulcs: 'cim',    nezet: 'allomas', valaszto: '.uq-pl-hero-cim',                felirat: 'Állomás neve' },
+    { kulcs: 'kerdes', nezet: 'allomas', valaszto: '.uq-pl-qtext',                   felirat: 'A kérdés szövege' },
+    { kulcs: 'valasz', nezet: 'allomas', valaszto: '#uqPlayAnswer, .uq-pl-notask',   felirat: 'A válasz módja',
       potHely: '.uq-pl-akcio', potMagas: 44, potAlul: true },
     /* utoljára, hogy a kis gomb a nagy zónák FÖLÉ kerüljön, ne alá */
-    { kulcs: 'media',  valaszto: '.uq-pl-taskimg, .uq-pl-taskvid', felirat: 'Kép vagy videó',
+    { kulcs: 'media',  nezet: 'allomas', valaszto: '.uq-pl-taskimg, .uq-pl-taskvid', felirat: 'Kép vagy videó',
       potHely: '.uq-pl-akcio', potGomb: true, rovidFelirat: '+ kép' }
   ];
+
+  /* =====================================================================
+     MELYIK KÉPERNYŐT ÉS MILYEN ÁLLAPOTBAN MUTASSA A KERET
+
+     A játékos négy különböző képernyőt lát, a szerkesztő eddig csak egyet
+     tudott megmutatni. Ez a két érték megy át a lejátszónak URL-ben —
+     ugyanabban a mintában, ahogy az állomás és a feladat is (`keretUrl`).
+
+     Az állapot CSAK az állomás-képernyőn értelmes: a helyes/rossz/átugrott
+     visszajelzés ugyanabba a dobozba kerül, mint a kérdés, a nézet közben
+     végig `station` marad — ezért ott a zónák is mérhetők maradnak. */
+  var NEZETEK = [
+    { kulcs: 'intro',    nev: 'Indítás',    mit: 'A pálya nyitóképernyője: név, állomásszám, „Indítás” gomb.' },
+    { kulcs: 'allomas',  nev: 'Állomás',    mit: 'Az állomás és a feladat — ezt szerkesztheted koppintással.' },
+    { kulcs: 'dontes',   nev: 'Útválasztó', mit: 'A döntési képernyő. Csak ott van, ahol az állomásnak legalább két útja van.' },
+    { kulcs: 'osszegzo', nev: 'Összegző',   mit: 'A játék végi képernyő. A számok nullák, mert itt nincs valódi menet.' }
+  ];
+  var ALLAPOTOK = [
+    { kulcs: 'nincs',    nev: 'Feladat',    mit: 'A kérdés, ahogy a csapat először látja.' },
+    { kulcs: 'helyes',   nev: 'Helyes',     mit: 'Amit jó válasz után lát.' },
+    { kulcs: 'rossz',    nev: 'Nem talált', mit: 'Amit rossz válasz után lát — itt jelenik meg a megoldás.' },
+    { kulcs: 'atugorva', nev: 'Átugorva',   mit: 'Amit akkor lát, ha feladja a feladatot.' }
+  ];
+  var aktivNezet = 'allomas';
+  var aktivAllapot = 'nincs';
+
+  /* Az útválasztó csak akkor választható, ha az állomásnak TÉNYLEG van
+     legalább két érvényes útja. A csapatlánc `role:` ágai nem számítanak:
+     ott a szerep dönt, a játékos soha nem lát útválasztót. Ugyanaz a szűrés,
+     amit a lejátszó is végez (jatszas.js playAfterStation).
+
+     Az utakat KÜLÖN kell lekérni: az állomás-lekérdezés csak a nevet, a
+     helyet és a sorrendet hozza — a station_edges nincs benne. Enélkül
+     minden állomás útvonal nélkülinek látszana, és a chip örökre tiltva
+     maradna. */
+  var utak = [];             // station_edges az egész pályára
+  var utakHiba = false;      // a lekérés elszállt-e
+
+  function utakTolt() {
+    if (!palya) return Promise.resolve();
+    return UQAPI.rest('/station_edges?select=from_station,to_station,branch_key' +
+                      '&course_id=eq.' + encodeURIComponent(palya.id))
+      .then(function (r) { utak = r || []; utakHiba = false; })
+      .catch(function () {
+        /* Nem blokkolhatja a szerkesztőt — de HALLGATNI sem szabad róla.
+           Ha elnyelnénk, az Útválasztó chip minden állomáson tiltva maradna,
+           a súgója pedig azt állítaná, hogy „nincs két külön útja" — ami
+           ilyenkor nem igaz, csak nem tudjuk. */
+        utak = []; utakHiba = true;
+      });
+  }
+
+  /* UGYANAZ A SZABÁLY, amit a lejátszó használ (jatszas.js playAfterStation):
+     a motor csak akkor lép magától, ha MINDEN ág `role:` kulcsú. Vegyesen
+     (szerep-ág + közönséges ág) a játékos MEGKAPJA az útválasztót.
+     Ha itt kiszűrnénk a role: ágakat, épp azt a képernyőt tiltanánk le,
+     amit a csapat látni fog. */
+  function utvalasztoAllapot() {
+    if (utakHiba) return 'ismeretlen';
+    var a = allomasok[aktivAllomas];
+    if (!a) return 'nincs';
+    var agak = [];
+    for (var i = 0; i < utak.length; i++) {
+      if (utak[i] && utak[i].from_station === a.id) agak.push(utak[i]);
+    }
+    if (agak.length < 2) return 'nincs';
+    var mindRole = agak.every(function (e) { return /^role:\d+$/.test(String(e.branch_key || '')); });
+    return mindRole ? 'lanc' : 'van';
+  }
+
+  function vanUtvalaszto() { return utvalasztoAllapot() === 'van'; }
+
+  /* A képernyő- és állapot-választó sáv. */
+  function nezetSav() {
+    var host = $('#nezetSav');
+    if (!host) return;
+    host.innerHTML = '';
+
+    var uAllapot = utvalasztoAllapot();
+    NEZETEK.forEach(function (n) {
+      var tiltva = false, ok = n.mit;
+      if (n.kulcs === 'dontes') {
+        if (uAllapot === 'nincs') {
+          tiltva = true;
+          ok = 'Ennek az állomásnak nincs két külön útja, ezért a játékos itt nem lát útválasztót.';
+        } else if (uAllapot === 'lanc') {
+          tiltva = true;
+          ok = 'Itt minden út csapatlánc-szerephez tartozik: a szerep dönt, a játékos nem kap választóképernyőt.';
+        } else if (uAllapot === 'ismeretlen') {
+          /* Nem tudjuk — de NEM tiltjuk le, mert az hamis indoklás lenne.
+             Inkább kattintható marad, és a súgó megmondja, mi a helyzet. */
+          ok = 'Az útvonalakat most nem sikerült lekérni, ezért nem tudjuk, van-e itt választóképernyő. Ha üres marad a keret, nincs.';
+        }
+      }
+      var b = el('button', 'alk-nchip' + (n.kulcs === aktivNezet ? ' is-active' : '') +
+                           (tiltva ? ' is-tiltva' : ''));
+      b.type = 'button';
+      b.appendChild(el('small', null, n.nev));
+      b.title = ok;
+      if (tiltva) { b.disabled = true; host.appendChild(b); return; }
+      b.addEventListener('click', function () {
+        if (n.kulcs === aktivNezet) return;
+        aktivNezet = n.kulcs;
+        if (aktivNezet !== 'allomas') aktivAllapot = 'nincs';   /* állapot csak az állomáson értelmes */
+        panelZar(); nezetSav(); keretUjratolt();
+      });
+      host.appendChild(b);
+    });
+
+    /* Az állapotok CSAK az állomás-képernyőn jelennek meg — máshol nincs
+       feladat, amit meg lehetne válaszolni. Külön kis csoportban, hogy ne
+       lehessen összekeverni a képernyőkkel. */
+    if (aktivNezet === 'allomas') {
+      var f = feladatok[aktivFeladat];
+      var vanFeladat = !!f;
+      /* A „Nem talált" eredménykártya élesben CSAK kvíznél születik meg.
+         Minden más típusnál a rossz válasz nem zárja le a feladatot: a mező
+         megrázkódik, és a csapat újrapróbálhat (playWrong). Ha itt mégis
+         felkínálnánk, a szerző egy nem létező képernyőre tervezne szöveget. */
+      ALLAPOTOK.forEach(function (a) {
+        var tiltva = false, ok = a.mit;
+        if (!vanFeladat) {
+          tiltva = (a.kulcs !== 'nincs');
+          ok = 'Ehhez az állomáshoz nincs feladat, ezért nincs mit megválaszolni.';
+        } else if (a.kulcs === 'rossz' && f.kind !== 'kviz') {
+          tiltva = true;
+          ok = 'Ennél a feladattípusnál a rossz válasz nem zárja le a feladatot — a csapat újrapróbálhatja, tehát ilyen képernyő nincs.';
+        }
+        var b = el('button', 'alk-nchip alk-nchip-allapot' +
+                             (a.kulcs === aktivAllapot ? ' is-active' : '') +
+                             (tiltva ? ' is-tiltva' : ''));
+        b.type = 'button';
+        b.title = ok;
+        b.appendChild(el('small', null, a.nev));
+        if (tiltva) { b.disabled = true; host.appendChild(b); return; }
+        b.addEventListener('click', function () {
+          if (a.kulcs === aktivAllapot) return;
+          aktivAllapot = a.kulcs; panelZar(); nezetSav(); keretUjratolt();
+        });
+        host.appendChild(b);
+      });
+
+      /* A megoldás-felfedésről őszintén: a befagyasztott csomagban nincs
+         benne a helyes válasz, élesben pedig a szerver adja — előnézetben
+         tehát nem látszik. Enélkül a szerző azt hinné, elromlott. */
+      if (vanFeladat && aktivAllapot !== 'nincs') {
+        host.appendChild(el('p', 'alk-nchip-fig',
+          'A megoldást élesben a szerver adja hozzá — előnézetben szándékosan nem írjuk ki, ' +
+          'mert a befagyasztott csomagban nincs benne a helyes válasz.'));
+      }
+    }
+
+    /* Az összegzőnél ki KELL mondani, hogy nem azonos a játékoséval:
+       szerkesztői módban mások a feliratok, a Patreon-gomb sosem látszik, és
+       a számok nullák, mert nincs valódi menet. */
+    if (aktivNezet === 'osszegzo') {
+      host.appendChild(el('p', 'alk-nchip-fig',
+        'Ez a szerkesztői összegző: a számok nullák, mert itt nincs valódi menet, ' +
+        'és pár felirat is más, mint a játékosnál. Az alkotói támogatás-gomb sem látszik itt.'));
+    }
+
+    /* Ha nem az állomás-képernyőt nézi, a szerkesztés vakon menne: a keretben
+       nem az látszik, amit épp ír. Inkább mondjuk ki. */
+    if (aktivNezet !== 'allomas') {
+      host.appendChild(el('p', 'alk-nchip-fig',
+        'Ezen a képernyőn nincs mit koppintani: a szerkesztéshez válts vissza az Állomás nézetre.'));
+    }
+  }
 
   function zonakRajzol() {
     var host = $('#zonak');
@@ -198,6 +372,11 @@
     host.innerHTML = '';
 
     ZONAK.forEach(function (z) {
+      /* Csak arra a képernyőre rajzolunk zónát, amelyikre mérve lett.
+         Az introón, az útválasztón és az összegzőn ezek az elemek nem
+         léteznek — ott a keret megnézésre való, nem szerkesztésre. */
+      if ((z.nezet || 'allomas') !== aktivNezet) return;
+
       var e = doc.querySelector(z.valaszto), r = null, rovid = false;
       if (e) {
         var b = e.getBoundingClientRect();
@@ -256,9 +435,14 @@
       }
     }
 
-    /* Amíg nincs mire koppintani, maradjon fent a betöltés-jelző: jobb egy
-       őszinte „Betöltés…", mint egy kész képernyő, ami nem reagál. */
-    if (db > 0) $('#tolt').hidden = true;
+    /* Az ÁLLOMÁS-képernyőn: amíg nincs mire koppintani, maradjon fent a
+       betöltés-jelző — jobb egy őszinte „Betöltés…", mint egy kész
+       képernyő, ami nem reagál.
+
+       A TÖBBI képernyőn viszont jogosan nincs egyetlen zóna sem (ott nincs
+       mit szerkeszteni), ezért ott a jelzőnek akkor is fel kell oldódnia,
+       ha db === 0. Enélkül a szerző örökké töltő, néma keretet kapna. */
+    if (db > 0 || aktivNezet !== 'allomas') $('#tolt').hidden = true;
   }
 
   /* A keret nem kattintható, ezért a görgetést nekünk kell továbbadni. */
@@ -312,8 +496,13 @@
       b.addEventListener('click', function () {
         if (i === aktivAllomas) return;
         aktivAllomas = i; aktivFeladat = 0;
+        /* Az útválasztó ÁLLOMÁSFÜGGŐ: ha az új állomásnak nincs két külön
+           útja, ott ilyen képernyő nem létezik. Ilyenkor visszaesünk az
+           állomás-nézetre, különben a keret üresen maradna, és a szerző azt
+           hinné, elromlott valami. */
+        if (aktivNezet === 'dontes' && !vanUtvalaszto()) aktivNezet = 'allomas';
         panelZar(); allomasValaszto();
-        feladatokTolt().then(function () { feladatSav(); keretUjratolt(); });
+        feladatokTolt().then(function () { feladatSav(); nezetSav(); keretUjratolt(); });
       });
       host.appendChild(b);
     });
@@ -336,7 +525,7 @@
       if (bajok.length) b.appendChild(el('span', 'alk-fchip-pont', '!'));
       b.addEventListener('click', function () {
         if (i === aktivFeladat) return;
-        aktivFeladat = i; panelZar(); feladatSav(); keretUjratolt();
+        aktivFeladat = i; panelZar(); feladatSav(); nezetSav(); keretUjratolt();
       });
       host.appendChild(b);
     });
@@ -486,7 +675,12 @@
   }
   window.addEventListener('pagehide', fuggokElsutese);
   document.addEventListener('visibilitychange', function () {
-    if (document.visibilityState === 'hidden') fuggokElsutese();
+    if (document.visibilityState === 'hidden') { fuggokElsutese(); return; }
+    /* Visszatéréskor ÚJRA lekérjük az utakat. Az útvonalakat egy MÁSIK
+       oldalon (Állomások) veszi fel a szerző — ha onnan jön vissza, a
+       memóriában lévő lista elavult, és az Útválasztó chip tiltva maradna
+       azzal a hamis indoklással, hogy nincs két útja. */
+    if (palya) utakTolt().then(nezetSav);
   });
 
   function jelez(szo) {
@@ -937,7 +1131,9 @@
         }
         $('#szerkeszto').hidden = false;
         allomasValaszto();
-        return feladatokTolt().then(function () { feladatSav(); keretUjratolt(); });
+        return utakTolt().then(function () {
+          return feladatokTolt().then(function () { feladatSav(); nezetSav(); keretUjratolt(); });
+        });
       })
       .catch(function (e) { ures('Nem sikerült betölteni', (e && e.message) || 'Próbáld újra.'); });
   }

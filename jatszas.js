@@ -733,6 +733,23 @@
      csomagnak nincs élő verziója). */
   function elonezetUgras() {
     if (!ELONEZET) return false;
+
+    /* MELYIK KÉPERNYŐ.
+
+       A szerkesztő eddig csak az állomás-képernyőt tudta megmutatni, pedig a
+       játékos négy különbözőt lát. A `?nezet=` ezt teszi választhatóvá:
+
+         intro    — az indítóképernyő (ehhez épp NEM kell ugrani sehova)
+         allomas  — az állomás és a feladat (ez az alapértelmezés)
+         dontes   — az útválasztó képernyő
+         osszegzo — a játék végi összegző
+
+       Az `intro` azért `return false`, mert a lejátszó alapból is ott áll
+       meg — ezt eddig is meg lehetett kapni, csak véletlenül (rossz állomás-
+       index), és semmi nem árulta el, hogy ez a szándék. */
+    const nezet = String(params.get('nezet') || 'allomas');
+    if (nezet === 'intro') return false;
+
     const a = parseInt(params.get('allomas'), 10);
     if (!(a >= 0 && a < COURSE.length)) return false;
 
@@ -744,8 +761,91 @@
     const f = parseInt(params.get('feladat'), 10);
     play.taskIdx = (f >= 0 && f < play.stationTasks.length) ? f : 0;
     play.startTs = Date.now(); play.finalMs = 0;
+
+    if (nezet === 'dontes' && elonezetDontes(a)) { renderPlay(); return true; }
+    if (nezet === 'osszegzo') { elonezetOsszegzo(); renderPlay(); return true; }
+
+    elonezetAllapot();
     renderPlay();
     return true;
+  }
+
+  /* Az ÚTVÁLASZTÓ képernyő előnézete.
+
+     A motor a valódi menetben a `playAfterStation()`-ben tölti fel a
+     `play.decOpts`-ot, de oda csak akkor jut el, ha a csapat végigcsinálta az
+     állomást. Itt ugyanazt a szűrést végezzük el, amit ő (jatszas.js
+     playAfterStation): érvényes cél-index, és legalább KÉT ág — egy ágnál a
+     motor kérdés nélkül továbblép, tehát ilyen képernyő élesben nincs.
+
+     A csapatlánc `role:` ágai kimaradnak: ott a játékos SOHA nem lát
+     útválasztót, a szerep dönt helyette. Hazugság volna megmutatni. */
+  function elonezetDontes(a) {
+    const s = COURSE[a] || {};
+    /* UGYANAZ A SZABÁLY, amit a playAfterStation is használ — és ez nem az,
+       amit elsőre gondolna az ember.
+
+       A motor akkor lép magától (útválasztó nélkül), ha MINDEN ág `role:`
+       kulcsú — csapatláncnál a szerep dönt. Ha viszont vegyesen van szerep-ág
+       és közönséges ág, akkor a játékos MEGKAPJA az útválasztót, benne az
+       összes ággal. Ezért itt nem szabad a role: ágakat kiszűrni: csak azt
+       nézzük, hogy van-e legalább kettő, és hogy nem MIND szerep-ág. */
+    const agak = (s.branches || []).filter(b => b && b.to >= 0 && b.to < COURSE.length);
+    if (agak.length < 2) return false;
+    const csakRole = agak.every(b => /^role:\d+$/.test(String(b.key || '')));
+    if (csakRole) return false;
+    play.decOpts = agak;
+    play.view = 'decision';
+    return true;
+  }
+
+  /* Az ÖSSZEGZŐ előnézete.
+
+     Itt nincs valódi menet: nem indult óra, nem gyűlt pont. A számok tehát
+     nullák — kitalált demó-adat rosszabb volna, mert a szerző azt hinné,
+     hogy a pontozása így fog kinézni. Amit érdemes megnézni rajta, az a
+     borítókép, a cím és az elrendezés. */
+  function elonezetOsszegzo() {
+    play.finished = true;
+    play.view = 'summary';
+    play.finalMs = 0;
+    play.result = null;
+  }
+
+  /* A FELADAT ÁLLAPOTA ugyanazon az állomás-képernyőn.
+
+     A `renderPlayResult()` és a `renderPlayAnswer()` ugyanabba a dobozba ír,
+     és a nézet közben végig `station` marad — ezért a koppintó-zónák
+     mérhetők maradnak, és semmit nem kell kivételként kezelni.
+
+     A `reveal` szövegét ugyanazzal a függvénnyel kérjük, amivel az éles
+     menet is: így a szerző pontosan azt látja, amit a csapat fog. */
+  function elonezetAllapot() {
+    const allapot = String(params.get('allapot') || '');
+    if (!allapot || allapot === 'nincs') return;
+    const task = play.stationTasks[play.taskIdx];
+    if (!task) return;
+
+    /* A MEGOLDÁST ELŐNÉZETBEN NEM MUTATJUK. Ez szándékos, és fontos:
+
+       A befagyasztott csomagból a `strip_solution` kiszedi a helyes választ
+       (kvíz `correct`, szöveges `accepted`, számzár `code`), a sorbarakósnál
+       pedig a szerver KEVERVE írja bele az elemeket. Ezért a csomagból
+       számolt `task.reveal` kvíznél/szövegesnél/számzárnál üres, puzzle-nál
+       viszont egy HAMIS sorrendet adna — és a szerző azt hinné, elrontotta a
+       feladatot, pedig jó.
+
+       Élesben a megoldás nem innen jön: átugrás után a `megoldastKer()` a
+       szervertől kéri le (task_reveal RPC). Az előnézetben nincs menet,
+       tehát az a hívás nem fut le. Inkább ne írjunk semmit, mint rosszat —
+       a választó súgója is ezt mondja. */
+    if (allapot === 'helyes') {
+      play.result = { ok: true,  reveal: null, task: task, ujra: false, atugorva: false };
+    } else if (allapot === 'rossz') {
+      play.result = { ok: false, reveal: null, task: task, ujra: false, atugorva: false };
+    } else if (allapot === 'atugorva') {
+      play.result = { ok: false, reveal: null, task: task, ujra: false, atugorva: true };
+    }
   }
 
   /* folytatás mentett állapotból */
