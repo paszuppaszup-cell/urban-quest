@@ -719,3 +719,11 @@
   .uq-pl-tamogat { padding: 12px 13px; }
   .uq-pl-tamogat-btn { width: 100%; justify-content: center; }
 }
+
+/* Fejléc nélküli, feladat nélküli állomáson ez az egyetlen hely, ahol a
+   csapat látja, hova érkezett. Halkabb, mint a nagy fejléc-cím, de ott van. */
+#playRoot .uq-pl-hely-nev {
+  font-family: var(--font-display, 'Archivo'), sans-serif;
+  font-size: 17px; font-weight: 800; color: #fff;
+  margin-bottom: 6px; line-height: 1.2;
+}

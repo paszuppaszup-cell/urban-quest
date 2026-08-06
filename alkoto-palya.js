@@ -502,7 +502,7 @@
         $('#palyaNev').textContent = palya.name || '(névtelen pálya)';
         $('#szerkeszto').hidden = false;
         terkepInit();
-        return UQAPI.rest('/stations?select=id,name,kind,description,lat,lng,position' +
+        return UQAPI.rest('/stations?select=id,name,kind,description,lat,lng,position,time_limit_s,show_header,show_hud' +
                           '&course_id=eq.' + encodeURIComponent(palya.id) + '&order=position.asc');
       })
       .then(function (r) {

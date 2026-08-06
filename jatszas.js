@@ -110,6 +110,10 @@
          csomagban. NEM az s.location: az a térképszerkesztő
          koordináta-mezője, amit fentebb parseLoc olvas. */
       loc: s.loc || s.address || '',
+      /* Állomásonkénti megjelenítés-kapcsolók. `!== false`, mert a régi
+         csomagokban a mező nincs benne — ott a korábbi viselkedés marad. */
+      showHeader: s.showHeader !== false,
+      showHud: s.showHud !== false,
       /* A szerző által megadott elágazások: [{to: <állomás sorszáma>,
          label: <a válasz szövege>}]. Enélkül a lejátszó csak találgatna,
          hogy a döntési pont hová visz — lásd playAfterStation(). */
@@ -1078,7 +1082,9 @@
        útvonal és a lépéslista lecsukható blokkba került: elérhető, de nem
        vonja el a figyelmet a helyszínen megoldandó feladatról. */
     host.innerHTML = '<div class="uq-play">' +
-      playHudHTML() +
+      (hudLatszik() ? playHudHTML() : '') +
+      /* a szinkron-sáv MINDIG ott van, akkor is, ha a statisztika nincs */
+      playSyncHTML() +
       '<div class="uq-play-stage" id="uqPlayStage"></div>' +
       /* A nyitottságot állapotban tartjuk: a renderPlay() minden válasz után
          kicseréli a teljes DOM-ot, így a natív <details> különben minden
@@ -1111,6 +1117,12 @@
     if (play.view === 'summary') { stage.innerHTML = playSummaryHTML(); wirePlaySummary(); }
     else if (play.view === 'decision') { stage.innerHTML = playDecisionHTML(); wirePlayDecision(); }
     else { stage.innerHTML = playStationHTML(); wirePlayStation(); }
+
+    /* A sav TARTALMAT is vissza kell tenni: a renderPlay minden lepesnel
+       ujrairja a teljes blokkot, es az uj .uq-sync ures. Enelkul a
+       'nincs net' es a 'N valasz var szinkronra' figyelmeztetes soha nem
+       jelenik meg a normal jatekfolyamban — a keret ott van, a tartalom nem. */
+    szinkronJelzes();   /* a sav ures marad nelkule */
   }
 
   function resumeState() {
@@ -1191,21 +1203,41 @@
       '</div>' +
       cella('a-clock', t.szoveg, t.cimke, { id: 'uqPlayTime', cls: t.lejart ? 'warn' : '' }) +
       cella('a-star', playPoints(), 'Pontod', { cls: 'lime' }) +
-      '</div>' +
-      '<div class="uq-sync" id="uqSync" aria-live="polite"></div>';
+      '</div>';
+  }
+
+  /* A SZINKRON-SÁV KÜLÖN. Korábban ugyanez a függvény adta vissza a HUD-dal
+     együtt — ha a HUD elrejtésekor az egészet kihagynánk, vele tűnnének el a
+     terepen legfontosabb jelzések is: „a válasz nem ért célba", „nincs net",
+     „a csapattársak N feladattal haladtak", „a szerver N pontot számol".
+     Ezek nem díszek: nélkülük a csapat abban a hitben megy tovább, hogy
+     minden rendben. Ezért a sáv AKKOR IS ott van, ha a statisztika nincs. */
+  function playSyncHTML() {
+    return '<div class="uq-sync" id="uqSync" aria-live="polite"></div>';
+  }
+
+  /* Látszik-e a felső statisztika-sáv az AKTUÁLIS állomáson.
+     Állomásonként állítható; hiányzó mezőnél (régi csomag) látszik. */
+  function hudLatszik() {
+    /* Az ÖSSZEGZŐ nem állomás-képernyő: ott az összpont és az idő maga az
+       eredmény. Ha a záró állomáson ki van kapcsolva a sáv, az ne vigye
+       magával a végeredményt is. */
+    if (play.view === 'summary') return true;
+    const s = COURSE[playCurIdx()];
+    return !s || s.showHud !== false;
   }
 
   /* A HUD újrarajzolása a teljes képernyő cseréje nélkül. */
   function frissitHud() {
     const regi = document.querySelector('.uq-play > .uq-hud');
-    if (!regi) return;
-    const doboz = document.createElement('div');
-    doboz.innerHTML = playHudHTML();
-    const uj = doboz.querySelector('.uq-hud');
-    const ujSav = doboz.querySelector('.uq-sync');
-    const regiSav = document.getElementById('uqSync');
-    if (uj) regi.replaceWith(uj);
-    if (ujSav && regiSav) regiSav.replaceWith(ujSav);
+    /* A szinkron-sávot AKKOR IS frissíteni kell, ha nincs HUD — korábban a
+       korai kilépés vele együtt a sávot is kihagyta volna. */
+    if (regi) {
+      const doboz = document.createElement('div');
+      doboz.innerHTML = playHudHTML();
+      const uj = doboz.querySelector('.uq-hud');
+      if (uj) regi.replaceWith(uj);
+    }
     szinkronJelzes();
   }
 
@@ -1382,7 +1414,17 @@
        helyet a feladat elől. Kikapcsolva a kép marad el — az állomás
        sorszáma és neve NEM, mert azokból tudja a csapat, hol van. */
     let h;
-    if (STATION_IMG) {
+    /* ÁLLOMÁSONKÉNT a fejléc EGÉSZE elhagyható (stations.show_header).
+       Ez más, mint a pálya-szintű kép-kapcsoló: ott a kép marad el, a
+       sorszám és a név megmarad; itt az egész blokk eltűnik, hogy csak a
+       feladat látszódjon.
+
+       Amit a játékos így elveszít: az állomás sorszámát és nevét. A leírás
+       és a „Helyszín:" sor NEM ebben a blokkban van, azok megmaradnak, és a
+       lecsukható „Útvonal és haladás" is mutatja, hol tart. */
+    if (s.showHeader === false) {
+      h = '';
+    } else if (STATION_IMG) {
       h = '<div class="uq-pl-hero" style="background:' + hatterAttr(s.img || heroHatter(i)) + '">' +
         '<span class="uq-pl-hero-fade" aria-hidden="true"></span>' +
         '<span class="uq-pl-hero-in">' +
@@ -1450,7 +1492,17 @@
       }
     } else {
       h += '<div class="uq-pl-card uq-pl-akcio">';
+      /* Fejléc nélküli, feladat nélküli állomáson különben SEMMI nem mondaná
+         meg a csapatnak, hol vannak: se név, se sorszám, se helyszín. A
+         feladatos ág kiírja a helyszínt, ez eddig nem — pótoljuk. */
+      if (s.showHeader === false && s.name) {
+        h += '<p class="uq-pl-hely-nev">' + esc(s.name) + '</p>';
+      }
       if (s.desc) h += '<p class="uq-pl-desc">' + esc(s.desc) + '</p>';
+      if (s.loc) {
+        h += '<p class="uq-pl-loc"><svg class="ico ico-xs" aria-hidden="true"><use href="#a-pin"/></svg>' +
+             esc(s.loc) + '</p>';
+      }
       h += '<div class="uq-pl-notask">Ehhez az állomáshoz nincs feladat — csak áthaladtok rajta.</div>';
       h += '<div class="uq-pl-actions"><button class="uq-pl-do" type="button" id="uqPlayCont"><svg class="ico ico-sm" aria-hidden="true"><use href="#a-check"/></svg>Állomás kész — tovább</button></div>';
       h += '</div>';

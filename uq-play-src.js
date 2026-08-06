@@ -15,7 +15,7 @@
 (function () {
   'use strict';
 
-  var LEJATSZO = 'jatszas.js?v=26';
+  var LEJATSZO = 'jatszas.js?v=28';
   var CACHE_ELO = 'uq_bundle_';           // offline tartalék pályánként
 
   var DIFF_LABEL = { konnyu: 'Könnyű', kozepes: 'Közepes', nehez: 'Nehéz', extrem: 'Extrém' };
@@ -56,7 +56,16 @@
         lng: s.lng == null ? '' : String(s.lng),
         desc: s.description || '',
         taskShort: s.task_short || '',
-        img: hatter(s.image)
+        img: hatter(s.image),
+        /* ÁLLOMÁSONKÉNTI MEGJELENÍTÉS-KAPCSOLÓK.
+
+           `!== false` és nem `=== true`: a régi, még újra nem publikált
+           csomagokban ez a két kulcs NINCS BENNE. Ha `=== true`-t néznénk,
+           minden meglévő pályáról eltűnne a fejléc és a felső sáv, egyetlen
+           szerzői beavatkozás nélkül. Hiányzó kulcs = a korábbi viselkedés
+           marad, tehát látszik. */
+        showHeader: s.show_header !== false,
+        showHud: s.show_hud !== false
       });
 
       (s.tasks || []).forEach(function (t) {

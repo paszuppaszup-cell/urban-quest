@@ -720,3 +720,38 @@
 @media (max-width: 760px) {
   .alk-nezetsav { max-width: none; }
 }
+
+/* ---------- ki-be kapcsoló a panelben ----------
+   Sima jelölőnégyzet, mert a felület többi része is az, és mert egy
+   egyértelmű pipa többet ér, mint egy szép, de kétértelmű csúszka. */
+.alk-p-kapcs {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 4px 9px;
+  margin-top: 10px;
+  cursor: pointer;
+}
+.alk-p-kapcs input { width: 17px; height: 17px; accent-color: var(--lime); cursor: pointer; }
+.alk-p-kapcs > span { font-size: 13px; color: var(--text); }
+.alk-p-kapcs .alk-p-sugo { grid-column: 2; margin-top: 1px; }
+
+.alk-p-elvalaszto {
+  height: 1px; margin: 16px 0 12px;
+  background: var(--line-soft);
+}
+.alk-p-cimke {
+  display: block;
+  font-size: 10px; font-weight: 700; letter-spacing: .1em;
+  text-transform: uppercase; color: var(--dim);
+}
+
+/* Időkorlát-figyelmeztetés: nem tilt, csak szól. */
+.alk-p-fig {
+  margin-top: 10px; padding: 9px 11px;
+  border-radius: 8px;
+  border-left: 3px solid #ffc98a;
+  background: rgba(255, 201, 138, .10);
+  font-size: 11.5px; line-height: 1.55; color: #ffc98a;
+}
+.alk-p-fig[hidden] { display: none; }

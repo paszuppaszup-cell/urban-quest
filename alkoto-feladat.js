@@ -100,6 +100,7 @@
      semmi rosszat. Ha közben újabb kérés kellene, csak megjegyezzük, és a futó
      után indítjuk. */
   var elonezetFut = false, elonezetVar = false, piszkos = true;
+  var mentesSzamlalo = 0;   /* minden mentes noveli — a befagyasztas ehhez meri magat */
 
   function keretUjratolt() {
     if (!palya) return;
@@ -119,10 +120,20 @@
        átállítani — a befagyasztott csomag változatlanul érvényes. */
     if (!piszkos) { $('#tolt').hidden = false; $('#emulator').src = keretUrl(); return; }
 
+    /* A mentés-számláló nélkül a gyors kattintgatás elveszti a piszkos
+       jelzőt: ha a befagyasztás közben ÚJABB mentés fut le, a `.then`
+       vakon `piszkos = false`-ra írna, és a keret a mentés ELŐTTI állapotot
+       mutatná — miközben a panelen „mentve" áll. Ezért megjegyezzük, hányadik
+       mentésnél jártunk, és csak akkor tekintjük tisztának, ha azóta nem
+       mentettünk újra. */
+    var pecset = mentesSzamlalo;
     elonezetFut = true;
     $('#tolt').hidden = false;
     UQAPI.rest('/rpc/preview_course', { method: 'POST', body: { p_course: palya.id } })
-      .then(function () { piszkos = false; $('#emulator').src = keretUrl(); })
+      .then(function () {
+        if (mentesSzamlalo === pecset) piszkos = false;
+        $('#emulator').src = keretUrl();
+      })
       .catch(function (e) { $('#tolt').hidden = true; hiba(e); })
       .then(function () {
         elonezetFut = false;
@@ -186,7 +197,13 @@
      ezek közül egy sem létezik, tehát ott egyetlen zónát sem szabad
      megpróbálni kirajzolni — különben a szerző néma keretet kapna. */
   var ZONAK = [
-    { kulcs: 'cim',    nezet: 'allomas', valaszto: '.uq-pl-hero-cim',                felirat: 'Állomás neve' },
+    /* Ha a szerző kikapcsolta az állomás-fejlécet (stations.show_header),
+       a `.uq-pl-hero-cim` elem NINCS a keretben — és e nélkül a pótlás
+       nélkül a zóna némán kimaradna: se hiba, se üzenet, csak a szerző
+       soha többé nem tudná koppintással átnevezni az állomást innen.
+       Ilyenkor a kontextus-kártya tetejére ülünk rá. */
+    { kulcs: 'cim',    nezet: 'allomas', valaszto: '.uq-pl-hero-cim',                felirat: 'Állomás neve',
+      potHely: '.uq-pl-ctx, .uq-pl-akcio', potMagas: 34 },
     { kulcs: 'kerdes', nezet: 'allomas', valaszto: '.uq-pl-qtext',                   felirat: 'A kérdés szövege' },
     { kulcs: 'valasz', nezet: 'allomas', valaszto: '#uqPlayAnswer, .uq-pl-notask',   felirat: 'A válasz módja',
       potHely: '.uq-pl-akcio', potMagas: 44, potAlul: true },
@@ -633,6 +650,23 @@
     return b;
   }
 
+  /* Ki-be kapcsoló. Sima jelölőnégyzet, mert a felület többi része is az —
+     és mert egy egyértelmű pipa többet ér, mint egy szép, de kétértelmű
+     csúszka. A `be` értéke a MEGJELENÍTÉST jelenti: bepipálva látszik. */
+  function kapcsolo(host, cimke, be, sugo, fn) {
+    var l = el('label', 'alk-p-kapcs');
+    var i = document.createElement('input');
+    i.type = 'checkbox';
+    i.checked = be !== false;
+    l.appendChild(i);
+    var t = el('span', null, cimke);
+    l.appendChild(t);
+    if (sugo) l.appendChild(el('small', 'alk-p-sugo', sugo));
+    host.appendChild(l);
+    if (fn) i.addEventListener('change', function () { fn(i.checked); });
+    return i;
+  }
+
   /* Automatikus mentés — telefonon a legkönnyebb elnavigálni egy mentetlen
      űrlapról, ezért nem bízzuk gombra.
 
@@ -697,13 +731,56 @@
     var nev = mezo(p, 'Név', a.name, false, 'Rövid, felismerhető: „Halászbástya", „A vörös kapu".');
     var leiras = mezo(p, 'Mit lát itt a csapat?', a.description, 3,
       'Ide jön a hangulat és az eligazítás — nem a kérdés.');
-    automent([nev, leiras], function () {
+    /* MIT MUTASSON A TELEFON EZEN AZ ÁLLOMÁSON.
+       Állomásonként állítható, mert a fejléc annak a tulajdonsága, amit rejt
+       (sorszám + név). A mentés ugyanazon a save_station-on megy, mint a név
+       és a leírás. */
+    var elv = el('div', 'alk-p-elvalaszto'); p.appendChild(elv);
+    p.appendChild(el('span', 'alk-p-cimke', 'Mit mutasson a telefon?'));
+
+    var kFejlec = kapcsolo(p, 'Állomás-fejléc (sorszám, név, kép)',
+      a.show_header !== false,
+      'Kikapcsolva csak a feladat látszik. A leírás és a „Helyszín:" sor megmarad, ' +
+      'és az „Útvonal és haladás" blokkból a csapat továbbra is látja, hol tart.');
+
+    var kHud = kapcsolo(p, 'Felső sáv (feladatszámláló, idő, pont)',
+      a.show_hud !== false,
+      'Kikapcsolva a hálózati és csapat-figyelmeztetések megmaradnak — csak a számok tűnnek el.');
+
+    /* AZ ÓRÁRÓL KI KELL MONDANI, hogy elrejtve is jár.
+
+       Nem feltételesen: a visszaszámláló a pálya becsült időtartamából
+       számolódik (jatszas.js playLimitMs), nem egy külön „van-e időkorlát"
+       mezőből — olyan mező a szerkesztő pálya-objektumán nincs is. Ezért egy
+       feltételes figyelmeztetés pont akkor hallgatna, amikor kellene.
+       Inkább mindig szól, amikor a sáv ki van kapcsolva. */
+    var fig = el('p', 'alk-p-fig');
+    p.appendChild(fig);
+    function figFrissit() {
+      fig.hidden = kHud.checked;
+      if (!fig.hidden) {
+        fig.textContent = 'A felső sávban fut a visszaszámláló is. Kikapcsolva az idő ' +
+          'tovább telik, de a csapat nem látja fogyni — váratlanul futhatnak ki belőle.';
+      }
+    }
+    figFrissit();
+
+    function mentes() {
       a.name = nev.value.trim() || 'Névtelen állomás';
       a.description = leiras.value.trim();
+      a.show_header = kFejlec.checked;
+      a.show_hud = kHud.checked;
+      figFrissit();
       allomasValaszto();
       return { _allomas: true, id: a.id, course_id: palya.id, name: a.name,
-               kind: a.kind, description: a.description, lat: a.lat, lng: a.lng };
-    });
+               kind: a.kind, description: a.description, lat: a.lat, lng: a.lng,
+               show_header: a.show_header, show_hud: a.show_hud };
+    }
+
+    /* A két jelölőnégyzet is a figyelt mezők közé kerül: az automent a
+       `change` eseményre ugyanúgy ment, és a lapelhagyáskori elsütés is
+       vonatkozik rájuk. */
+    automent([nev, leiras, kFejlec, kHud], mentes);
   }
 
   /* --- Kép és videó --- */
@@ -1033,6 +1110,7 @@
      javítja, áthelyezni nem tud. Az állomást egyedül a létrehozás dönti el
      (ujFeladat), ott viszont muszáj megadni. */
   function ment(p) {
+    mentesSzamlalo++;
     piszkos = true;                 // innentől kell friss előnézeti verzió
     if (p._allomas) {
       delete p._allomas;
@@ -1118,7 +1196,7 @@
       .then(function (r) {
         palya = (r || [])[0] || null;
         if (!palya) { ures('Előbb válassz pályát'); return null; }
-        return UQAPI.rest('/stations?select=id,name,kind,description,lat,lng,position' +
+        return UQAPI.rest('/stations?select=id,name,kind,description,lat,lng,position,time_limit_s,show_header,show_hud' +
                           '&course_id=eq.' + encodeURIComponent(palya.id) + '&order=position.asc');
       })
       .then(function (r) {
