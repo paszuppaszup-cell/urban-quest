@@ -11,7 +11,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&family=Inter:wght@400..700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="styles.css?v=18">
 <link rel="stylesheet" href="admin.css?v=24">
-<link rel="stylesheet" href="alkoto.css?v=9">
+<link rel="stylesheet" href="alkoto.css?v=10">
 <!-- uq-seo -->
 <meta name="robots" content="noindex, nofollow">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
@@ -153,6 +153,15 @@
                A szűkülő sorrend: állomás → feladat → képernyő → állapot. -->
           <div class="alk-nezetsav" id="nezetSav"></div>
 
+          <!-- MIT MUTASSON A TELEFON EZEN AZ ÁLLOMÁSON.
+
+               Szándékosan ITT van, és nem egy koppintó-zóna mögött: a zónák a
+               lejátszó valódi elemeire mérődnek, tehát el tudnak csúszni vagy
+               eltűnni — és épp az a kapcsoló veszne el velük, amivel a szerző
+               vissza tudná kapcsolni, amit kikapcsolt. Egy állandóan látható
+               sor ezt nem tudja megtenni. -->
+          <div class="alk-allomassav" id="allomasSav"></div>
+
           <div class="alk-telefon">
             <div class="alk-telefon-ful"></div>
             <iframe class="alk-telefon-kepernyo" id="emulator" title="A játékos képernyője"
@@ -194,6 +203,6 @@
 <script src="uq-track.js?v=1"></script>
 <script src="uq-auth.js?v=7"></script>
 <script src="uq-admin-fejlec.js?v=3"></script>
-<script src="alkoto-feladat.js?v=13"></script>
+<script src="alkoto-feladat.js?v=14"></script>
 </body>
 </html>

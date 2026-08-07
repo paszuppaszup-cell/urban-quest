@@ -755,3 +755,42 @@
   font-size: 11.5px; line-height: 1.55; color: #ffc98a;
 }
 .alk-p-fig[hidden] { display: none; }
+
+/* ---------- „Mit mutasson a telefon?" sáv ----------
+   A telefon FÖLÖTT, állandóan látható. Szándékosan nem panelben és nem
+   koppintó-zóna mögött: a zónák a lejátszó valódi elemeire mérődnek, tehát
+   el tudnak csúszni vagy eltűnni — és épp az a kapcsoló veszne el velük,
+   amivel a szerző visszakapcsolná, amit kikapcsolt. */
+.alk-allomassav {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+  padding: 9px 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--bg-elev);
+}
+.alk-allomassav:empty { display: none; }
+
+.alk-allomassav-cim {
+  font-size: 10px; font-weight: 700; letter-spacing: .1em;
+  text-transform: uppercase; color: var(--dim);
+  flex: none;
+}
+
+/* Ebben a sávban a kapcsoló egysoros: a súgó a title-ben van, nem alatta,
+   különben szétdobná a sort. */
+.alk-allomassav .alk-p-kapcs {
+  display: inline-flex; align-items: center; gap: 7px;
+  margin-top: 0;
+}
+.alk-allomassav .alk-p-kapcs > span { font-size: 12.5px; white-space: nowrap; }
+.alk-allomassav .alk-p-kapcs .alk-p-sugo { display: none; }
+
+.alk-allomassav .alk-p-fig { flex: 1 1 100%; margin-top: 2px; }
+
+@media (max-width: 760px) {
+  .alk-allomassav { gap: 7px 12px; padding: 8px 10px; }
+  .alk-allomassav .alk-p-kapcs > span { font-size: 12px; }
+}

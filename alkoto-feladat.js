@@ -202,8 +202,12 @@
        nélkül a zóna némán kimaradna: se hiba, se üzenet, csak a szerző
        soha többé nem tudná koppintással átnevezni az állomást innen.
        Ilyenkor a kontextus-kártya tetejére ülünk rá. */
+    /* A póthely CSAK akkor lép életbe, ha az elem TÉNYLEG nincs ott (a szerző
+       kikapcsolta a fejlécet). A „kicsi a magassága" eset itt nem indokolja:
+       attól a zóna elvándorolt a kontextus-kártya aljára, holott az állomás
+       neve látszott — és a szerző hiába koppintott rá. */
     { kulcs: 'cim',    nezet: 'allomas', valaszto: '.uq-pl-hero-cim',                felirat: 'Állomás neve',
-      potHely: '.uq-pl-ctx, .uq-pl-akcio', potMagas: 34 },
+      potHely: '.uq-pl-ctx, .uq-pl-akcio', potMagas: 34, potCsakHaHianyzik: true },
     { kulcs: 'kerdes', nezet: 'allomas', valaszto: '.uq-pl-qtext',                   felirat: 'A kérdés szövege' },
     { kulcs: 'valasz', nezet: 'allomas', valaszto: '#uqPlayAnswer, .uq-pl-notask',   felirat: 'A válasz módja',
       potHely: '.uq-pl-akcio', potMagas: 44, potAlul: true },
@@ -315,7 +319,7 @@
         if (n.kulcs === aktivNezet) return;
         aktivNezet = n.kulcs;
         if (aktivNezet !== 'allomas') aktivAllapot = 'nincs';   /* állapot csak az állomáson értelmes */
-        panelZar(); nezetSav(); keretUjratolt();
+        panelZar(); nezetSav(); allomasSav(); keretUjratolt();
       });
       host.appendChild(b);
     });
@@ -348,7 +352,7 @@
         if (tiltva) { b.disabled = true; host.appendChild(b); return; }
         b.addEventListener('click', function () {
           if (a.kulcs === aktivAllapot) return;
-          aktivAllapot = a.kulcs; panelZar(); nezetSav(); keretUjratolt();
+          aktivAllapot = a.kulcs; panelZar(); nezetSav(); allomasSav(); keretUjratolt();
         });
         host.appendChild(b);
       });
@@ -406,7 +410,8 @@
          nulla magas válaszdobozt rajzol. A zóna így ki sem került, tehát a
          szerző nem tudta megnyitni a panelt — ahhoz, hogy megadhassa az első
          választ, már lett volna szüksége válaszra. Ilyenkor a póthely kell. */
-      if ((!r || r.height < 24) && z.potHely) {
+      var kellPot = z.potCsakHaHianyzik ? !r : (!r || r.height < 24);
+      if (kellPot && z.potHely) {
         var p = doc.querySelector(z.potHely);
         if (!p) return;
         var pb = p.getBoundingClientRect();
@@ -519,7 +524,7 @@
            hinné, elromlott valami. */
         if (aktivNezet === 'dontes' && !vanUtvalaszto()) aktivNezet = 'allomas';
         panelZar(); allomasValaszto();
-        feladatokTolt().then(function () { feladatSav(); nezetSav(); keretUjratolt(); });
+        feladatokTolt().then(function () { feladatSav(); nezetSav(); allomasSav(); keretUjratolt(); });
       });
       host.appendChild(b);
     });
@@ -542,7 +547,7 @@
       if (bajok.length) b.appendChild(el('span', 'alk-fchip-pont', '!'));
       b.addEventListener('click', function () {
         if (i === aktivFeladat) return;
-        aktivFeladat = i; panelZar(); feladatSav(); nezetSav(); keretUjratolt();
+        aktivFeladat = i; panelZar(); feladatSav(); nezetSav(); allomasSav(); keretUjratolt();
       });
       host.appendChild(b);
     });
@@ -637,7 +642,7 @@
     if (tobbsoros) i.rows = tobbsoros === true ? 3 : tobbsoros; else i.type = 'text';
     i.value = ertek == null ? '' : String(ertek);
     l.appendChild(i);
-    if (sugo) l.appendChild(el('small', 'alk-p-sugo', sugo));
+    if (sugo) { l.appendChild(el('small', 'alk-p-sugo', sugo)); l.title = sugo; }
     host.appendChild(l);
     return i;
   }
@@ -731,56 +736,69 @@
     var nev = mezo(p, 'Név', a.name, false, 'Rövid, felismerhető: „Halászbástya", „A vörös kapu".');
     var leiras = mezo(p, 'Mit lát itt a csapat?', a.description, 3,
       'Ide jön a hangulat és az eligazítás — nem a kérdés.');
-    /* MIT MUTASSON A TELEFON EZEN AZ ÁLLOMÁSON.
-       Állomásonként állítható, mert a fejléc annak a tulajdonsága, amit rejt
-       (sorszám + név). A mentés ugyanazon a save_station-on megy, mint a név
-       és a leírás. */
-    var elv = el('div', 'alk-p-elvalaszto'); p.appendChild(elv);
-    p.appendChild(el('span', 'alk-p-cimke', 'Mit mutasson a telefon?'));
+    /* A megjelenítés-kapcsolók NEM ide kerültek, hanem a telefon fölé, az
+       `allomasSav()`-ba: ha egy koppintó-zóna mögött laknának, és a zóna
+       elcsúszik vagy eltűnik (mert épp a fejlécet kapcsolták ki), akkor a
+       szerző nem tudná visszakapcsolni, amit kikapcsolt. */
+    automent([nev, leiras], function () {
+      a.name = nev.value.trim() || 'Névtelen állomás';
+      a.description = leiras.value.trim();
+      allomasValaszto();
+      return { _allomas: true, id: a.id, course_id: palya.id, name: a.name,
+               kind: a.kind, description: a.description, lat: a.lat, lng: a.lng };
+    });
+  }
 
-    var kFejlec = kapcsolo(p, 'Állomás-fejléc (sorszám, név, kép)',
+  /* =====================================================================
+     MIT MUTASSON A TELEFON EZEN AZ ÁLLOMÁSON
+
+     Állandóan látható sor a telefon fölött — nem panel, nem zóna mögött.
+     Állomásonként állítható, mert a fejléc annak a tulajdonsága, amit rejt
+     (sorszám + név). A mentés ugyanazon a save_station-on megy.
+     ===================================================================== */
+  function allomasSav() {
+    var host = $('#allomasSav');
+    if (!host) return;
+    host.innerHTML = '';
+
+    var a = allomasok[aktivAllomas];
+    if (!a) return;
+    /* Csak az állomás-képernyőn van értelme: a többi nézeten nem ez látszik. */
+    if (aktivNezet !== 'allomas') return;
+
+    host.appendChild(el('span', 'alk-allomassav-cim', 'Mit mutasson a telefon?'));
+
+    var kFejlec = kapcsolo(host, 'Állomás-fejléc',
       a.show_header !== false,
-      'Kikapcsolva csak a feladat látszik. A leírás és a „Helyszín:" sor megmarad, ' +
-      'és az „Útvonal és haladás" blokkból a csapat továbbra is látja, hol tart.');
+      'Sorszám, név és kép. Kikapcsolva csak a feladat látszik.');
 
-    var kHud = kapcsolo(p, 'Felső sáv (feladatszámláló, idő, pont)',
+    var kHud = kapcsolo(host, 'Felső sáv',
       a.show_hud !== false,
-      'Kikapcsolva a hálózati és csapat-figyelmeztetések megmaradnak — csak a számok tűnnek el.');
+      'Feladatszámláló, idő, pont.');
 
-    /* AZ ÓRÁRÓL KI KELL MONDANI, hogy elrejtve is jár.
-
-       Nem feltételesen: a visszaszámláló a pálya becsült időtartamából
-       számolódik (jatszas.js playLimitMs), nem egy külön „van-e időkorlát"
-       mezőből — olyan mező a szerkesztő pálya-objektumán nincs is. Ezért egy
-       feltételes figyelmeztetés pont akkor hallgatna, amikor kellene.
-       Inkább mindig szól, amikor a sáv ki van kapcsolva. */
+    /* AZ ÓRÁRÓL KI KELL MONDANI, hogy elrejtve is jár. Nem feltételesen: a
+       visszaszámláló a pálya becsült időtartamából számolódik, nem egy külön
+       „van-e időkorlát" mezőből — ezért a feltételes figyelmeztetés pont
+       akkor hallgatna, amikor kellene. */
     var fig = el('p', 'alk-p-fig');
-    p.appendChild(fig);
+    host.appendChild(fig);
     function figFrissit() {
       fig.hidden = kHud.checked;
       if (!fig.hidden) {
         fig.textContent = 'A felső sávban fut a visszaszámláló is. Kikapcsolva az idő ' +
-          'tovább telik, de a csapat nem látja fogyni — váratlanul futhatnak ki belőle.';
+          'tovább telik, de a csapat nem látja fogyni.';
       }
     }
     figFrissit();
 
     function mentes() {
-      a.name = nev.value.trim() || 'Névtelen állomás';
-      a.description = leiras.value.trim();
       a.show_header = kFejlec.checked;
       a.show_hud = kHud.checked;
       figFrissit();
-      allomasValaszto();
-      return { _allomas: true, id: a.id, course_id: palya.id, name: a.name,
-               kind: a.kind, description: a.description, lat: a.lat, lng: a.lng,
+      return { _allomas: true, id: a.id, course_id: palya.id,
                show_header: a.show_header, show_hud: a.show_hud };
     }
-
-    /* A két jelölőnégyzet is a figyelt mezők közé kerül: az automent a
-       `change` eseményre ugyanúgy ment, és a lapelhagyáskori elsütés is
-       vonatkozik rájuk. */
-    automent([nev, leiras, kFejlec, kHud], mentes);
+    automent([kFejlec, kHud], mentes);
   }
 
   /* --- Kép és videó --- */
@@ -1210,7 +1228,7 @@
         $('#szerkeszto').hidden = false;
         allomasValaszto();
         return utakTolt().then(function () {
-          return feladatokTolt().then(function () { feladatSav(); nezetSav(); keretUjratolt(); });
+          return feladatokTolt().then(function () { feladatSav(); nezetSav(); allomasSav(); keretUjratolt(); });
         });
       })
       .catch(function (e) { ures('Nem sikerült betölteni', (e && e.message) || 'Próbáld újra.'); });
