@@ -119,7 +119,12 @@
          befagyaszt egy verziót, a játékosok a legutóbb KÖZZÉTETT-et kapják.
          Ezt látnia kell a szerzőnek, különben azt hiszi, kész van. */
       _kozzetetlen: r.kozzetetlen_modositas === true,
-      _akadaly: r.kozzeteteli_akadaly || 0
+      _akadaly: r.kozzeteteli_akadaly || 0,
+      /* MI A NEVE KINT. Az élő verzió befagyasztott neve. Ha eltér a maitól,
+         a látogató MÁS NÉVEN látja a pályát, mint ami itt a listában áll —
+         és ez a „közzé nem tett módosítás” jelzésből nem derül ki, mert az
+         a legapróbb szerkesztésre is felvillan. */
+      _eloNev: r.elo_nev || ''
     };
   }
 
@@ -442,6 +447,10 @@
         g._kozzetetlen ? '<span class="jtk-warn is-draft" title="A legutóbbi szerkesztéseid be vannak fagyasztva, de a játékosok még a korábban közzétett verziót játsszák. A Közzététel gombbal teszed élesre.">közzé nem tett módosítás</span>' : ''
       }${
         g._akadaly ? '<span class="jtk-warn" title="' + g._akadaly + ' dolog akadályozza a közzétételt — a Közzététel gomb megmutatja, mi.">' + g._akadaly + ' akadály</span>' : ''
+      }${
+        (g._eloNev && g._eloNev !== g.name)
+          ? '<span class="jtk-warn is-draft" title="A látogatók még a korábban közzétett verziót látják, és annak MÁS A NEVE. A Közzététel gombbal frissül.">kint még: ' + esc(g._eloNev) + '</span>'
+          : ''
       }</div>
       <div class="jtk-actions">
         <button class="jtk-act jtk-act-edit" type="button" data-act="edit" aria-label="Szerkesztés">${ico('a-edit')}</button>
