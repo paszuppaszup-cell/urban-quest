@@ -811,10 +811,21 @@
       /* Eredmény nélkül ÉS gombbal: a csapat egy néma gomb előtt állna, és
          nem tudná, jó volt-e a válasz. A lejátszó ilyenkor kirajzolja a
          kártyát — itt is kimondjuk, hogy a kapcsoló nem hat. */
-      if (!kEredmeny.checked && !kAutoFeladat.checked && !kAutoAllomas.checked) {
-        uzenet.push('Az eredmény-visszajelzés csak automatikus továbblépéssel ' +
-                    'kapcsolható ki. Amíg a csapat gombbal lép tovább, a kártya ' +
-                    'megjelenik — különben nem tudná, jó volt-e a válasz.');
+      if (!kEredmeny.checked) {
+        if (!kAutoFeladat.checked && !kAutoAllomas.checked) {
+          uzenet.push('Az eredmény-visszajelzés csak automatikus továbblépéssel ' +
+                      'kapcsolható ki. Amíg a csapat gombbal lép tovább, a kártya ' +
+                      'megjelenik — különben nem tudná, jó volt-e a válasz.');
+        } else if (!kAutoAllomas.checked) {
+          /* Ez a fele-kikapcsolás a legfélrevezetőbb: a szerző azt hiszi,
+             sehol nem lesz kártya, közben az állomás UTOLSÓ feladatánál
+             mégis. A lejátszó feladatonként dönt, nem állomásonként. */
+          uzenet.push('Az állomás utolsó feladatánál a kártya mégis megjelenik: ' +
+                      'ott gombbal lépnek tovább, tehát kell a visszajelzés.');
+        } else if (!kAutoFeladat.checked) {
+          uzenet.push('Az utolsó feladat kivételével a kártya mégis megjelenik: ' +
+                      'a feladatok közt gombbal lépnek, tehát kell a visszajelzés.');
+        }
       }
       fig.hidden = uzenet.length === 0;
       fig.textContent = uzenet.join(' ');
@@ -907,20 +918,38 @@
 
     /* Az ellenőrző gomb felirata a FELADATHOZ tartozik, nem az állomáshoz:
        a gomb a feladat sajátja, és típusonként már ma is más (számzárnál
-       „Feltör"). Üresen hagyva marad a típushoz illő alapértelmezés. */
-    var gombFelirat = mezo(p, 'Az ellenőrző gomb felirata <em>(nem kötelező)</em>',
-      f.check_label || '', false,
-      'Üresen hagyva: „Ellenőrzés" (számzárnál „Feltör"). Legfeljebb 40 karakter.');
-    gombFelirat.maxLength = 40;
-    gombFelirat.placeholder = f.kind === 'kod' ? 'Feltör' : 'Ellenőrzés';
+       „Feltör", fotónál „Fotó feltöltése"). Üresen hagyva marad a típushoz
+       illő alapértelmezés.
 
-    automent([q, pont, gombFelirat], function () {
+       A KVÍZNEK NINCS ILYEN GOMBJA: ott a válasz-gombra koppintás maga a
+       beküldés. Ha itt mégis felkínálnánk a mezőt, a szerző beleírna egy
+       feliratot, elmentené, és sosem látná viszont. */
+    var VAN_GOMB = { kviz: false };
+    var vanGomb = VAN_GOMB[f.kind] !== false;
+    var ALAP = { kod: 'Feltör', foto: 'Fotó feltöltése', qr: 'QR beolvasása',
+                 gps: 'Helyszín igazolása', info: 'Megvan, kész', gyors: 'Indítás' };
+    var gombFelirat = null;
+    if (vanGomb) {
+      gombFelirat = mezo(p, 'Az ellenőrző gomb felirata <em>(nem kötelező)</em>',
+        f.check_label || '', false,
+        'Üresen hagyva a típushoz illő alapértelmezés marad. Legfeljebb 40 karakter.');
+      gombFelirat.maxLength = 40;
+      gombFelirat.placeholder = ALAP[f.kind] || 'Ellenőrzés';
+    } else {
+      p.appendChild(el('p', 'alk-p-fig',
+        'Ennél a feladattípusnál nincs ellenőrző gomb: a válasz-gombra koppintás ' +
+        'maga a beküldés. Ezért itt nem adható neki felirat.'));
+    }
+
+    automent([q, pont].concat(gombFelirat ? [gombFelirat] : []), function () {
       var szoveg = q.value.trim();
       if (!szoveg) return null;                 // üres kérdést a szerver úgyis eldob
       f.question = szoveg;
       var p = { id: f.id, question: szoveg };
-      f.check_label = gombFelirat.value.trim();
-      p.check_label = f.check_label;
+      if (gombFelirat) {
+        f.check_label = gombFelirat.value.trim();
+        p.check_label = f.check_label;
+      }
       /* A pontszámot CSAK akkor küldjük, ha tényleg van benne szám. Korábban
          `parseInt(...) || 0` állt itt: ha a szerző kitörölte a mezőt, hogy
          újat írjon, a közben elsülő mentés csendben NULLÁRA írta a feladat
