@@ -114,6 +114,14 @@
          csomagokban a mező nincs benne — ott a korábbi viselkedés marad. */
       showHeader: s.showHeader !== false,
       showHud: s.showHud !== false,
+      /* LÉPTETÉS. A két auto-* alapja FALSE, nem true: a mai viselkedés az,
+         hogy a játékos koppint a továbblépéshez. Ha true lenne az alapérték,
+         minden meglévő pálya menete megváltozna, egyetlen szerzői döntés
+         nélkül — és a régi csomagokban ez a kulcs nincs is benne. */
+      autoNextTask: s.autoNextTask === true,
+      autoNextStation: s.autoNextStation === true,
+      showResult: s.showResult !== false,
+      nextLabel: s.nextLabel || '',
       /* A szerző által megadott elágazások: [{to: <állomás sorszáma>,
          label: <a válasz szövege>}]. Enélkül a lejátszó csak találgatna,
          hogy a döntési pont hová visz — lásd playAfterStation(). */
@@ -1005,6 +1013,45 @@
     if (!cel) return false;
     return COURSE.some(s => (s.branches || []).some(b => b && b.to === idx));
   }
+  /* Az ellenőrző gomb felirata. A szerző adhat sajátot (tasks.check_label);
+     e nélkül marad a típushoz illő alapértelmezés. */
+  function ellenorzoFelirat(task, alap) {
+    const sajat = task && task.checkLabel ? String(task.checkLabel).trim() : '';
+    return sajat || alap || 'Ellenőrzés';
+  }
+
+  /* A továbblépő gomb felirata az állomás végén. */
+  function tovabbFelirat(s) {
+    const sajat = s && s.nextLabel ? String(s.nextLabel).trim() : '';
+    return sajat || 'Állomás kész — tovább';
+  }
+
+  /* Automatikus továbblépés — állomásonként, KÉT külön kapcsolóval:
+     `autoNextTask` a feladatok között, `autoNextStation` az állomás végén.
+     A kettő azért külön, mert nagyon más: az egyik lapozás, a másik azt
+     üzeni a csapatnak, hogy indulhattok tovább a városban.
+
+     Ha az eredménykártya is látszik, adunk neki egy pillanatot — a pont
+     megszerzése az, amiért játszanak, azt kár elvenni. Kártya nélkül nincs
+     mire várni, ott azonnal lépünk. */
+  function autoTovabb() {
+    const s = COURSE[playCurIdx()];
+    if (!s) return false;
+    const utolso = play.taskIdx >= play.stationTasks.length - 1;
+    const kell = utolso ? s.autoNextStation === true : s.autoNextTask === true;
+    if (!kell) return false;
+
+    const varakozas = (s.showResult !== false) ? 1500 : 0;
+    if (autoTovabb._ora) clearTimeout(autoTovabb._ora);
+    autoTovabb._ora = setTimeout(function () {
+      autoTovabb._ora = null;
+      /* Közben a játékos is koppinthatott, vagy kiléphetett — csak akkor
+         lépünk, ha még mindig ugyanannál az eredménynél állunk. */
+      if (play.active && !play.finished && play.result) playNextTask();
+    }, varakozas);
+    return true;
+  }
+
   function playTaskDone(credited, revealText, atugorva) {
     const task = play.stationTasks[play.taskIdx];
     if (!task) return playNextTask();
@@ -1038,6 +1085,7 @@
                     ujra: ujra && credited, atugorva: !!atugorva };
     saveSnapshot();
     renderPlay();
+    autoTovabb();
   }
   function playNextTask() {
     play.taskIdx++; play.result = null; play.pv = {};
@@ -1504,7 +1552,7 @@
              esc(s.loc) + '</p>';
       }
       h += '<div class="uq-pl-notask">Ehhez az állomáshoz nincs feladat — csak áthaladtok rajta.</div>';
-      h += '<div class="uq-pl-actions"><button class="uq-pl-do" type="button" id="uqPlayCont"><svg class="ico ico-sm" aria-hidden="true"><use href="#a-check"/></svg>Állomás kész — tovább</button></div>';
+      h += '<div class="uq-pl-actions"><button class="uq-pl-do" type="button" id="uqPlayCont"><svg class="ico ico-sm" aria-hidden="true"><use href="#a-check"/></svg>' + esc(tovabbFelirat(s)) + '</button></div>';
       h += '</div>';
     }
     return h;
@@ -1792,7 +1840,7 @@
          épp abban a pillanatban, amikor a csapat elkezdett rá reagálni. */
       const regiHiba = box.querySelector('.uq-pl-wrong');
       const hibaHtml = regiHiba ? regiHiba.outerHTML : '';
-      box.innerHTML = '<div class="uq-pl-puzzle">' + play.pv.order.map((idx, pos) => '<div class="uq-pl-pz"><span class="n">' + (pos + 1) + '</span><span class="t">' + esc(c.items[idx]) + '</span><span class="mv"><button type="button" data-mv="up" data-pos="' + pos + '">▲</button><button type="button" data-mv="dn" data-pos="' + pos + '">▼</button></span></div>').join('') + '</div><button class="uq-pl-go uq-pl-wide" type="button" id="uqPlayGo">Ellenőrzés</button>' + hibaHtml;
+      box.innerHTML = '<div class="uq-pl-puzzle">' + play.pv.order.map((idx, pos) => '<div class="uq-pl-pz"><span class="n">' + (pos + 1) + '</span><span class="t">' + esc(c.items[idx]) + '</span><span class="mv"><button type="button" data-mv="up" data-pos="' + pos + '">▲</button><button type="button" data-mv="dn" data-pos="' + pos + '">▼</button></span></div>').join('') + '</div><button class="uq-pl-go uq-pl-wide" type="button" id="uqPlayGo">' + esc(ellenorzoFelirat(task)) + '</button>' + hibaHtml;
       box.querySelectorAll('[data-mv]').forEach(b => b.addEventListener('click', () => {
         const pos = +b.dataset.pos, dir = b.dataset.mv === 'up' ? -1 : 1, np = pos + dir;
         if (np < 0 || np >= play.pv.order.length) return;
@@ -1966,7 +2014,7 @@
                : ' placeholder="Írd be a választ…"') +
          (c.codeLen ? ' maxlength="' + (+c.codeLen) + '"' : '') + '>' +
          '<button class="uq-pl-go" type="button" id="uqPlayGo">' +
-         (szam ? 'Feltör' : 'Ellenőrzés') + '</button></div>';
+         esc(ellenorzoFelirat(task, szam ? 'Feltör' : 'Ellenőrzés')) + '</button></div>';
     box.innerHTML = h;
     const go = () => relayBekuld(task, $('#uqPlayIn').value, $('#uqPlayGo'));
     $('#uqPlayGo').addEventListener('click', go);
@@ -2057,7 +2105,7 @@
         });
       }));
     } else if (task.type === 'szoveg') {
-      box.innerHTML = '<div class="uq-pl-input"><input type="text" id="uqPlayIn" placeholder="Írd be a választ…" autocomplete="off"><button class="uq-pl-go" type="button" id="uqPlayGo">Ellenőrzés</button></div>';
+      box.innerHTML = '<div class="uq-pl-input"><input type="text" id="uqPlayIn" placeholder="Írd be a választ…" autocomplete="off"><button class="uq-pl-go" type="button" id="uqPlayGo">' + esc(ellenorzoFelirat(task)) + '</button></div>';
       const go = () => {
         const v = $('#uqPlayIn').value;
         ertekel(task, v, playCheckText(v, c)).then(ok => ok ? done(true) : playWrong());
@@ -2075,7 +2123,7 @@
     } else if (task.type === 'puzzle' && c.subtype !== 'match') {
       drawPuzzle(box, c, done, task);
     } else if (task.type === 'puzzle') {
-      box.innerHTML = '<div class="uq-pl-match">' + (c.pairs || []).map((p, i) => '<div class="uq-pl-mrow"><span>' + esc(p.left) + '</span><select data-i="' + i + '"><option value="">…</option>' + (c.pairs || []).map((q, j) => '<option value="' + j + '">' + esc(q.right) + '</option>').join('') + '</select></div>').join('') + '</div><button class="uq-pl-go uq-pl-wide" type="button" id="uqPlayGo">Ellenőrzés</button>';
+      box.innerHTML = '<div class="uq-pl-match">' + (c.pairs || []).map((p, i) => '<div class="uq-pl-mrow"><span>' + esc(p.left) + '</span><select data-i="' + i + '"><option value="">…</option>' + (c.pairs || []).map((q, j) => '<option value="' + j + '">' + esc(q.right) + '</option>').join('') + '</select></div>').join('') + '</div><button class="uq-pl-go uq-pl-wide" type="button" id="uqPlayGo">' + esc(ellenorzoFelirat(task)) + '</button>';
       $('#uqPlayGo').addEventListener('click', () => {
         const valasztott = Array.prototype.map.call(box.querySelectorAll('select'), s => {
           const p = (c.pairs || [])[+s.value];
@@ -2101,6 +2149,19 @@
   function renderPlayResult() {
     const r = play.result; const box = $('#uqPlayAnswer'); const act = $('#uqPlayActions');
     const last = play.taskIdx >= play.stationTasks.length - 1;
+    const st = COURSE[playCurIdx()] || {};
+
+    /* Az eredménykártya elrejthető (stations.show_result). Ilyenkor a válasz
+       után nincs visszajelzés — ennek CSAK automatikus továbblépéssel van
+       értelme, mert különben a csapat egy néma gomb előtt állna, és nem
+       tudná, jó volt-e a válasz. Ezért ha a léptetés nincs bekapcsolva, a
+       kártyát akkor is kirajzoljuk. */
+    const lepAuto = last ? st.autoNextStation === true : st.autoNextTask === true;
+    if (st.showResult === false && lepAuto) {
+      box.innerHTML = '';
+      act.innerHTML = '';
+      return;
+    }
     /* Ha ezt a feladatot már megoldottátok (folytatás után újra elétek
        került), a válasz helyes marad, de pont nem jár érte másodszor. */
     /* HÁROM állapot, nem kettő. A tévedés eddig ugyanazt az „Átugorva" címkét
@@ -2117,7 +2178,7 @@
     else if (r.ok) box.innerHTML = '<div class="uq-pl-res good"><svg class="ico" aria-hidden="true"><use href="#a-check-c"/></svg><div><b>' + esc(siker) + '</b><small>+' + (r.task.points || 0) + ' pont' + (tippKoltseg(r.task) ? ' · −' + tippKoltseg(r.task) + ' tippért' : '') + '</small></div></div>';
     else if (r.atugorva) box.innerHTML = '<div class="uq-pl-res skip"><svg class="ico" aria-hidden="true"><use href="#a-collapse"/></svg><div><b>Átugorva</b>' + (felfed ? '<small>Megoldás: ' + esc(felfed) + '</small>' : '') + '</div></div>';
     else box.innerHTML = '<div class="uq-pl-res bad"><svg class="ico" aria-hidden="true"><use href="#a-x"/></svg><div><b>Nem talált</b><small>' + (felfed ? 'A helyes válasz: ' + esc(felfed) : 'Ez a válasz nem volt jó — a következő állomás viszi tovább a történetet.') + '</small></div></div>';
-    act.innerHTML = '<button class="adm-btn adm-btn-lime" type="button" id="uqPlayNext"><svg class="ico ico-sm" aria-hidden="true"><use href="#a-check"/></svg>' + (last ? 'Állomás kész — tovább' : 'Következő feladat') + '</button>';
+    act.innerHTML = '<button class="adm-btn adm-btn-lime" type="button" id="uqPlayNext"><svg class="ico ico-sm" aria-hidden="true"><use href="#a-check"/></svg>' + esc(last ? tovabbFelirat(st) : 'Következő feladat') + '</button>';
     $('#uqPlayNext').addEventListener('click', playNextTask);
   }
 

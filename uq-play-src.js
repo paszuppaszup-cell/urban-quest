@@ -15,7 +15,7 @@
 (function () {
   'use strict';
 
-  var LEJATSZO = 'jatszas.js?v=28';
+  var LEJATSZO = 'jatszas.js?v=29';
   var CACHE_ELO = 'uq_bundle_';           // offline tartalék pályánként
 
   var DIFF_LABEL = { konnyu: 'Könnyű', kozepes: 'Közepes', nehez: 'Nehéz', extrem: 'Extrém' };
@@ -65,7 +65,13 @@
            szerzői beavatkozás nélkül. Hiányzó kulcs = a korábbi viselkedés
            marad, tehát látszik. */
         showHeader: s.show_header !== false,
-        showHud: s.show_hud !== false
+        showHud: s.show_hud !== false,
+        /* Leptetes es feliratok. A ket auto-* alapja FALSE: a mai viselkedes
+           az, hogy a jatekos koppint. Hianyzo kulcsnal tehat marad a gomb. */
+        autoNextTask: s.auto_next_task === true,
+        autoNextStation: s.auto_next_station === true,
+        showResult: s.show_result !== false,
+        nextLabel: s.next_label || ''
       });
 
       (s.tasks || []).forEach(function (t) {
@@ -88,6 +94,7 @@
           station: s.name,
           question: t.question,
           type: t.kind,
+          checkLabel: t.check_label || '',
           points: t.points || 0,
           image: t.image || '',
           /* A videó saját mezőt kap a csomagban. A config-os ág a RÉGI,

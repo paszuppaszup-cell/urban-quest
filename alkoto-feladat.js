@@ -776,6 +776,26 @@
       a.show_hud !== false,
       'Feladatszámláló, idő, pont.');
 
+    var kEredmeny = kapcsolo(host, 'Eredmény-visszajelzés',
+      a.show_result !== false,
+      'A „Helyes! +N pont" kártya a válasz után. Csak automatikus továbblépéssel kapcsolható ki — enélkül a csapat nem tudná, jó volt-e a válasz.');
+
+    /* KÉT KÜLÖN LÉPTETÉS-KAPCSOLÓ. Nem egy: a feladatok közti lépés csak
+       lapozás, az állomások közti viszont azt üzeni, hogy indulhattok tovább
+       a városban. A kettőt nem szabad egy kapcsolóra tenni. */
+    var kAutoFeladat = kapcsolo(host, 'Feladatok közt magától lép',
+      a.auto_next_task === true,
+      'A következő feladat gomb nélkül jön, ugyanazon az állomáson.');
+
+    var kAutoAllomas = kapcsolo(host, 'Állomás végén magától lép',
+      a.auto_next_station === true,
+      'Az utolsó feladat után magától a következő állomásra visz — a csapat nem koppint „Állomás kész"-t.');
+
+    var felirat = mezo(host, 'A továbbgomb felirata', a.next_label || '', false,
+      'Üresen: „Állomás kész — tovább".');
+    felirat.maxLength = 40;
+    felirat.placeholder = 'Állomás kész — tovább';
+
     /* AZ ÓRÁRÓL KI KELL MONDANI, hogy elrejtve is jár. Nem feltételesen: a
        visszaszámláló a pálya becsült időtartamából számolódik, nem egy külön
        „van-e időkorlát" mezőből — ezért a feltételes figyelmeztetés pont
@@ -783,22 +803,40 @@
     var fig = el('p', 'alk-p-fig');
     host.appendChild(fig);
     function figFrissit() {
-      fig.hidden = kHud.checked;
-      if (!fig.hidden) {
-        fig.textContent = 'A felső sávban fut a visszaszámláló is. Kikapcsolva az idő ' +
-          'tovább telik, de a csapat nem látja fogyni.';
+      var uzenet = [];
+      if (!kHud.checked) {
+        uzenet.push('A felső sávban fut a visszaszámláló is. Kikapcsolva az idő tovább ' +
+                    'telik, de a csapat nem látja fogyni.');
       }
+      /* Eredmény nélkül ÉS gombbal: a csapat egy néma gomb előtt állna, és
+         nem tudná, jó volt-e a válasz. A lejátszó ilyenkor kirajzolja a
+         kártyát — itt is kimondjuk, hogy a kapcsoló nem hat. */
+      if (!kEredmeny.checked && !kAutoFeladat.checked && !kAutoAllomas.checked) {
+        uzenet.push('Az eredmény-visszajelzés csak automatikus továbblépéssel ' +
+                    'kapcsolható ki. Amíg a csapat gombbal lép tovább, a kártya ' +
+                    'megjelenik — különben nem tudná, jó volt-e a válasz.');
+      }
+      fig.hidden = uzenet.length === 0;
+      fig.textContent = uzenet.join(' ');
     }
     figFrissit();
 
     function mentes() {
       a.show_header = kFejlec.checked;
       a.show_hud = kHud.checked;
+      a.show_result = kEredmeny.checked;
+      a.auto_next_task = kAutoFeladat.checked;
+      a.auto_next_station = kAutoAllomas.checked;
+      a.next_label = felirat.value.trim();
       figFrissit();
       return { _allomas: true, id: a.id, course_id: palya.id,
-               show_header: a.show_header, show_hud: a.show_hud };
+               show_header: a.show_header, show_hud: a.show_hud,
+               show_result: a.show_result,
+               auto_next_task: a.auto_next_task,
+               auto_next_station: a.auto_next_station,
+               next_label: a.next_label };
     }
-    automent([kFejlec, kHud], mentes);
+    automent([kFejlec, kHud, kEredmeny, kAutoFeladat, kAutoAllomas, felirat], mentes);
   }
 
   /* --- Kép és videó --- */
@@ -866,11 +904,23 @@
     var q = mezo(p, 'Kérdés', f.question, 3);
     var pont = mezo(p, 'Hány pontot ér?', f.points == null ? 20 : f.points);
     pont.type = 'number'; pont.min = '0'; pont.max = '200';
-    automent([q, pont], function () {
+
+    /* Az ellenőrző gomb felirata a FELADATHOZ tartozik, nem az állomáshoz:
+       a gomb a feladat sajátja, és típusonként már ma is más (számzárnál
+       „Feltör"). Üresen hagyva marad a típushoz illő alapértelmezés. */
+    var gombFelirat = mezo(p, 'Az ellenőrző gomb felirata <em>(nem kötelező)</em>',
+      f.check_label || '', false,
+      'Üresen hagyva: „Ellenőrzés" (számzárnál „Feltör"). Legfeljebb 40 karakter.');
+    gombFelirat.maxLength = 40;
+    gombFelirat.placeholder = f.kind === 'kod' ? 'Feltör' : 'Ellenőrzés';
+
+    automent([q, pont, gombFelirat], function () {
       var szoveg = q.value.trim();
       if (!szoveg) return null;                 // üres kérdést a szerver úgyis eldob
       f.question = szoveg;
       var p = { id: f.id, question: szoveg };
+      f.check_label = gombFelirat.value.trim();
+      p.check_label = f.check_label;
       /* A pontszámot CSAK akkor küldjük, ha tényleg van benne szám. Korábban
          `parseInt(...) || 0` állt itt: ha a szerző kitörölte a mezőt, hogy
          újat írjon, a közben elsülő mentés csendben NULLÁRA írta a feladat
@@ -1168,7 +1218,7 @@
   function feladatokTolt() {
     var a = allomasok[aktivAllomas];
     if (!a) { feladatok = []; return Promise.resolve(); }
-    return UQAPI.rest('/tasks?select=id,kind,question,points,image,video,config,solution,position' +
+    return UQAPI.rest('/tasks?select=id,kind,question,points,image,video,config,solution,position,check_label' +
                       '&station_id=eq.' + encodeURIComponent(a.id) +
                       '&status=eq.active&order=position.asc')
       .then(function (r) {
@@ -1214,7 +1264,7 @@
       .then(function (r) {
         palya = (r || [])[0] || null;
         if (!palya) { ures('Előbb válassz pályát'); return null; }
-        return UQAPI.rest('/stations?select=id,name,kind,description,lat,lng,position,time_limit_s,show_header,show_hud' +
+        return UQAPI.rest('/stations?select=id,name,kind,description,lat,lng,position,time_limit_s,show_header,show_hud,auto_next_task,auto_next_station,show_result,next_label' +
                           '&course_id=eq.' + encodeURIComponent(palya.id) + '&order=position.asc');
       })
       .then(function (r) {

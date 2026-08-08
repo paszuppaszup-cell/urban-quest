@@ -794,3 +794,18 @@
   .alk-allomassav { gap: 7px 12px; padding: 8px 10px; }
   .alk-allomassav .alk-p-kapcs > span { font-size: 12px; }
 }
+
+/* A léptetés-sávban a szövegmező sem szakítja meg a sort. */
+.alk-allomassav .alk-p-mezo {
+  display: inline-flex; flex-direction: column; gap: 3px;
+  min-width: 190px; margin: 0;
+}
+.alk-allomassav .alk-p-mezo > span {
+  font-size: 10px; font-weight: 700; letter-spacing: .08em;
+  text-transform: uppercase; color: var(--dim);
+}
+.alk-allomassav .alk-p-mezo input {
+  padding: 6px 9px; font-size: 12.5px;
+  background: #0e120d; border: 1px solid var(--line); border-radius: 7px; color: var(--text);
+}
+.alk-allomassav .alk-p-mezo .alk-p-sugo { display: none; }
