@@ -1233,419 +1233,123 @@
   }
 
   /* =========================================================
-     JÁTÉKOS VÉGIGJÁTSZÁS (teszt-mód) — beágyazott panel
+     JÁTÉKOS NÉZET — A VALÓDI LEJÁTSZÓ, keretben
+
+     Itt korábban egy MÁSODIK, kézzel írt lejátszó állt (~410 sor): saját
+     állomás-render, saját feladat-típusok, saját eredménykártya. Külön
+     kódból, külön adatból dolgozott — a szerkesztő nyers tábláiból, nem a
+     befagyasztott csomagból —, és menthetetlenül szétcsúszott az igazitól:
+
+       - nem tudott a csapatláncról, a tippekről, az időkorlátról, az
+         állomásonkénti megjelenítés-kapcsolókról, a gombfeliratokról és az
+         automatikus léptetésről;
+       - a kvíznél a HELYES választ is felfedte (`o.correct`), pedig azt az
+         éles csomagból a strip_solution kiszedi;
+       - az eredménykártyából két állapotot ismert három helyett.
+
+     Vagyis pontosan azt csinálta, amit a lejátszóból már egyszer kiirtottunk
+     (lásd jatszas.js, a beégetett demó-pálya története): a szerző azt hitte,
+     a saját pályáját teszteli, közben egy másik játékot látott.
+
+     Most ugyanaz az emulátor fut itt, mint az Alkotó szerkesztőjében: a
+     `jatszas.html` a maga teljes valójában, iframe-ben, előnézeti módban.
+     Ami a keretben látszik, az BETŰRE az, amit a játékos kap.
      ========================================================= */
-  const PLAY_TYPE = {
-    kviz:   { l: 'Kvíz',       c: '#5b9de0', ic: 'a-task' },
-    szoveg: { l: 'Szöveges',   c: '#e0b93a', ic: 'a-preview' },
-    puzzle: { l: 'Puzzle',     c: '#8fb04f', ic: 'a-layers' },
-    kod:    { l: 'Kód',        c: '#e8813a', ic: 'a-lock' },
-    foto:   { l: 'Fotó',       c: '#9d7ce0', ic: 'a-camera' },
-    gps:    { l: 'GPS',        c: '#4fb84f', ic: 'a-target' },
-    qr:     { l: 'QR-kód',     c: '#39c0c8', ic: 'a-qr' },
-    gyors:  { l: 'Gyorsasági', c: '#e05b9d', ic: 'a-bolt' }
-  };
-  const playNorm = s => String(s == null ? '' : s).trim().toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
 
-  const play = { active: false, view: 'intro', path: [], points: 0, done: 0, skipped: 0, taskIdx: 0, stationTasks: [], result: null, decOpts: [], pv: {}, startTs: 0, timer: null, finished: false, finalMs: 0 };
+  /* A lejátszó a BEFAGYASZTOTT verziót játssza, nem a nyers táblákat, ezért
+     megnyitás előtt friss előnézeti verziót kérünk. Egyszerre csak egy
+     kérés lehet úton: két egymásra futó preview_course a verzió-befagyasztáson
+     ütközik (a (course_id, version) pár egyedi), és a második HTTP 409-cel
+     szállna el. */
+  var elonezetFut = false, elonezetVar = false;
 
-  function revealFor(type, c) {
-    c = c || {};
-    if (type === 'kviz') { const ok = (c.options || []).find(o => o.correct); return ok ? ok.text : '—'; }
-    if (type === 'szoveg') return (c.accepted || []).filter(Boolean).join(' / ') || '—';
-    if (type === 'kod') return c.code || '—';
-    if (type === 'puzzle' && c.subtype !== 'match') return (c.items || []).join(' → ');
-    if (type === 'puzzle') return (c.pairs || []).map(p => p.left + '→' + p.right).join(', ');
-    return null;
+  function jatekosKeretUrl() {
+    var idx = COURSES_INDEX.find(function (c) { return c.id === currentCourseId; });
+    var slug = idx && idx.slug ? idx.slug : '';
+    if (!slug) return '';
+    return 'jatszas.html?quest=' + encodeURIComponent(slug) +
+           '&elonezet=1&cb=' + Date.now();
   }
-  /* A beépített előnézet feladatai.
 
-     Ez korábban a halott uq_tasks_v1 kulcsból dolgozott, ezért MINDIG a
-     tartalék ágra futott: állomásonként egyetlen feladatot gyártott az
-     állomás UI-alapértékeiből — amiket az adatbázisból betöltött állomás
-     nem is tölt ki. Vagyis üres kérdéseket mutatott a valódiak helyett.
+  function jatekosVaz() {
+    return '' +
+      '<div class="adm-jn">' +
+        '<div class="adm-jn-fej">' +
+          '<div>' +
+            '<b>Ez a valódi lejátszó.</b>' +
+            '<p>Nem külön előnézet: ugyanaz a kód fut a keretben, amit a játékos telefonja tölt be. ' +
+               'A pálya <b>befagyasztott előnézeti verzióját</b> játssza, ezért a frissítés előbb ' +
+               'menti és befagyasztja, amit épp írtál.</p>' +
+          '</div>' +
+          '<button class="adm-btn adm-btn-lime" type="button" id="admJnFrissit">' +
+            '<svg class="ico ico-sm" aria-hidden="true"><use href="#a-refresh"/></svg>Frissítés' +
+          '</button>' +
+        '</div>' +
+        '<div class="adm-jn-telefon">' +
+          '<div class="adm-jn-ful"></div>' +
+          '<iframe class="adm-jn-kepernyo" id="admJnKeret" title="A játékos képernyője" referrerpolicy="no-referrer"></iframe>' +
+          '<div class="adm-jn-tolt" id="admJnTolt"><span></span>Betöltés…</div>' +
+        '</div>' +
+      '</div>';
+  }
 
-     Az admin nézetben a megoldás legitim módon látható, ezért a külön
-     tárolt `solution` mezőt visszaolvasztjuk a konfigba — a lejátszó
-     motorja ezt az alakot várja. (A JÁTÉKOS soha nem ezen az úton jut
-     feladathoz: neki a befagyasztott csomag megy, sózott hash-sel.) */
-  function cfgMegoldassal(t) {
-    const cfg = JSON.parse(JSON.stringify(t.config || {}));
-    const sol = t.solution || {};
-    const acc = Array.isArray(sol.accepted) ? sol.accepted : [];
-
-    if (t.kind === 'kviz' && Array.isArray(cfg.options)) {
-      cfg.options = cfg.options.map(function (o) {
-        return { id: o.id, text: o.text, correct: acc.indexOf(o.text) >= 0 };
-      });
-    } else if (t.kind === 'kod') {
-      cfg.code = acc[0] || '';
-    } else if (t.kind === 'puzzle') {
-      /* a sorrend-feladat megoldása egyetlen, '|' jellel fűzött sztring */
-      if (acc.length && !Array.isArray(cfg.items)) cfg.items = String(acc[0]).split('|');
-    } else if (acc.length) {
-      cfg.accepted = acc;
+  /* Csak akkor építjük újra a vázat, ha még nincs meg — különben minden
+     fülváltás újratöltené a keretet, és a félig végigjátszott teszt elveszne. */
+  function renderPlay() {
+    var host = $('#panelJatekos'); if (!host) return;
+    if (!$('#admJnKeret')) {
+      host.innerHTML = jatekosVaz();
+      on($('#admJnFrissit'), 'click', function () { playStart(); });
+      playStart();
     }
-    return cfg;
   }
 
-  /* A háttér-érték IDÉZŐJELET tartalmaz — url("https://…") —, és a
-     style="…" attribútumot pontosan ott vágta el: a böngésző csak
-     `background:center/cover no-repeat url(` -ig olvasta, a kép URL-jét
-     pedig szemét attribútumnak látta. Ezért maradt üres az állomás hero-ja
-     akkor is, ha a képe fel volt töltve. A &quot; a HTML-elemzőn átjut, és
-     a CSS már valódi idézőjelet lát. */
-  function hatterAttr(v) { return String(v == null ? '' : v).replace(/"/g, '&quot;'); }
-
-  /* A „Játékos nézet" videót is mutat — ugyanaz a felismerés, mint a
-     lejátszóban (jatszas.js), hogy a két előnézet ne mondjon mást. */
-  function parseVideo(url) {
-    url = String(url == null ? '' : url).trim();
-    if (!url) return null;
-    if (/^data:video\//i.test(url) || /\.(mp4|webm|ogg)(\?.*)?$/i.test(url)) return { kind: 'file', src: url };
-    const yt = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([\w-]{11})/);
-    if (yt) return { kind: 'youtube', embed: 'https://www.youtube.com/embed/' + yt[1] };
-    const vm = url.match(/vimeo\.com\/(?:video\/)?(\d+)/);
-    if (vm) return { kind: 'vimeo', embed: 'https://player.vimeo.com/video/' + vm[1] };
-    return { kind: 'url', src: url };
-  }
-  function videoEmbedHTML(url, cls) {
-    const v = parseVideo(url);
-    if (!v) return '';
-    if (v.kind === 'youtube' || v.kind === 'vimeo')
-      return '<div class="' + (cls || '') + '"><iframe src="' + esc(v.embed) + '" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen" allowfullscreen loading="lazy"></iframe></div>';
-    return '<div class="' + (cls || '') + '"><video src="' + esc(v.src || url) + '" controls playsinline preload="metadata"></video></div>';
-  }
-
-  function stationPlayTasks(i) {
-    const s = state[i];
-    if (!s) return [];
-    const tasks = TASKS_BY_STATION[s.id] || [];
-    return tasks
-      .filter(function (t) { return t.status === 'active'; })
-      .map(function (t) {
-        const cfg = cfgMegoldassal(t);
-        return { id: t.id, question: t.title || t.question, type: t.kind, cfg: cfg,
-                 points: t.points || 0, reveal: revealFor(t.kind, cfg),
-                 image: t.image || '', video: t.video || '' };
-      });
-  }
-
-  /* --- idő --- */
-  function playFmt(ms) { const s = Math.max(0, Math.floor(ms / 1000)); const m = Math.floor(s / 60); const r = s % 60; return (m < 10 ? '0' : '') + m + ':' + (r < 10 ? '0' : '') + r; }
-  function playElapsed() { return play.startTs ? Date.now() - play.startTs : 0; }
-  function stopTimer() { if (play.timer) { clearInterval(play.timer); play.timer = null; } }
-  function startTimer() {
-    stopTimer();
-    play.timer = setInterval(() => {
-      if (activeTab === 'jatekos' && play.active && !play.finished) { const el = $('#uqPlayTime'); if (el) el.textContent = playFmt(playElapsed()); }
-    }, 500);
-  }
-
-  /* --- életciklus --- */
+  /* Frissítés: a függőben lévő szerkesztés KIÍRÁSA, majd befagyasztás, majd
+     a keret újratöltése. A sorrend nem cserélhető fel: befagyasztás előtt
+     kiírt mentés nélkül a szerző a két perce beírt szövegét sem látná. */
   function playStart() {
-    let startIdx = state.findIndex(s => s.type === 'Kezdő állomás');
-    if (startIdx < 0) startIdx = 0;
-    play.active = true; play.finished = false; play.view = 'station';
-    play.path = [startIdx]; play.points = 0; play.done = 0; play.skipped = 0;
-    play.taskIdx = 0; play.result = null; play.decOpts = []; play.pv = {};
-    play.stationTasks = stationPlayTasks(startIdx);
-    play.startTs = Date.now(); play.finalMs = 0;
-    startTimer();
-    renderPlay();
-  }
-  function playExit() { play.active = false; play.finished = false; play.view = 'intro'; stopTimer(); renderPlay(); }
-  function playCurIdx() { return play.path[play.path.length - 1]; }
-  function playGoto(i) {
-    play.path.push(i); play.taskIdx = 0; play.result = null; play.pv = {}; play.view = 'station';
-    play.stationTasks = stationPlayTasks(i);
-    renderPlay();
-  }
-  function playFinish() { play.finished = true; play.view = 'summary'; play.finalMs = playElapsed(); stopTimer(); renderPlay(); }
-  function playAfterStation() {
-    const i = playCurIdx();
-    const s = state[i];
+    var host = $('#panelJatekos'); if (!host) return;
+    if (!$('#admJnKeret')) { renderPlay(); return; }
+    if (!currentCourseId || !window.UQAPI) return;
+    if (elonezetFut) { elonezetVar = true; return; }
 
-    /* A megadott ágak szerint megyünk tovább — ugyanaz a szabály, mint az
-       éles lejátszóban (jatszas.js playAfterStation). Korábban itt a lista
-       következő KÉT állomása jött, ezért a próbajáték mást mutatott, mint
-       a mellette lévő térkép és mint a valódi játék. */
-    const agak = (s.branches || [])
-      .map(b => ({ idx: state.indexOf(b.to), label: b.label || '' }))
-      .filter(b => b.idx >= 0);
-
-    if (agak.length) {
-      if (agak.length === 1) return playGoto(agak[0].idx);
-      play.decOpts = agak;
-      play.view = 'decision';
-      renderPlay();
+    var url = jatekosKeretUrl();
+    if (!url) {
+      host.innerHTML = '<div class="adm-ures"><b>Ehhez a pályához nincs azonosító</b>' +
+        '<p>A pálya „slug” mezője üres, ezért a lejátszó nem tudja megnyitni. ' +
+        'A Játékok oldalon add meg, és próbáld újra.</p></div>';
       return;
     }
-    if (i + 1 < state.length) return playGoto(i + 1);
-    return playFinish();
-  }
-  function playTaskDone(credited, revealText) {
-    const task = play.stationTasks[play.taskIdx];
-    if (credited) { play.points += (task.points || 0); play.done++; }
-    else play.skipped++;
-    play.result = { ok: credited, reveal: revealText || null, task: task };
-    renderPlay();
-  }
-  function playNextTask() {
-    play.taskIdx++; play.result = null; play.pv = {};
-    if (play.taskIdx >= play.stationTasks.length) playAfterStation();
-    else renderPlay();
-  }
 
-  /* --- fő render --- */
-  function renderPlay() {
-    const host = $('#panelJatekos'); if (!host) return;
-    if (!play.active) { host.innerHTML = playIntroHTML(); const b = $('#uqPlayStart'); if (b) b.addEventListener('click', playStart); return; }
-    host.innerHTML = '<div class="uq-play">' +
-      '<div class="uq-play-main">' + playHudHTML() + '<div class="uq-play-stage" id="uqPlayStage"></div></div>' +
-      '<aside class="uq-play-side">' + playMapHTML() + playStepsHTML() + '</aside>' +
-      '</div>';
-    const ex = $('#uqPlayExit'); if (ex) ex.addEventListener('click', playExit);
-    const stage = $('#uqPlayStage');
-    if (play.view === 'summary') { stage.innerHTML = playSummaryHTML(); wirePlaySummary(); }
-    else if (play.view === 'decision') { stage.innerHTML = playDecisionHTML(); wirePlayDecision(); }
-    else { stage.innerHTML = playStationHTML(); wirePlayStation(); }
-  }
+    elonezetFut = true;
+    var tolt = $('#admJnTolt'); if (tolt) tolt.hidden = false;
+    if (syncTimer) { clearTimeout(syncTimer); syncTimer = null; }
 
-  function playIntroHTML() {
-    const name = ($('#cmName') && $('#cmName').value) || 'Városliget Felfedező';
-    const total = state.length;
-    let tasks = 0; for (let i = 0; i < total; i++) tasks += stationPlayTasks(i).length;
-    return '<div class="uq-play-intro">' +
-      '<span class="uq-play-intro-ic"><svg class="ico" aria-hidden="true"><use href="#a-play"/></svg></span>' +
-      '<h2>Végigjátszás — teszt-mód</h2>' +
-      '<p>Játszd végig a(z) <b>' + esc(name) + '</b> pályát úgy, ahogy a játékos látná: állomásról állomásra, valódi feladatokkal és döntési pontokkal.</p>' +
-      '<div class="uq-play-intro-meta"><span><b>' + total + '</b> állomás</span><span><b>' + tasks + '</b> feladat</span><span><b>~' + Math.max(1, Math.round(total * 2.5)) + '</b> perc</span></div>' +
-      '<button class="adm-btn adm-btn-lime uq-play-start" type="button" id="uqPlayStart"><svg class="ico ico-sm" aria-hidden="true"><use href="#a-play"/></svg>Végigjátszás indítása</button>' +
-      '<small class="uq-play-note">A feladatok átugorhatók • a döntési pontoknál választhatsz útvonalat</small>' +
-      '</div>';
-  }
-
-  function playHudHTML() {
-    const total = state.length;
-    const pct = Math.min(100, Math.round(play.path.length / total * 100));
-    return '<div class="uq-play-hud">' +
-      '<div class="uq-hud-item"><span class="uq-hud-label">Haladás</span><b>' + play.path.length + '<small>/' + total + '</small></b></div>' +
-      '<div class="uq-hud-item"><span class="uq-hud-label">Pont</span><b class="lime">' + play.points + '</b></div>' +
-      '<div class="uq-hud-item"><span class="uq-hud-label">Idő</span><b id="uqPlayTime">' + playFmt(play.finished ? play.finalMs : playElapsed()) + '</b></div>' +
-      '<div class="uq-hud-bar"><span style="width:' + pct + '%"></span></div>' +
-      '<button class="uq-hud-exit" type="button" id="uqPlayExit" aria-label="Kilépés a teszt-módból"><svg class="ico ico-sm" aria-hidden="true"><use href="#a-x"/></svg></button>' +
-      '</div>';
-  }
-
-  function playStationHTML() {
-    const i = playCurIdx(); const s = state[i];
-    const total = play.stationTasks.length;
-    const tno = Math.min(play.taskIdx + 1, total);
-    let h = '<div class="uq-pl-card">';
-    /* A nagy állomás-képsáv pályánként kikapcsolható (show_station_image).
-       Az ELŐNÉZETNEK is követnie kell, különben a szerző kikapcsolja, és
-       pont azon a képernyőn nem lát változást, ami miatt kikapcsolta. */
-    var jelvenyek =
-      '<span class="uq-pl-badge"><svg class="ico ico-xs" aria-hidden="true"><use href="#' +
-        (s.type === 'Döntési pont' ? 'a-diamond' : 'a-pin') + '"/></svg>' +
-        play.path.length + '. állomás</span>' +
-      '<span class="uq-pl-type">' + esc(s.type) + '</span>';
-    h += ALLOMAS_KEP
-      ? '<div class="uq-pl-hero" style="background:' + hatterAttr(s.img) + '">' + jelvenyek + '</div>'
-      : '<div class="uq-pl-hero uq-pl-hero-kep-nelkul">' + jelvenyek + '</div>';
-    h += '<div class="uq-pl-body">';
-    h += '<h3>' + esc(s.name) + '</h3>';
-    h += '<p class="uq-pl-desc">' + esc(s.desc || 'Nincs leírás ehhez az állomáshoz.') + '</p>';
-    if (total) {
-      const task = play.stationTasks[play.taskIdx];
-      const ty = PLAY_TYPE[task.type] || { l: task.type, c: '#8b957f', ic: 'a-task' };
-      h += '<div class="uq-pl-taskhead"><span class="uq-pl-tico" style="color:' + ty.c + ';background:' + ty.c + '22"><svg class="ico ico-sm" aria-hidden="true"><use href="#' + ty.ic + '"/></svg></span>' +
-        '<div class="uq-pl-tmeta"><span class="uq-pl-tlabel">' + ty.l + (total > 1 ? ' · ' + tno + '/' + total + ' feladat' : '') + '</span><b>' + esc(task.question) + '</b></div>' +
-        '<span class="uq-pl-tpts"><svg class="ico ico-xs" aria-hidden="true"><use href="#a-star"/></svg>' + (task.points || 0) + '</span></div>';
-      if (task.image) h += '<div class="uq-pl-taskimg"><img src="' + esc(task.image) + '" alt=""></div>';
-      if (task.video) h += videoEmbedHTML(task.video, 'uq-pl-taskvid');
-      h += '<div class="uq-pl-answer" id="uqPlayAnswer"></div>';
-      h += '<div class="uq-pl-actions" id="uqPlayActions"></div>';
-    } else {
-      h += '<div class="uq-pl-notask">Ehhez az állomáshoz nincs feladat — csak áthaladsz rajta.</div>';
-      h += '<div class="uq-pl-actions"><button class="adm-btn adm-btn-lime" type="button" id="uqPlayCont"><svg class="ico ico-sm" aria-hidden="true"><use href="#a-check"/></svg>Tovább</button></div>';
-    }
-    h += '</div></div>';
-    return h;
-  }
-  function wirePlayStation() {
-    const cont = $('#uqPlayCont'); if (cont) { cont.addEventListener('click', () => playAfterStation()); return; }
-    if (!play.stationTasks.length) return;
-    if (play.result) renderPlayResult(); else renderPlayAnswer();
-  }
-
-  function playWrong() {
-    const box = $('#uqPlayAnswer'); if (!box) return;
-    let m = box.querySelector('.uq-pl-wrong');
-    if (!m) { m = document.createElement('div'); m.className = 'uq-pl-wrong'; box.appendChild(m); }
-    m.innerHTML = '<svg class="ico ico-xs" aria-hidden="true"><use href="#a-x"/></svg>Nem talált — próbáld újra, vagy ugord át.';
-    const inp = box.querySelector('input'); if (inp) { inp.classList.remove('shake'); void inp.offsetWidth; inp.classList.add('shake'); inp.focus(); }
-  }
-  function playCheckText(val, c) {
-    c = c || {};
-    if (c.numeric) { const a = parseFloat(String(val).replace(',', '.')); return (c.accepted || []).some(x => parseFloat(String(x).replace(',', '.')) === a); }
-    const v = c.tolerant ? playNorm(val) : String(val).trim();
-    return (c.accepted || []).some(x => { const xx = c.tolerant ? playNorm(x) : String(x).trim(); return c.keyword ? (xx && v.includes(xx)) : v === xx; });
-  }
-  function drawCodePad(box, c, done) {
-    const len = (c.code || '').length || 4;
-    const disp = () => '<div class="uq-pl-code">' + Array.from({ length: len }).map((_, i) => '<span>' + (play.pv.code[i] || '') + '</span>').join('') + '</div>';
-    box.innerHTML = disp() + '<div class="uq-pl-pad">' + [1, 2, 3, 4, 5, 6, 7, 8, 9].map(n => '<button type="button" data-k="' + n + '">' + n + '</button>').join('') + '<button type="button" data-k="del">⌫</button><button type="button" data-k="0">0</button><button type="button" data-k="ok" class="ok">OK</button></div>';
-    box.querySelectorAll('.uq-pl-pad button').forEach(b => b.addEventListener('click', () => {
-      const k = b.dataset.k;
-      if (k === 'del') play.pv.code = play.pv.code.slice(0, -1);
-      else if (k === 'ok') { if (String(play.pv.code) === String(c.code)) return done(true); return playWrong(); }
-      else if (play.pv.code.length < len) play.pv.code += k;
-      const d = box.querySelector('.uq-pl-code'); if (d) d.outerHTML = disp();
-    }));
-  }
-  function drawPuzzle(box, c, done) {
-    if (!play.pv.order) play.pv.order = uqKeverveNemAzonos((c.items || []).map((_, i) => i));
-    const draw = () => {
-      box.innerHTML = '<div class="uq-pl-puzzle">' + play.pv.order.map((idx, pos) => '<div class="uq-pl-pz"><span class="n">' + (pos + 1) + '</span><span class="t">' + esc(c.items[idx]) + '</span><span class="mv"><button type="button" data-mv="up" data-pos="' + pos + '">▲</button><button type="button" data-mv="dn" data-pos="' + pos + '">▼</button></span></div>').join('') + '</div><button class="uq-pl-go uq-pl-wide" type="button" id="uqPlayGo">Ellenőrzés</button>';
-      box.querySelectorAll('[data-mv]').forEach(b => b.addEventListener('click', () => {
-        const pos = +b.dataset.pos, dir = b.dataset.mv === 'up' ? -1 : 1, np = pos + dir;
-        if (np < 0 || np >= play.pv.order.length) return;
-        const t = play.pv.order[pos]; play.pv.order[pos] = play.pv.order[np]; play.pv.order[np] = t; draw();
-      }));
-      $('#uqPlayGo').addEventListener('click', () => {
-        const correct = play.pv.order.filter((idx, pos) => idx === pos).length;
-        if (correct === (c.items || []).length) done(true); else playWrong();
+    Promise.resolve(syncToDb())
+      .then(function () {
+        return UQAPI.rest('/rpc/preview_course', { method: 'POST', body: { p_course: currentCourseId } });
+      })
+      .then(function () {
+        var keret = $('#admJnKeret');
+        if (keret) keret.src = jatekosKeretUrl();
+      })
+      .catch(function (e) {
+        if (tolt) tolt.hidden = true;
+        toast('Az előnézet nem készült el', { type: 'error', sub: (e && e.message) || 'ismeretlen hiba' });
+      })
+      .then(function () {
+        elonezetFut = false;
+        if (elonezetVar) { elonezetVar = false; playStart(); }
       });
-    };
-    draw();
   }
-  function renderPlayAnswer() {
-    const task = play.stationTasks[play.taskIdx];
-    const c = task.cfg || {}; const box = $('#uqPlayAnswer'); const act = $('#uqPlayActions');
-    play.pv = { code: '', order: null };
-    act.innerHTML = '<button class="uq-pl-skip" type="button" id="uqPlaySkip"><svg class="ico ico-xs" aria-hidden="true"><use href="#a-collapse"/></svg>Megoldás / átugrás</button>';
-    $('#uqPlaySkip').addEventListener('click', () => playTaskDone(false, task.reveal));
-    const done = (ok) => playTaskDone(ok, ok ? null : task.reveal);
 
-    if (task.type === 'kviz') {
-      let opts = (c.options || []).map((o, i) => ({ o: o, i: i }));
-      if (c.shuffle) opts = uqKeverve(opts);
-      box.innerHTML = '<div class="uq-pl-opts">' + opts.map(x => '<button class="uq-pl-opt" type="button" data-i="' + x.i + '">' + esc(x.o.text || '—') + '</button>').join('') + '</div>';
-      box.querySelectorAll('.uq-pl-opt').forEach(b => b.addEventListener('click', () => {
-        const ok = c.options[+b.dataset.i] && c.options[+b.dataset.i].correct;
-        box.querySelectorAll('.uq-pl-opt').forEach(x => { x.disabled = true; });
-        b.classList.add(ok ? 'ok' : 'bad');
-        if (!ok) { const ci = c.options.findIndex(o => o.correct); const cb = box.querySelector('.uq-pl-opt[data-i="' + ci + '"]'); if (cb) cb.classList.add('ok'); }
-        setTimeout(() => done(!!ok), 420);
-      }));
-    } else if (task.type === 'szoveg') {
-      box.innerHTML = '<div class="uq-pl-input"><input type="text" id="uqPlayIn" placeholder="Írd be a választ…" autocomplete="off"><button class="uq-pl-go" type="button" id="uqPlayGo">Ellenőrzés</button></div>';
-      const go = () => { if (playCheckText($('#uqPlayIn').value, c)) done(true); else playWrong(); };
-      $('#uqPlayGo').addEventListener('click', go);
-      $('#uqPlayIn').addEventListener('keydown', e => { if (e.key === 'Enter') go(); });
-    } else if (task.type === 'kod') {
-      if (c.codeType === 'word') {
-        box.innerHTML = '<div class="uq-pl-input"><input type="text" id="uqPlayIn" placeholder="Írd be a kódot…" autocomplete="off"><button class="uq-pl-go" type="button" id="uqPlayGo">Feltör</button></div>';
-        $('#uqPlayGo').addEventListener('click', () => { if (playNorm($('#uqPlayIn').value) === playNorm(c.code)) done(true); else playWrong(); });
-      } else { drawCodePad(box, c, done); }
-    } else if (task.type === 'puzzle' && c.subtype !== 'match') {
-      drawPuzzle(box, c, done);
-    } else if (task.type === 'puzzle') {
-      box.innerHTML = '<div class="uq-pl-match">' + (c.pairs || []).map((p, i) => '<div class="uq-pl-mrow"><span>' + esc(p.left) + '</span><select data-i="' + i + '"><option value="">…</option>' + (c.pairs || []).map((q, j) => '<option value="' + j + '">' + esc(q.right) + '</option>').join('') + '</select></div>').join('') + '</div><button class="uq-pl-go uq-pl-wide" type="button" id="uqPlayGo">Ellenőrzés</button>';
-      $('#uqPlayGo').addEventListener('click', () => { const ok = Array.prototype.every.call(box.querySelectorAll('select'), s => String(s.value) === String(s.dataset.i)); if (ok) done(true); else playWrong(); });
-    } else {
-      const a = { foto: { ic: 'a-camera', lbl: 'Fotó feltöltése', txt: (c.instruction || 'Készíts képet a helyszínen') }, gps: { ic: 'a-target', lbl: 'Helyszín igazolása', txt: 'Menj a megjelölt pontra (' + (c.radius || 30) + ' m)' }, qr: { ic: 'a-qr', lbl: 'QR beolvasása', txt: 'Keresd meg és olvasd be a kódot' }, gyors: { ic: 'a-bolt', lbl: 'Indítás', txt: (c.game === 'tap' ? 'Koppints ' + (c.target || 15) + '-öt ' + (c.time || 5) + ' mp alatt' : 'Mini-játék') } }[task.type] || { ic: 'a-target', lbl: 'Teljesítés', txt: 'Teljesítsd a feladatot' };
-      box.innerHTML = '<div class="uq-pl-action"><span class="big"><svg class="ico" aria-hidden="true"><use href="#' + a.ic + '"/></svg></span><p>' + esc(a.txt) + '</p><button class="uq-pl-do" type="button" id="uqPlayGo">' + a.lbl + '</button></div>';
-      $('#uqPlayGo').addEventListener('click', () => done(true));
+  /* A keret betöltése után eltűnik a takaró. Delegálva kötjük, mert a
+     vázat a renderPlay() építi, és a `load` esemény nem buborékol. */
+  document.addEventListener('load', function (e) {
+    if (e.target && e.target.id === 'admJnKeret') {
+      var t = $('#admJnTolt'); if (t) t.hidden = true;
     }
-  }
-  function renderPlayResult() {
-    const r = play.result; const box = $('#uqPlayAnswer'); const act = $('#uqPlayActions');
-    const last = play.taskIdx >= play.stationTasks.length - 1;
-    if (r.ok) box.innerHTML = '<div class="uq-pl-res good"><svg class="ico" aria-hidden="true"><use href="#a-check-c"/></svg><div><b>Helyes!</b><small>+' + (r.task.points || 0) + ' pont</small></div></div>';
-    else box.innerHTML = '<div class="uq-pl-res skip"><svg class="ico" aria-hidden="true"><use href="#a-collapse"/></svg><div><b>Átugorva</b>' + (r.reveal ? '<small>Megoldás: ' + esc(r.reveal) + '</small>' : '') + '</div></div>';
-    act.innerHTML = '<button class="adm-btn adm-btn-lime" type="button" id="uqPlayNext"><svg class="ico ico-sm" aria-hidden="true"><use href="#a-check"/></svg>' + (last ? 'Állomás kész — tovább' : 'Következő feladat') + '</button>';
-    $('#uqPlayNext').addEventListener('click', playNextTask);
-  }
-
-  function playDecisionHTML() {
-    const i = playCurIdx(); const s = state[i];
-    let h = '<div class="uq-pl-card uq-pl-decision"><div class="uq-pl-dec-head"><span class="uq-pl-dec-ic"><svg class="ico" aria-hidden="true"><use href="#a-diamond"/></svg></span><div><h3>' + esc(s.name) + '</h3><p>' + esc(s.desc || 'Válaszd ki a következő útvonalat!') + '</p></div></div>';
-    /* A gombon a SZERZŐ ÁLTAL ÍRT válasz áll, alatta az állomás, ahová
-       visz. A korábbi „rövidebb út" / „a következő állomás" alcím semmilyen
-       adatból nem következett — kitalált információ volt. */
-    const betuk = 'ABCDEFGH';
-    h += '<div class="uq-pl-routes">' + play.decOpts.map((ag, k) => {
-      const t = state[ag.idx];
-      const felirat = (ag.label || '').trim() || t.name;
-      const alcim = (ag.label || '').trim() ? t.name : t.type;
-      return '<button class="uq-pl-route" type="button" data-goto="' + ag.idx + '">' +
-        '<span class="uq-pl-route-k">' + (betuk[k] || (k + 1)) + '</span>' +
-        '<span class="uq-pl-route-body"><b>' + esc(felirat) + '</b><small>' + esc(alcim) + '</small></span>' +
-        '<svg class="ico ico-sm uq-pl-route-go" aria-hidden="true"><use href="#a-route"/></svg></button>';
-    }).join('') + '</div></div>';
-    return h;
-  }
-  function wirePlayDecision() {
-    $$('#uqPlayStage [data-goto]').forEach(b => b.addEventListener('click', () => {
-      const ti = +b.dataset.goto;
-      toast('Útvonal választva', { type: 'info', sub: state[ti].name });
-      playGoto(ti);
-    }));
-  }
-
-  function playSummaryHTML() {
-    const total = play.done + play.skipped;
-    const rate = total ? Math.round(play.done / total * 100) : 0;
-    const name = ($('#cmName') && $('#cmName').value) || 'pálya';
-    return '<div class="uq-pl-summary">' +
-      '<span class="uq-pl-sum-ic"><svg class="ico" aria-hidden="true"><use href="#a-flag"/></svg></span>' +
-      '<h2>Pálya teljesítve!</h2>' +
-      '<p>Végigjátszottad a(z) <b>' + esc(name) + '</b> tesztjét.</p>' +
-      '<div class="uq-pl-sum-grid">' +
-      '<div class="uq-pl-sum-stat"><span>Összpont</span><b class="lime">' + play.points + '</b></div>' +
-      '<div class="uq-pl-sum-stat"><span>Idő</span><b>' + playFmt(play.finalMs) + '</b></div>' +
-      '<div class="uq-pl-sum-stat"><span>Bejárt állomás</span><b>' + play.path.length + '</b></div>' +
-      '<div class="uq-pl-sum-stat"><span>Megoldott feladat</span><b>' + play.done + '<small>/' + total + '</small></b></div>' +
-      '</div>' +
-      '<div class="uq-pl-sum-bar"><span>Teljesítési arány</span><div class="uq-pl-sum-track"><div style="width:' + rate + '%"></div></div><b>' + rate + '%</b></div>' +
-      '<div class="uq-pl-sum-actions"><button class="adm-btn" type="button" id="uqPlayExitSum"><svg class="ico ico-sm" aria-hidden="true"><use href="#a-x"/></svg>Bezárás</button><button class="adm-btn adm-btn-lime" type="button" id="uqPlayRestart"><svg class="ico ico-sm" aria-hidden="true"><use href="#a-play"/></svg>Újra</button></div>' +
-      '</div>';
-  }
-  function wirePlaySummary() {
-    const r = $('#uqPlayRestart'); if (r) r.addEventListener('click', playStart);
-    const x = $('#uqPlayExitSum'); if (x) x.addEventListener('click', playExit);
-  }
-
-  /* --- mini-térkép + lépéslista (jobb oszlop) --- */
-  function playMapHTML() {
-    const cur = playCurIdx();
-    let base = '';
-    state.forEach((s, i) => {
-      const agakIdx = (s.branches || []).map(b => state.indexOf(b.to)).filter(x => x >= 0);
-      const tg = agakIdx.length ? agakIdx : [i + 1];
-      tg.forEach(ti => { if (ti < state.length) { const a = svgXY(s), b = svgXY(state[ti]); base += '<line x1="' + a.x.toFixed(1) + '" y1="' + a.y.toFixed(1) + '" x2="' + b.x.toFixed(1) + '" y2="' + b.y.toFixed(1) + '" class="uq-pm-base"/>'; } });
-    });
-    let done = '';
-    for (let k = 1; k < play.path.length; k++) { const a = svgXY(state[play.path[k - 1]]), b = svgXY(state[play.path[k]]); done += '<line x1="' + a.x.toFixed(1) + '" y1="' + a.y.toFixed(1) + '" x2="' + b.x.toFixed(1) + '" y2="' + b.y.toFixed(1) + '" class="uq-pm-done"/>'; }
-    const nodes = state.map((s, i) => {
-      const p = svgXY(s); const isCur = i === cur; const inPath = play.path.indexOf(i) >= 0;
-      const cls = isCur ? 'cur' : (inPath ? 'done' : 'future');
-      return '<circle cx="' + p.x.toFixed(1) + '" cy="' + p.y.toFixed(1) + '" r="' + (isCur ? 9 : 6) + '" class="uq-pm-node ' + cls + '"/>';
-    }).join('');
-    return '<div class="uq-play-map"><div class="uq-play-map-t"><svg class="ico ico-xs" aria-hidden="true"><use href="#a-map"/></svg>Útvonal</div>' +
-      '<svg viewBox="0 0 540 470" preserveAspectRatio="xMidYMid meet" class="uq-pm-svg" aria-hidden="true">' + base + done + nodes + '</svg></div>';
-  }
-  function playStepsHTML() {
-    const items = play.path.map((idx, k) => {
-      const s = state[idx]; const isCur = k === play.path.length - 1 && !play.finished;
-      return '<li class="uq-play-step' + (isCur ? ' is-cur' : ' is-done') + '"><span class="uq-step-n">' + (k + 1) + '</span><span class="uq-step-b"><b>' + esc(s.name) + '</b><small>' + esc(s.type) + '</small></span>' + (isCur ? '<span class="uq-step-here">itt</span>' : '<svg class="ico ico-xs uq-step-ck" aria-hidden="true"><use href="#a-check"/></svg>') + '</li>';
-    }).join('');
-    return '<ol class="uq-play-steps">' + items + '</ol>';
-  }
-
+  }, true);
   /* =========================================================
      KERESŐ — élő szűrés a lista nevein
      ========================================================= */
@@ -1830,7 +1534,13 @@
   });
 
   /* pálya tesztelése — Játékos nézet fül + azonnali végigjátszás */
-  on($('#admCourseTest'), 'click', () => { saveForm(current); setTab('jatekos'); playStart(); toast('Teszt mód indítva', { type: 'info', sub: 'Pálya végigjátszása tesztként' }); });
+  on($('#admCourseTest'), 'click', () => {
+    saveForm(current); setTab('jatekos');
+    /* Ha a keret még nem állt, a setTab által hívott renderPlay() már el is
+       indította — a második hívás csak fölösleges befagyasztást kérne. */
+    if ($('#admJnKeret')) playStart();
+    toast('Teszt mód indítva', { type: 'info', sub: 'A valódi lejátszó fut a keretben' });
+  });
 
   /* =========================================================
      TÉRKÉP — zoom-gombok (Leaflet)
@@ -1977,7 +1687,7 @@
 
     UQAPI.isAdmin().then(function (admin) {
       if (!admin) { hiba('Nincs jogosultság', 'Ez a fiók nem admin.'); return; }
-      return UQAPI.rest('/v_admin_courses?select=id,name,status,van_elo_verzio,show_station_image&order=sort_order.asc,name.asc')
+      return UQAPI.rest('/v_admin_courses?select=id,slug,name,status,van_elo_verzio,show_station_image&order=sort_order.asc,name.asc')
         .then(function (rows) {
           COURSES_INDEX = rows || [];
           if (!COURSES_INDEX.length) {
@@ -2004,5 +1714,5 @@
   });
 
   /* mély-link: #play → Játékos nézet + azonnali végigjátszás (teszt/megosztás) */
-  if (location.hash === '#play') { setTab('jatekos'); playStart(); }
+  if (location.hash === '#play') setTab('jatekos');   /* a keretet a renderPlay() építi és indítja */
 })();

@@ -13,6 +13,21 @@
 
   const CTA_LABEL = 'Játék indítása';
 
+  /* ÁR-BLOKK. Két dolog ellen véd, és mindkettő valódi eset volt:
+
+     1. ÜRES ÁR. A `price_huf` NULL-ból az `ar_szoveg()` üres szöveget csinál,
+        amiből itt egy csupasz „/ csapat” sor lett, összeg nélkül. Az adatbázis
+        alapértelmezése azóta 0, de a régi, még újra nem publikált csomagokban
+        az üres ár benne maradhatott — ott inkább ne írjunk ki semmit.
+     2. „INGYENES / csapat”. Csapatonkénti egységet csak akkor van értelme
+        kiírni, ha van mihez: az ingyenesnél nincs. */
+  function arBlokk(ertek, cls) {
+    const ar = String(ertek == null ? '' : ertek).trim();
+    if (!ar || ar === '—') return '';
+    const egyseg = /\d/.test(ar) ? `<span class="${cls}-unit">/ csapat</span>` : '';
+    return `<span class="${cls}-amount">${esc(ar)}</span>${egyseg}`;
+  }
+
   const ico  = (id, cls) => `<svg class="${cls || 'ico'}" aria-hidden="true"><use href="#${id}"/></svg>`;
   const flag = (code) => `<svg class="flag" aria-hidden="true"><use href="#f-${code}"/></svg>`;
   const esc  = (s) => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -174,10 +189,7 @@
         </div>
 
         <aside class="price-card">
-          <div class="price-top">
-            <span class="price-amount">${esc(q.price)}</span>
-            <span class="price-unit">/ csapat</span>
-          </div>
+          ${arBlokk(q.price, 'price') ? `<div class="price-top">${arBlokk(q.price, 'price')}</div>` : ''}
           <button type="button" class="btn btn-lime book-btn" id="bookBtn">${CTA_LABEL}</button>
           <p class="price-perk price-perk-team">${ico('i-users', 'ico ico-sm')}<span><strong>${esc(q.team)} részére</strong>További fő hozzáadható a fizetésnél.</span></p>
         </aside>
@@ -226,7 +238,7 @@
       bar.className = 'book-bar';
       bar.innerHTML = `
         <div class="bb-left">
-          <span class="bb-price"><span class="bb-amount">${esc(q.price)}</span><span class="bb-unit">/ csapat</span></span>
+          <span class="bb-price">${arBlokk(q.price, 'bb')}</span>
         </div>
         <button class="btn btn-lime bb-btn" type="button">${CTA_LABEL}</button>`;
       document.body.appendChild(bar);
