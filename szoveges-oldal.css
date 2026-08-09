@@ -96,3 +96,40 @@
 @media (max-width: 760px) {
   .szoveg-lap { padding: 22px 15px 40px; }
 }
+
+/* =========================================================
+   ALKOTÓKNAK OLDAL
+
+   A meglévő szöveges-lap alapokra épül, csak három dolgot tesz hozzá:
+   egy számozott lépéssort, egy jelölt listát és a gombsort.
+   ========================================================= */
+.szoveg-lap ol { margin: 0 0 14px; padding-left: 20px; }
+
+/* A lépések számai hangsúlyosak: ez a lap gerince, ezen fut végig a szem. */
+.alk-lepesek { counter-reset: alk; list-style: none; padding-left: 0 !important; }
+.alk-lepesek li {
+  position: relative;
+  padding-left: 40px;
+  margin-bottom: 12px;
+}
+.alk-lepesek li::before {
+  counter-increment: alk;
+  content: counter(alk);
+  position: absolute; left: 0; top: 1px;
+  width: 26px; height: 26px;
+  display: grid; place-items: center;
+  border-radius: 50%;
+  background: rgb(var(--lime-rgb) / .14);
+  border: 1px solid rgb(var(--lime-rgb) / .4);
+  color: var(--lime);
+  font-size: 12.5px; font-weight: 800;
+}
+
+.alk-lista li { margin-bottom: 9px; }
+
+.alk-gombsor {
+  display: flex; flex-wrap: wrap; gap: 10px;
+  margin: 14px 0 10px !important;
+}
+.alk-gombsor .btn { text-decoration: none; }
+.alk-apro { font-size: 12.5px; color: var(--muted); margin-bottom: 0 !important; }

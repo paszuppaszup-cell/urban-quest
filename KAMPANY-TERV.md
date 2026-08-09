@@ -150,8 +150,8 @@ levelet, elveszik. Szeptember első hetétől viszont a rovatok éhesek.
 
 | Hét | Mit | Csatorna | Óra | Függés |
 |---|---|---|---|---|
-| **H1** (aug 10–16) | **A bejárat megnyitása:** „Írj te is pályát" blokk a nyitólapra, menüpont a fejlécbe, `alkoto.html` publikus és `noindex` nélkül | termék | 4 | — |
-| | Alkotói belépő-oldal szövege: mit vállal a szerző, mit kap cserébe | termék | 2 | ↑ |
+| **H1** (aug 10–16) | ✅ **A bejárat megnyitva (2026-08-09):** nyitólapi blokk a küldetések után, „Alkotóknak" a főmenüben (az „Árak" helyén), önálló indexelhető [alkotoknak.html](alkotoknak.html), kijelentkezve regisztrációs út is | termék | kész | — |
+| | ✅ Alkotói belépő-oldal szövege: mit vállal a szerző, mit kap cserébe | termék | kész | ↑ |
 | | 8–12 ismerős kiválasztása 1:1 megkeresésre | előkészítés | 2 | — |
 | **H2** (aug 17–23) | 1:1 üzenetek kimennek — cél: **2 elkötelezett alkotó** | személyes | 3 | H1 |
 | | Blogcikk: *„Hogyan írj városi kalandot a saját kerületedről"* | blog | 3 | H1 |

@@ -1788,3 +1788,36 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
 /* a részletoldal betöltő állapota, amíg a katalógus megérkezik */
 .detail-toltes { padding: 80px 20px; text-align: center; color: var(--text-2); }
 .detail-toltes a { color: var(--lime); text-decoration: none; }
+
+/* =========================================================
+   NYITÓLAPI ALKOTÓI BLOKK
+
+   A küldetések UTÁN áll: előbb lássa a látogató, mi ez a játék, és csak
+   utána hívjuk meg alkotni. Nem külön szekció-háttérrel, hogy ne szakítsa
+   ketté az oldalt — egy keretes doboz a szokásos konténerben.
+   ========================================================= */
+.fooldal-alkoto .alkoto-doboz {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 22px;
+  padding: 26px 28px;
+  background: var(--bg-elev, #0f130d);
+  border: 1px solid rgb(var(--lime-rgb) / .28);
+  border-radius: 18px;
+}
+.fooldal-alkoto h2 {
+  font-family: var(--font-display, 'Archivo'), sans-serif;
+  font-size: clamp(19px, 2.4vw, 25px); font-weight: 900; font-stretch: 80%;
+  color: #fff; margin: 0 0 8px; line-height: 1.15;
+}
+.fooldal-alkoto p { font-size: 14px; line-height: 1.6; color: var(--text-2, #c9d2c0); margin: 0; max-width: 62ch; }
+.fooldal-alkoto p + p { margin-top: 8px; }
+.fooldal-alkoto .alkoto-kicsi { font-size: 12.5px; color: var(--muted); }
+.fooldal-alkoto .alkoto-gombok { display: flex; flex-direction: column; gap: 8px; }
+.fooldal-alkoto .alkoto-gombok .btn { white-space: nowrap; text-decoration: none; }
+
+@media (max-width: 760px) {
+  .fooldal-alkoto .alkoto-doboz { grid-template-columns: 1fr; padding: 20px; gap: 16px; }
+  .fooldal-alkoto .alkoto-gombok { flex-direction: row; flex-wrap: wrap; }
+}

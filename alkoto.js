@@ -375,10 +375,25 @@
       host.innerHTML = '';
       var d = el('div', 'alk-ures');
       d.appendChild(el('b', null, 'Jelentkezz be'));
-      d.appendChild(el('p', null, 'Pályát csak bejelentkezve tudsz készíteni — így tudjuk, hogy a tiéd.'));
-      var a = el('a', 'adm-btn adm-btn-lime', 'Bejelentkezés');
-      a.href = 'bejelentkezes.html?next=alkoto.html';
-      d.appendChild(a);
+      d.appendChild(el('p', null, 'Pályát csak bejelentkezve tudsz készíteni — így tudjuk, hogy a tiéd. ' +
+                                  'A regisztráció egy e-mail-cím, semmi más.'));
+      /* KÉT gomb, nem egy. Aki az „Alkotóknak” oldalról érkezik, jó eséllyel
+         MOST hall rólunk először: neki nincs mibe bejelentkeznie, és az egyetlen
+         Bejelentkezés gomb elé állítva zsákutcába fut. A regisztráció után ide
+         hozzuk vissza, hogy ne kelljen újra megkeresnie. */
+      var sor = el('div', 'alk-p-gombok');
+      var a = el('a', 'adm-btn adm-btn-lime', 'Regisztrálok');
+      a.href = 'regisztracio.html?next=' + encodeURIComponent('alkoto.html');
+      sor.appendChild(a);
+      var b = el('a', 'adm-btn', 'Van már fiókom');
+      b.href = 'bejelentkezes.html?next=' + encodeURIComponent('alkoto.html');
+      sor.appendChild(b);
+      d.appendChild(sor);
+      var vissza = el('p', 'alk-sugo', '');
+      var vl = el('a', null, 'Mit jelent pályát írni?');
+      vl.href = 'alkotoknak.html';
+      vissza.appendChild(vl);
+      d.appendChild(vissza);
       host.appendChild(d);
       $('#ujPalya').disabled = true;
       return;
