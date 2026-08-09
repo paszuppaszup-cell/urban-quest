@@ -185,6 +185,15 @@ for (const b of BEJEGYZESEK) {
     });
   }
 
+  /* A HÍD GOMBJA CIKKENKÉNT MÁS LEHET.
+
+     Eddig fixen a küldetés-listára mutatott, mert minden cikk játékosnak
+     szólt. Az alkotóknak írt cikk viszont pont máshova visz: ott az olvasó
+     nem játszani akar, hanem írni — a küldetés-lista neki zsákutca lenne.
+     Alapértelmezésben marad a régi cél, tehát a meglévő cikkek nem változnak. */
+  const hidCel = (b.hidGomb && b.hidGomb.cel) || 'index.html#kuldetesek';
+  const hidSzoveg = (b.hidGomb && b.hidGomb.szoveg) || 'Nézd meg a küldetéseket';
+
   const torzs = b.szakaszok.map(s =>
     `  <h2>${esc(s.alcim)}</h2>\n` + s.bekezdesek.map(p => `  <p>${p}</p>`).join('\n')
   ).join('\n\n');
@@ -227,7 +236,7 @@ ${torzs}${gyikBlokk}
   <aside class="blog-hid">
     <h2>${esc(b.hidCim)}</h2>
     <p>${b.hid}</p>
-    <a class="btn btn-primary" href="../index.html#kuldetesek">Nézd meg a küldetéseket</a>
+    <a class="btn btn-primary" href="../${hidCel}">${esc(hidSzoveg)}</a>
   </aside>${kapcsolodo}
 </main>`;
 
@@ -314,7 +323,12 @@ fs.writeFileSync(__dirname + '/fooldal-blokk.html',
      Alapból LÁTHATÓ. A bejelentkezett látogató elől a uq-blog.js rejti el.
      Fordítva nem lehet: ha alapból rejtett lenne, a keresőrobotok sem látnák,
      pedig épp nekik szól — a blog feladata, hogy keresésből hozzon új embert.
-     A főoldalra a három LEGFRISSEBB cikk kerül; a többi a blog.html-en van. -->
+     A főoldalra a három LEGFRISSEBB cikk kerül; a többi a blog.html-en van.
+
+     AZ ALKOTÓI CIKKEK KIMARADNAK INNEN. Nem rangsor kérdése: ennek a blokknak
+     „Mit csináljatok Budapesten?" a címe, és egy pályaírásról szóló cikk
+     alatta hazugság lenne — a látogató programot keres, nem szerkesztőt.
+     Az alkotói ajánlatnak saját blokkja van feljebb, a küldetések után. -->
 <section class="section fooldal-blog" id="fooldalBlog">
   <div class="container">
     <div class="section-head">
@@ -326,7 +340,7 @@ fs.writeFileSync(__dirname + '/fooldal-blokk.html',
     </div>
 
     <div class="blog-lista">
-${kartyak('blog/', SORREND.slice(0, 3))}
+${kartyak('blog/', SORREND.filter(b => b.cimke !== 'Alkotóknak').slice(0, 3))}
     </div>
   </div>
 </section>

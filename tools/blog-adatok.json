@@ -492,5 +492,187 @@
         "v": "Az Iskola lifttel. Az alsó állomása az Iskola lépcső mellett, a Gimnázium utcánál van (a Hunyadi János útról, Víziváros felől), a felső a Hess András tér, a Hilton mellett — onnan pár lépés a Szentháromság tér, a Mátyás-templom és a Halászbástya. Ingyenes. Ha viszont a Palotanegyedbe tartasz, a Várkert Bazár vagy a Palota úti gyorslift a jó választás."
       }
     ]
+  },
+  {
+    "slug": "hogyan-irj-varosi-kalandot",
+    "cimke": "Alkotóknak",
+    "cim": "Hogyan írj városi kalandot a saját környékedről",
+    "h1": "Hogyan írj városi kalandot a saját környékedről",
+    "leiras": "Amit te tudsz a saját utcádról, azt más nem tudja. Végigjátszható kalanddá írni nem nagy munka — de van pár dolog, amit elsőre mindenki elront. Ez a cikk azokról szól.",
+    "kep": "Városi kaland írása — útvonal, állomások, feladatok",
+    "perc": 7,
+    "bevezeto": "A legjobb városi kalandok mögött nincs se csapat, se költségvetés. Egyetlen ember áll mögöttük, aki tud valamit egy utcáról, amit rajta kívül szinte senki. Ez a cikk arról szól, hogyan lesz ebből a tudásból olyasmi, amit mások is végig tudnak járni — és hogy mi az a négy hiba, amit elsőre majdnem mindenki elkövet.",
+    "szakaszok": [
+      {
+        "alcim": "A séta, amit egyszer megszerveztél, elszállt",
+        "bekezdesek": [
+          "Majdnem mindenkinek van egy ilyen emléke. Végigvezettél valakit a környéken, ahol laksz vagy dolgozol, és menet közben elmesélted, mi hol volt régen, melyik ház mögött mi történt, hol van az a felirat, amit senki nem vesz észre. Jól sikerült. Aztán vége lett, és soha többé nem csináltad meg.",
+          "Ez a tudás nem tűnik értékesnek, amíg benned van. Pedig pont az a fajta, amit nem lehet kiguglizni: nincs róla cikk, nincs róla tábla, csak te tudod, mert ott laksz, mert egyszer utánanéztél, mert a nagyapád mesélte. Egy útikönyv soha nem fogja megírni. Egy idegenvezetés nem áll meg annál a kapualjnál.",
+          "Végigjátszható kalanddá írni ezt nagyjából egy hétvége munka. Nem azért, mert bonyolult, hanem mert bejárni is kell. Cserébe attól kezdve bármikor, bárki végigmehet rajta nélküled — és pontosan azt fogja látni, amit te mutatnál meg."
+        ]
+      },
+      {
+        "alcim": "Miért jobb ez, mint egy útvonalleírás",
+        "bekezdesek": [
+          "Egy leírást elolvasnak és bólintanak. Egy kalandot végigcsinálnak — és ez nem ugyanaz a fajta figyelem. Ha valakinek meg kell számolnia az ablakokat egy homlokzaton, hogy továbbjusson, akkor tényleg megnézi azt a homlokzatot. Ha csak azt írod le, hogy „szép szecessziós épület\", elsétál mellette.",
+          "Ez a különbség az egész műfaj lényege. Nem az információ átadása a cél, hanem hogy az ember <b>odanézzen</b>. A feladat csak ürügy — a jutalom az, hogy észrevette.",
+          "És van egy mellékhatás, amire senki nem számít: a saját környékedet is másképp fogod látni, amíg írod. Olyan részleteket veszel észre, amik mellett tíz éve elmész naponta."
+        ]
+      },
+      {
+        "alcim": "Az első és legfontosabb szabály: a megoldás legyen kint",
+        "bekezdesek": [
+          "Ha egy feladat megfejthető telefonos kereséssel, akkor az nem állomás, hanem kvízkérdés — és a csapat két perc múlva ülve fogja megoldani a padon. Ez az egyetlen hiba, ami önmagában tönkretesz egy pályát.",
+          "A jó kérdés olyasmire vonatkozik, ami <b>ott van, és csak ott</b>: egy évszám a kapu fölött, egy név a márványtáblán, hány oszlop tartja az erkélyt, milyen színű a postaláda, mi áll a régi cégéren. Ezek nincsenek fent az interneten, mert senkinek nem jutott eszébe felírni őket.",
+          "Praktikus teszt: mielőtt beírsz egy kérdést, keress rá a saját telefonodon. Ha harminc másodperc alatt megvan a válasz, dobd ki, és keress helyette valamit, amit csak a helyszínen lehet leolvasni."
+        ]
+      },
+      {
+        "alcim": "Az útvonal: a séta ritmusa fontosabb, mint a hossza",
+        "bekezdesek": [
+          "Öt és tíz állomás között van az a sáv, ahol egy pálya kellemes marad. Ennél kevesebb kevés, ennél több elfárasztja a csapatot — a végén már nem élvezik, csak le akarják tudni. A teljes táv másfél–két órányi séta, megállásokkal együtt.",
+          "Az állomások közti táv legyen egyenetlen, de sose hosszú. Két perc séta után jön a következő? Az kapkodásnak hat. Tizenöt perc? Az addigra kihűl. Öt-tíz perc a jó ritmus, és nem baj, ha egy-két helyen hosszabb — de akkor legyen ott valami látnivaló, amiről a szöveg beszél.",
+          "A sorrend nem mindegy. A legerősebb helyszínedet ne tedd az elejére: az első állomás a bemelegítés, ott legyen könnyű a feladat, hogy a csapat sikerélménnyel induljon. A legjobbat tartogasd a végére vagy a kétharmadhoz — arra fognak emlékezni."
+        ]
+      },
+      {
+        "alcim": "A feladatok: ne mindegyik ugyanolyan legyen",
+        "bekezdesek": [
+          "A leggyakoribb elsőpályás hiba, hogy minden állomás kvíz. Öt kérdés után ez iskolának kezd hatni. Váltogasd: valahol beírandó szám, valahol kiválasztható válasz, valahol sorba kell rakni eseményeket, valahol csak le kell fényképezni magatokat egy helyszínen.",
+          "A fotós és a „megvan, kész\" típusú feladatok nem gyengébbek a többinél — másra valók. Ezek adják a levegőt a nehezebbek között, és ezeknél nevet a csapat. Egy pálya, amiben nincs ilyen, fárasztó lesz, akármilyen okosak a kérdései.",
+          "Ha van benne <b>döntési pont</b> — ahol a válasz szerint más útvonalon mennek tovább —, azt tedd nagyjából a felénél. Onnantól a csapat érzi, hogy az ő játékuk lett, nem a tiéd. Ugyanez a helyzet a szétváló feladatokkal: erről <a href=\"mi-tortenik-ha-egy-csapat-szetvalik.html\">külön cikkben írtunk</a>."
+        ]
+      },
+      {
+        "alcim": "A négy hiba, amit elsőre majdnem mindenki elkövet",
+        "bekezdesek": [
+          "<b>Túl sokat írsz.</b> A telefon képernyőjén álló ember négy-öt sort olvas el, utána átugorja. Amit tudni akarsz vele, azt az első két mondatba tedd; a többi legyen jutalom annak, aki elolvassa.",
+          "<b>Olyat kérdezel, amit te tudsz, de ő nem láthat.</b> Ez a legalattomosabb: neked nyilvánvaló, mert százszor arra jártál. Az egyetlen védelem ellene, ha valaki mással bejáratod, aki nem ismeri a környéket.",
+          "<b>Nem számolsz a napszakkal.</b> Ami délután olvasható a táblán, este már nem. Ami nyitva van hétköznap, hétvégén zárva. Ha a megoldás egy udvarban van, ellenőrizd, hogy este is be lehet-e menni.",
+          "<b>Nem hagysz kiutat.</b> Ha valaki elakad, tudnia kell továbbmenni — különben a pálya ott véget ér neki. Tegyél tippet a nehezebb feladatokhoz. Egy feladat egyébként mindig átugorható — pont nélkül, de továbbmehetnek —, tehát úgy írd a történetet, hogy egy kihagyott állomás se szakítsa ketté."
+        ]
+      },
+      {
+        "alcim": "Honnan tudod, hogy kész?",
+        "bekezdesek": [
+          "Onnan, hogy valaki más végigcsinálta. Nem te — te ismered a megoldásokat, neked minden működni fog. Kérj meg egy ismerőst, aki nem ismeri a környéket, hogy járja végig, és menj vele, de ne segíts. Ahol megáll és téged néz, ott van a hiba.",
+          "Az első bejárás után jellemzően három-négy dolgot írsz át: egy kérdés túl nehéz volt, egy szakasz túl hosszú, egy megfogalmazás félreérthető. Ez normális. A második bejárás után már csak apróságok maradnak.",
+          "Utána jöhet a beadás. Az <a href=\"../alkotoknak.html\">alkotói oldalon</a> leírtuk, mit nézünk meg jóváhagyás előtt, és mit kapsz cserébe — a lényeg, hogy a pályán a te neved marad, és később is szerkesztheted, ha valami megváltozik a helyszínen."
+        ]
+      },
+      {
+        "alcim": "Nem kell nagyvárosnak lennie",
+        "bekezdesek": [
+          "Egy jó kaland nem méret kérdése. Egy kisváros főutcája, egy falu temploma és temetője, egy lakótelep, ami ötven éve épült — mindegyikben van annyi történet, amennyi kitölt egy másfél órás sétát. Sokszor több is, mint egy belvárosi turistaútvonalban, amiről mindenki mindent tud.",
+          "Egy dolgot viszont őszintén meg kell mondanunk: a katalógusunkban ma még nincs városválasztó, ezért egy kisebb településen játszódó pálya nehezebben talál rá a saját játékosaira. Dolgozunk rajta. Addig is: ha megírod, a linkjét te magad is meg tudod osztani ott, ahol a helyiek amúgy is beszélgetnek."
+        ]
+      }
+    ],
+    "gyik": [
+      {
+        "k": "Mennyi idő megírni az elsőt?",
+        "v": "Jellemzően egy hétvége: fél nap a helyszínen, néhány óra írás, plusz egy próbabejárás valakivel. Aki jól ismeri a környéket, gyorsabb."
+      },
+      {
+        "k": "Kell hozzá bármilyen technikai tudás?",
+        "v": "Nem. A szerkesztő végigvezet a lépéseken, és egy telefonkereten mutatja, mit fog látni a játékos. Térképen kattintva jelölöd ki az állomásokat."
+      },
+      {
+        "k": "Mi van, ha később megváltozik valami a helyszínen?",
+        "v": "A pálya utólag is szerkeszthető, kicserélheted az állomást vagy a kérdést. Az épp futó játékok közben nem törnek el: azok a korábbi, befagyasztott verziót játsszák végig."
+      },
+      {
+        "k": "Kaphatok érte pénzt?",
+        "v": "Közvetlenül nem tőlünk — a platform nem kezel pénzt. A profilodnál megadhatod a saját támogatói linkedet, és a pályád végén az jelenik meg a csapatnak. Erről a <a href=\"../tamogatas.html\">Támogatás oldalon</a> írtunk részletesen."
+      }
+    ],
+    "hidCim": "Ha van egy utcád, amiről tudsz valamit",
+    "hid": "Nem kell hozzá engedély, csapat vagy költségvetés — csak egy környék, amit ismersz, és egy szabad hétvége. A szerkesztő ingyenes, a pályán a te neved áll, és jóváhagyás után bárki végigjátszhatja.",
+    "hidGomb": {
+      "cel": "alkotoknak.html",
+      "szoveg": "Nézd meg, hogyan kezdj neki"
+    },
+    "datum": "2026-08-09"
+  },
+  {
+    "slug": "mi-tortenik-ha-egy-csapat-szetvalik",
+    "cimke": "Csapatjáték",
+    "cim": "Mi történik, ha egy csapat szétválik egy játékban?",
+    "h1": "Mi történik, ha egy csapat szétválik egy játékban?",
+    "leiras": "A legtöbb csapatjátékban egy ember játszik, a többi nézi. Van egy egyszerű trükk, ami ezt megszünteti: elveszed tőlük a közös képernyőt.",
+    "kep": "Szétváló csapat — mindenki mást lát a telefonján",
+    "perc": 5,
+    "bevezeto": "Ha valaha játszottál társasjátékot olyasvalakivel, aki gyorsabban gondolkodik nálad, ismered az érzést: technikailag ott vagy, de valójában nézed, ahogy más játszik. A csapatjátékok többsége ezt a hibát hordozza. Van rá egy megoldás, ami elsőre kegyetlennek hangzik.",
+    "szakaszok": [
+      {
+        "alcim": "A közös képernyő csapdája",
+        "bekezdesek": [
+          "Amikor egy csapat együtt áll egy feladat előtt, majdnem mindig ugyanaz történik. Valaki hamarabb meglátja a megoldást és kimondja. A többiek bólintanak. Mennek tovább. Senki nem érzi rosszul magát, és mégis: csak egy ember játszott.",
+          "Ez nem a csapat hibája, hanem a helyzeté. Ha mindenki ugyanazt az információt kapja ugyanabban a pillanatban, akkor a leggyorsabb dönt — mindig. A többiek szerepe legfeljebb annyi, hogy egyetértenek.",
+          "A klasszikus ellenszer az, hogy a feladatot mesterségesen szétosztod: te olvasod, én írom, ő számol. Ez segít egy kicsit, de nem sokat, mert a döntés attól még közösen születik, ugyanannál az asztalnál."
+        ]
+      },
+      {
+        "alcim": "Mi történik, ha tényleg elveszed a közös nézetet",
+        "bekezdesek": [
+          "A radikálisabb megoldás az, hogy a csapat egy ponton fizikailag is szétválik: mindenki más helyszínre megy, és a telefonján <b>más feladatot lát</b>. Nem nehezebbet vagy könnyebbet — másikat. Innentől nincs olyan, hogy „megnézem, mi van nálad\".",
+          "És itt jön a lényeg: az egyik játékos megfejtése lesz a másik feladványának a kulcsa. Amíg az első nem oldja meg a magáét, a második képernyőjén zárva marad a feladat. Nem azért, mert nem tudná megcsinálni, hanem mert nincs mit megcsinálnia — a kérdés még meg sem érkezett hozzá.",
+          "Ez a lánc technikailag akárhány szemből állhat. A lényeg nem a hossza, hanem hogy senki nem tudja átugrani a másikat."
+        ]
+      },
+      {
+        "alcim": "Miért működik: a kényszerű beszélgetés",
+        "bekezdesek": [
+          "A szétválás első pillanatában a csapat elhallgat. Aztán megszólal a telefon, és elkezdenek beszélni — de nem úgy, ahogy egyébként szoktak. Nem cseverésznek: <b>információt kell átadniuk</b>, pontosan, félreértés nélkül, gyakran rossz térerővel.",
+          "Ez az a helyzet, amit egy csapatépítő tréning egész délelőtt próbál előállítani, itt meg magától megtörténik. Kiderül, ki magyaráz érthetően. Kiderül, ki kérdez vissza, ha nem érti, és ki bólint rá vakon. Kiderül, ki figyel arra, hogy a másik ott áll egyedül és vár rá.",
+          "És van egy csendes pillanat is, amiről ritkán beszélünk: amikor valaki megoldja a magáét, és tudja, hogy ezzel most a társát engedte tovább. Ez egy nagyon más érzés, mint egy pontot szerezni."
+        ]
+      },
+      {
+        "alcim": "A közös tábla: látni, hogy a másik hol tart",
+        "bekezdesek": [
+          "A szétválás önmagában frusztráló lenne. Aki vár, nem tudja, hogy a társa gondolkodik, elakadt, vagy épp rossz utcába fordult — és a bizonytalanság sokkal rosszabb, mint a várakozás.",
+          "Ezért kell egy közös tábla, amit mindenki lát a saját telefonján: ki hol tart, melyik láncszem nyílt már meg. Nem a megoldásokat mutatja, csak az állapotot. Ennyi elég ahhoz, hogy a várakozás izgalom legyen, ne idegesség.",
+          "A gyakorlatban ez az, amitől az egész működik. Nélküle a szétválás büntetésnek hat; vele viszont pont az a feszültség keletkezik, amiért az emberek szabadulószobába járnak."
+        ]
+      },
+      {
+        "alcim": "Mikor NEM jó ötlet",
+        "bekezdesek": [
+          "Ha a csapat egy része gyerek, vagy valaki nem ismeri a környéket, a szétválás nem játék, hanem stressz. Ilyenkor jobb együtt maradni, és a döntési pontokkal adni a szabadságot.",
+          "Ha nincs mindenkinél telefon vagy térerő, szintén ne. Az egész azon áll, hogy mindenki lássa a sajátját és a közös táblát.",
+          "És van egy tervezési buktató: a szétváló szakasz ne legyen hosszú. Ha valaki tíz percig áll egyedül egy utcasarkon, elromlik a hangulat. Két-három perc várakozás izgalmas; tíz perc unalom."
+        ]
+      },
+      {
+        "alcim": "Ilyet bárki írhat",
+        "bekezdesek": [
+          "Ez nem egy nagy stúdiónak fenntartott mechanika. Egy szétváló szakasz megírása nagyjából annyi munka, mint két hagyományos állomásé: kijelölöd a helyszíneket, megírod a feladatokat, és megmondod, melyik melyiket nyitja.",
+          "A nehezebb rész nem technikai, hanem dramaturgiai: úgy kell felépíteni, hogy a szétválásnak legyen <b>oka a történetben</b>. Ha csak azért válnak szét, mert a játék így akarja, az érződik. Ha azért, mert két nyomot egyszerre kell ellenőrizni, mielőtt bezár a hivatal, az működik.",
+          "Ha kíváncsi vagy, hogyan épül fel egy ilyen pálya az elejétől, arról <a href=\"hogyan-irj-varosi-kalandot.html\">külön cikkben írtunk</a> — az útvonaltól a feladattípusokon át a próbabejárásig."
+        ]
+      }
+    ],
+    "gyik": [
+      {
+        "k": "Hány ember kell hozzá?",
+        "v": "Annyi, ahány ágra a szerző szétosztotta a láncot. Egyedül is végigjátszható: ilyenkor a láncszemek egymás után jönnek ugyanazon a telefonon. Ha többen vagytok, mint ahány láncszem, a fölös játékosok nem kapnak sajátot — ők egyből a találkozási pontra mennek, és ott várják be a többieket."
+      },
+      {
+        "k": "Mi van, ha valaki elakad, és a többiek várnak?",
+        "v": "A tippek és az átugrás ilyenkor is működnek, tehát a lánc nem tud véglegesen megállni. Aki átugrik, azért nem kap pontot, de a többiek továbbmehetnek."
+      },
+      {
+        "k": "Muszáj szétválni?",
+        "v": "Nem. A legtöbb pályán nincs ilyen szakasz, és a szétválós pályák is jelzik előre, hogy lesz benne. Aki nem szeretné, válasszon másikat."
+      }
+    ],
+    "hidCim": "A legegyszerűbb, ha kipróbálod",
+    "hid": "Ezt nehéz elképzelni leírásból — az a pillanat számít, amikor egyedül állsz egy utcasarkon, és a telefonod arra vár, hogy a társad megfejtse a magáét. A küldetések ingyenesek, és nem kell hozzá telepíteni semmit.",
+    "hidGomb": {
+      "cel": "index.html#kuldetesek",
+      "szoveg": "Nézd meg a küldetéseket"
+    },
+    "datum": "2026-08-09"
   }
 ]
