@@ -41,6 +41,13 @@ Disallow: /jatszas.html
 # generátorok (nem oldal, csak a cikkek forrása és a kapu)
 Disallow: /tools/
 
+# belső tervdokumentumok — nem a látogatónak szólnak
+# (a robots.txt csak a BEJÁRÁST kéri; aki tudja a címet, továbbra is eléri —
+#  ha tényleg zárt kell, ki kell venni a kitolt mappából)
+Disallow: /SEO-TERV.md
+Disallow: /KAMPANY-TERV.md
+Disallow: /ROADMAP.md
+
 # fejlesztői maradékok
 Disallow: /wireframe.html
 Disallow: /mobil-elonezet.html
